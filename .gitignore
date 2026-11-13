@@ -23,6 +23,9 @@ auth.json
 # ── Editor / OS ───────────────────────────────
 .idea/
 .vscode/
+.nova/
+.zed/
+.phpactor.json
 .fleet/
 *.swp
 .DS_Store
