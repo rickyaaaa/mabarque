@@ -5,8 +5,16 @@ use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\RegisteredStreamerController;
 use App\Http\Controllers\MatchController;
 use App\Http\Controllers\StreamerProfileController;
+use App\Http\Controllers\Admin\StreamerAccessController;
 use App\Http\Middleware\EnsureActiveBeta;
+use App\Http\Middleware\EnsureSuperAdmin;
 use Illuminate\Support\Facades\Route;
+
+// ── Super Admin: persetujuan akses beta streamer ────────────────────────
+Route::middleware(['auth', EnsureSuperAdmin::class])->prefix('admin')->group(function (): void {
+    Route::get('/streamers', [StreamerAccessController::class, 'index']);
+    Route::patch('/streamers/{user}/beta-status', [StreamerAccessController::class, 'updateStatus']);
+});
 
 // ── Auth (tamu) ─────────────────────────────────────────────────────────
 Route::middleware('guest')->group(function (): void {

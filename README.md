@@ -30,6 +30,21 @@ php artisan serve        # aplikasi di http://127.0.0.1:8000
 php artisan queue:work   # email reset password & proses webhook (database queue)
 ```
 
+**Data demo lokal** — `php artisan db:seed` membuat Super Admin, streamer aktif `@andrarizky` (dengan 3 paket VIP), dan streamer pending `@nadia-gaming`. Daftar akun & password lokalnya ada di `database/seeders/DatabaseSeeder.php`. Seeder ini menolak jalan di produksi.
+
+## Super Admin & akses beta
+
+Akun baru berstatus `pending` dan belum bisa membuka dashboard sampai disetujui.
+
+```bash
+php artisan mabarqueue:create-admin admin@domainkamu.com     # password diketik tersembunyi
+php artisan mabarqueue:streamers --status=pending           # antrean persetujuan
+php artisan mabarqueue:beta nadia@example.com active        # setujui (email/slug), kirim email notifikasi
+php artisan mabarqueue:beta nadia-gaming inactive           # nonaktifkan + cabut sesi login
+```
+
+Untuk panel admin nanti tersedia API (khusus Super Admin, selain itu 404): `GET /api/admin/streamers?status=pending` dan `PATCH /api/admin/streamers/{id}/beta-status`.
+
 ## Test
 
 ```bash
