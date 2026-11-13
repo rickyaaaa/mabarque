@@ -29,8 +29,9 @@ $PHP -r 'exit(version_compare(PHP_VERSION, "8.2.0", ">=") ? 0 : 1);' || { echo "
 
 step "Mode maintenance"
 $PHP artisan down --retry=15 || true
-# Apa pun yang terjadi (termasuk gagal di tengah), situs dinyalakan lagi.
-trap '$PHP artisan up || true' EXIT
+# Apa pun yang terjadi (termasuk gagal di tengah), situs dinyalakan lagi. Bila Laravel sendiri gagal boot,
+# "artisan up" tidak bisa jalan — hapus penanda maintenance-nya langsung supaya situs tidak tertahan 503.
+trap '$PHP artisan up 2>/dev/null || rm -f storage/framework/down' EXIT
 
 step "Ambil kode terbaru ($BRANCH)"
 git fetch --prune origin "$BRANCH"
@@ -41,6 +42,9 @@ step "Install dependensi produksi"
 # --no-scripts: Hostinger menonaktifkan proc_open di PHP CLI, padahal Composer memakainya untuk menjalankan
 # script "@php artisan package:discover". Script itu dijalankan langsung di bawah ini.
 $COMPOSER install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader --no-scripts
+# Cache daftar package/provider bisa masih menyebut paket dev yang barusan dihapus (mis. Laravel Pail),
+# sehingga Laravel gagal boot. Hapus dulu, lalu bangun ulang dari paket yang benar-benar terpasang.
+rm -f bootstrap/cache/packages.php bootstrap/cache/services.php bootstrap/cache/config.php
 $PHP artisan package:discover --ansi
 
 step "Migrasi database"
