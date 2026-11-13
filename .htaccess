@@ -1,0 +1,19 @@
+# Pengaman untuk shared hosting (Hostinger) bila repo di-clone langsung ke public_html:
+# semua request diteruskan ke folder public/, sehingga .env, vendor/, storage/, dll. tidak bisa diakses.
+# Jika document root domain sudah diarahkan ke folder public/, file ini tidak dipakai.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Tolak file/folder sensitif secara eksplisit.
+    RewriteRule (^|/)\.(?!well-known/) - [F,L]
+    RewriteRule ^(app|bootstrap|config|database|resources|routes|storage|tests|vendor|scripts|docs)(/|$) - [F,L]
+    RewriteRule ^(artisan|composer\.(json|lock)|package\.json|phpunit\.xml|vite\.config\.js|README\.md|AGENTS\.md|PRODUCT\.md)$ - [F,L]
+
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+<IfModule !mod_rewrite.c>
+    # Tanpa mod_rewrite, jangan biarkan isi repo terbuka.
+    Require all denied
+</IfModule>
