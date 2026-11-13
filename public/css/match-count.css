@@ -67,3 +67,7 @@
   .history-item { grid-template-columns: 58px 1fr auto; gap: 8px; }
   .history-note { grid-column: 2 / -1; }
 }
+
+/* Pemain yang jatahnya sudah habis (status selesai). */
+.match-row.is-done { opacity: .6; }
+.match-row-action:disabled { cursor: not-allowed; opacity: .45; }

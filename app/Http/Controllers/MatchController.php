@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\LiveSession;
 use App\Models\MatchRecord;
 use App\Models\QueueEntry;
-use App\Models\LiveSession;
 use App\Services\MatchService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 
 class MatchController extends Controller
 {
@@ -24,43 +24,27 @@ class MatchController extends Controller
         }
 
         // Dikunci per streamer supaya key yang sama dari akun lain tidak bisa membaca hasil milik orang lain.
-        $cacheKey = 'match:idempotency:' . $request->user()->getKey() . ':' . hash('sha256', $idempotencyKey);
+        $cacheKey = 'match:idempotency:'.$request->user()->getKey().':'.hash('sha256', $idempotencyKey);
         $cached = Cache::get($cacheKey);
 
-        if ($cached !== null && !isset($cached['processing'])) {
+        if ($cached !== null && ! isset($cached['processing'])) {
             return response()->json($cached, 200);
         }
 
-        if (!Cache::add($cacheKey, ['processing' => true], now()->addHours(24))) {
+        if (! Cache::add($cacheKey, ['processing' => true], now()->addHours(24))) {
             return response()->json(['message' => 'Permintaan dengan Idempotency-Key yang sama sedang diproses.'], 409);
         }
 
         try {
-            $result = DB::transaction(function () use ($queueEntry, $matchService, $request): array {
-                $entry = QueueEntry::query()->whereKey($queueEntry->id)->lockForUpdate()->firstOrFail();
-                $matchService->assertCanRecord($entry);
-
-                $nextNumber = (int) $entry->matches()->max('match_number') + 1;
-                $match = MatchRecord::query()->create([
-                    'queue_entry_id' => $entry->id,
-                    'live_session_id' => $entry->live_session_id,
-                    'match_number' => $nextNumber,
-                    'note' => $request->string('note')->trim()->value() ?: null,
-                    'played_at' => now(),
-                ]);
-
-                $entry->increment('matches_played');
-                LiveSession::query()->whereKey($entry->live_session_id)->increment('total_matches');
-
-                return [
-                    'data' => [
-                        'match' => $match->fresh(),
-                        'matches_remaining' => $matchService->remaining($entry->refresh()),
-                        'quota_status' => $matchService->quotaStatus($entry),
-                    ],
-                ];
-            });
-        } catch (\InvalidArgumentException $exception) {
+            $match = $matchService->record($queueEntry, $request->string('note')->value());
+            $result = [
+                'data' => [
+                    'match' => $match->fresh(),
+                    'matches_remaining' => $matchService->remaining($queueEntry),
+                    'quota_status' => $matchService->quotaStatus($queueEntry),
+                ],
+            ];
+        } catch (InvalidArgumentException $exception) {
             // Aturan bisnis (mis. jatah match habis) → 422, bukan 500.
             Cache::forget($cacheKey);
 
@@ -79,29 +63,17 @@ class MatchController extends Controller
     {
         abort_unless($match->isOwnedBy($request->user()), 404);
 
-        $result = DB::transaction(function () use ($match, $matchService): array {
-            $record = MatchRecord::query()->whereKey($match->id)->lockForUpdate()->firstOrFail();
-            $entry = QueueEntry::query()->whereKey($record->queue_entry_id)->lockForUpdate()->firstOrFail();
+        try {
+            $entry = $matchService->undo($match);
+        } catch (InvalidArgumentException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 422);
+        }
 
-            if (!$matchService->canCorrect($entry)) {
-                return ['message' => 'Tidak ada match tercatat yang bisa dikoreksi.', 'status' => 422];
-            }
-
-            $record->delete();
-            $entry->decrement('matches_played');
-            LiveSession::query()->whereKey($entry->live_session_id)->where('total_matches', '>', 0)->decrement('total_matches');
-
-            return [
-                'data' => [
-                    'queue_entry_id' => $entry->id,
-                    'matches_remaining' => $matchService->remaining($entry->refresh()),
-                    'quota_status' => $matchService->quotaStatus($entry),
-                ],
-                'status' => 200,
-            ];
-        });
-
-        return response()->json($result['data'] ?? ['message' => $result['message']], $result['status']);
+        return response()->json([
+            'queue_entry_id' => $entry->id,
+            'matches_remaining' => $matchService->remaining($entry),
+            'quota_status' => $matchService->quotaStatus($entry),
+        ]);
     }
 
     public function today(Request $request, LiveSession $liveSession): JsonResponse

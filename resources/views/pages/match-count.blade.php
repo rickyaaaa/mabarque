@@ -1,61 +1,17 @@
-<!doctype html>
-<html lang="id">
-  <head>
-    <meta charset="UTF-8" /><meta name="csrf-token" content="{{ csrf_token() }}" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="MabarQueue — hitungan match pemain VIP." />
-    <title>MabarQueue — Hitungan Match</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Agdasima:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="{{ asset('css/styles.css') }}" />
+@extends('layouts.dashboard')
+
+@section('title', 'Hitungan Match')
+@section('active', 'match-count')
+@section('main-class', 'match-content')
+
+@push('styles')
     <link rel="stylesheet" href="{{ asset('css/match-count.css') }}" />
-  </head>
-  <body>
-    <div class="app-shell match-shell">
-      <aside class="sidebar" aria-label="Navigasi utama">
-        <div class="brand-lockup"><div class="brand-mark" aria-hidden="true">MQ</div><div><p class="brand-name">MabarQueue</p><p class="brand-subtitle">Dashboard streamer<br />VIP mabar Mobile Legends</p></div></div>
-        <nav class="main-nav">
-          <a class="nav-link" href="/live-session"><span class="nav-icon" aria-hidden="true">⌂</span><span>Dashboard</span></a>
-          <a class="nav-link" href="/dashboard#queue"><span class="nav-icon" aria-hidden="true">☷</span><span>Antrean</span></a>
-          <a class="nav-link" href="/dashboard#queue"><span class="nav-icon" aria-hidden="true">♟</span><span>Pemain</span></a>
-          <a class="nav-link" href="/donations"><span class="nav-icon" aria-hidden="true">★</span><span>VIP &amp; Donasi</span></a>
-          <a class="nav-link is-active" href="/match-count" aria-current="page"><span class="nav-icon" aria-hidden="true">▥</span><span>Statistik</span></a>
-          <a class="nav-link" href="/overlay-settings"><span class="nav-icon" aria-hidden="true">⚙</span><span>Pengaturan</span></a>
-        </nav>
-        <div class="sidebar-divider"></div>
-        <section class="stream-status" aria-label="Status stream"><div class="status-line"><span class="status-dot is-live"></span><strong>Stream: Online</strong></div><p>Mode: Mabar VIP</p><p>Antrean: <strong>11 pemain</strong></p></section>
-      </aside>
+@endpush
 
-      <main class="main-content match-content">
-        <header class="match-header">
-          <div><p class="eyebrow">Fase 2 · Closed beta</p><h1>Hitungan match</h1><p class="session-meta">Pantau jatah pemain selama sesi <strong>Sesi Mabar VIP</strong>.</p></div>
-          <a class="button button-outline" href="/dashboard#queue">Kembali ke antrean</a>
-        </header>
-
-        <section class="match-summary" aria-label="Ringkasan match">
-          <article class="match-stat match-stat-red"><span>Match selesai</span><strong id="matches-finished">47</strong><small>di sesi ini</small></article>
-          <article class="match-stat match-stat-orange"><span>Pemain aktif</span><strong>11</strong><small>masih punya jatah</small></article>
-          <article class="match-stat match-stat-purple"><span>Jatah menipis</span><strong id="low-quota-count">3</strong><small>tersisa ≤ 2 match</small></article>
-        </section>
-
-        <section class="match-focus" aria-labelledby="match-focus-title">
-          <div><p class="eyebrow">Pemain saat ini</p><h2 id="match-focus-title">Raka ML</h2><p>Saweria <span>•</span> role jungler <span>•</span> 3 match tersisa</p></div>
-          <div class="match-focus-actions"><button class="button button-primary" id="finish-current-match" type="button">✓ Tandai match selesai</button><button class="button button-outline" id="undo-current-match" type="button">− Koreksi 1 match</button></div>
-        </section>
-
-        <section class="match-list-panel" aria-labelledby="match-list-title">
-          <div class="match-list-head"><div><h2 id="match-list-title">Jatah pemain</h2><p>Data tiruan untuk menguji alur pengurangan match.</p></div><button class="filter-button is-active" id="reset-matches" type="button">Reset data tiruan</button></div>
-          <div class="match-list" id="match-list"></div>
-        </section>
-
-        <section class="history-panel" aria-labelledby="history-title">
-          <div class="match-list-head"><div><h2 id="history-title">Riwayat hari ini</h2><p>Match yang sudah dicatat dalam sesi berjalan.</p></div><span class="history-date">Rabu, 29 Jan 2025</span></div>
-          <div class="history-list" id="history-list"></div>
-        </section>
-      </main>
-    </div>
-    <div class="toast" id="match-toast" role="status" aria-live="polite"></div>
-    <script src="{{ asset('js/api.js') }}" defer></script><script src="{{ asset('js/match-count.js') }}" defer></script>
-  </body>
-</html>
+@section('content')
+    @if ($session)
+        <livewire:match-board :session="$session" />
+    @else
+        @include('partials.no-session', ['heading' => 'Hitungan match'])
+    @endif
+@endsection

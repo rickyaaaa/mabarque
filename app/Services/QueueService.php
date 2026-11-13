@@ -118,6 +118,24 @@ class QueueService
         });
     }
 
+    /**
+     * Tandai pemain selesai (jatah habis): pindah ke belakang dengan status "done"; bila ia sedang
+     * bermain, giliran dioper ke pemain siap berikutnya.
+     */
+    public function complete(LiveSession $session, QueueEntry $entry): ?QueueEntry
+    {
+        return DB::transaction(function () use ($session, $entry): ?QueueEntry {
+            $this->ensureEntryBelongsToSession($session, $entry);
+            $wasPlaying = $entry->status === 'playing';
+
+            $lastPosition = (int) $this->orderedEntries($session)->max('position');
+            $entry->update(['status' => 'done', 'position' => $lastPosition + 1]);
+            $this->normalizePositions($session);
+
+            return $wasPlaying ? $this->promoteNextReady($session) : $this->current($session);
+        });
+    }
+
     public function normalizePositions(LiveSession $session): void
     {
         $this->orderedEntries($session)->values()->each(

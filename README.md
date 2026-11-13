@@ -66,4 +66,5 @@ Buka aplikasi di **http://127.0.0.1:8000** (sama dengan `APP_URL`), bukan `local
 ## Status
 
 - ✅ Tersambung ke backend: masuk, daftar, lupa/reset password, keluar, halaman akun, dan pengaturan profil.
-- ⏳ Masih data tiruan (tahap berikutnya): papan antrean, sesi live, hitungan match, paket VIP, donasi, overlay OBS, dan isi halaman antrean publik.
+- ✅ Livewire: papan antrean (`/dashboard`), sesi live (`/live-session`), dan hitungan match (`/match-count`) — polling otomatis, tanpa WebSocket.
+- ⏳ Masih data tiruan (tahap berikutnya): paket VIP, donasi & koneksi provider, overlay OBS, dan isi halaman antrean publik.

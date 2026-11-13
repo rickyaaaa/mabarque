@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AccountPageController;
+use App\Http\Controllers\DashboardPageController;
 use App\Http\Controllers\PublicChannelPageController;
 use App\Http\Middleware\EnsureActiveBeta;
 use Illuminate\Support\Facades\Auth;
@@ -28,9 +29,9 @@ Route::middleware('auth')->group(function (): void {
 
 // ── Dashboard streamer: wajib akses beta aktif ──────────────────────────
 Route::middleware(['auth', EnsureActiveBeta::class])->group(function (): void {
-    Route::view('/dashboard', 'pages.dashboard')->name('dashboard');
+    Route::get('/dashboard', [DashboardPageController::class, 'queue'])->name('dashboard');
     Route::view('/live-session', 'pages.live-session')->name('live-session');
-    Route::view('/match-count', 'pages.match-count')->name('match-count');
+    Route::get('/match-count', [DashboardPageController::class, 'matches'])->name('match-count');
     Route::view('/vip-packages', 'pages.vip-packages')->name('vip-packages');
     Route::view('/donations', 'pages.donations')->name('donations');
     Route::view('/overlay-settings', 'pages.overlay-settings')->name('overlay-settings');
