@@ -91,7 +91,7 @@
 
           <aside class="account-panel preview-panel" aria-labelledby="preview-heading">
             <div class="panel-heading">
-              <div><p class="eyebrow">Pratinjau tiruan</p><h2 id="preview-heading">Dilihat viewer</h2></div>
+              <div><p class="eyebrow">Contoh tampilan</p><h2 id="preview-heading">Dilihat viewer</h2></div>
               <div class="preview-tabs" role="tablist" aria-label="Jenis pratinjau">
                 <button role="tab" id="tab-public" aria-selected="true" aria-controls="preview-public" type="button">Halaman publik</button>
                 <button role="tab" id="tab-overlay" aria-selected="false" aria-controls="preview-overlay" type="button" tabindex="-1">Overlay OBS</button>

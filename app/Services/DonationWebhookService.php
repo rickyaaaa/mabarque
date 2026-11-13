@@ -20,6 +20,11 @@ class DonationWebhookService
         $this->assertProviderMatchesRoute($connection, (string) $request->route('provider'));
         $this->verifySignature($connection, $request);
 
+        // Koneksi yang dijeda streamer tidak menerima donasi baru (dan tidak otomatis aktif kembali).
+        if ($connection->status === 'paused') {
+            abort(409, 'Koneksi sedang dijeda oleh streamer.');
+        }
+
         $payload = $request->json()->all();
         $normalized = $this->normalize($connection->provider, $payload);
 
@@ -58,6 +63,15 @@ class DonationWebhookService
             // process() mengembalikan instance fresh() yang kehilangan penanda ini; controller memakainya
             // untuk membedakan donasi baru (201) dari kiriman ulang provider (200, duplicate: true).
             $processed->wasRecentlyCreated = $isNew;
+
+            if ($isNew) {
+                // Notifikasi untuk panel "Notifikasi masuk" di halaman donasi streamer.
+                $processed->notifications()->create([
+                    'user_id' => $connection->user_id,
+                    'type' => in_array($processed->status, ['queued', 'review'], true) ? $processed->status : 'received',
+                    'context' => ['donor_name' => $processed->donor_name, 'amount' => $processed->amount, 'provider' => $processed->provider],
+                ]);
+            }
 
             return $processed;
         });

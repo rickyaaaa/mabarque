@@ -11,6 +11,7 @@
         'vip-packages' => ['/vip-packages', '♟', 'Paket VIP'],
         'donations' => ['/donations', '★', 'VIP &amp; Donasi'],
         'match-count' => ['/match-count', '▥', 'Statistik'],
+        'overlay-settings' => ['/overlay-settings', '▣', 'Overlay OBS'],
         'account' => ['/account', '◎', 'Akun'],
     ];
 @endphp

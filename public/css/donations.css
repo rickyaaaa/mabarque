@@ -143,3 +143,12 @@
   .activity-time { font-size: 9px; }
   .connection-history-item { gap: 5px; }
 }
+
+/* ── Donasi & koneksi (Livewire) ───────────────────────────────────── */
+.provider-card { flex-wrap: wrap; }
+.provider-card-actions { display: flex; gap: 6px; margin-left: auto; }
+.provider-endpoint { display: flex; align-items: center; gap: 6px; flex-basis: 100%; min-width: 0; }
+.provider-endpoint code { flex: 1; min-width: 0; padding: 5px 7px; overflow: hidden; background: var(--cream); border: 2px solid var(--line); font-size: 10px; white-space: nowrap; text-overflow: ellipsis; }
+.connection-badge.is-paused { color: var(--ink); background: #ffe6a4; }
+.donation-actions { display: inline-flex; flex-wrap: wrap; justify-content: end; gap: 6px; }
+.notification-read:disabled { cursor: default; opacity: .6; }

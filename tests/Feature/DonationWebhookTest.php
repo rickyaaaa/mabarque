@@ -29,7 +29,7 @@ class DonationWebhookTest extends TestCase
         $this->streamer = User::factory()->create();
         $this->connection = PlatformConnection::create([
             'user_id' => $this->streamer->id, 'provider' => 'saweria', 'webhook_url' => 'https://example.test/hook',
-            'signing_secret' => self::SECRET, 'status' => 'paused',
+            'signing_secret' => self::SECRET, 'status' => 'pending',
         ]);
         $this->streamer->vipPackages()->createMany([
             ['name' => 'VIP 1 Match', 'price' => 15000, 'match_count' => 1, 'sort_order' => 1],

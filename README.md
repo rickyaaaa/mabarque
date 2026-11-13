@@ -66,5 +66,13 @@ Buka aplikasi di **http://127.0.0.1:8000** (sama dengan `APP_URL`), bukan `local
 ## Status
 
 - ✅ Tersambung ke backend: masuk, daftar, lupa/reset password, keluar, halaman akun, dan pengaturan profil.
-- ✅ Livewire: papan antrean (`/dashboard`), sesi live (`/live-session`), dan hitungan match (`/match-count`) — polling otomatis, tanpa WebSocket.
-- ⏳ Masih data tiruan (tahap berikutnya): paket VIP, donasi & koneksi provider, overlay OBS, dan isi halaman antrean publik.
+- ✅ Livewire: papan antrean (`/dashboard`), sesi live (`/live-session`), hitungan match (`/match-count`), paket VIP (`/vip-packages`), donasi & koneksi provider (`/donations`), dan pengaturan overlay (`/overlay-settings`) — polling otomatis, tanpa WebSocket.
+- ✅ Halaman tanpa login: antrean publik `/{slug}` dan overlay OBS `/o/{token}` (JS ringan + `/api`, diperbarui tiap 3–5 detik).
+- ⚠️ Belum: format webhook asli Saweria/SociaBuzz/Trakteer (saat ini signature HMAC `X-Webhook-Signature` + field umum), uji di MySQL, dan deploy.
+
+### Menyambungkan provider donasi
+
+1. Buka **VIP & Donasi** → *Hubungkan* provider, isi signing secret (min. 16 karakter).
+2. Salin URL webhook yang muncul ke dashboard provider, dengan secret yang sama.
+3. Donasi dengan nominal **tepat** sama dengan harga paket aktif otomatis masuk antrean; sisanya muncul sebagai "Perlu cek".
+4. *Jeda* menolak webhook sementara (HTTP 409) tanpa menghapus koneksi.

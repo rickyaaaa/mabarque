@@ -15,7 +15,7 @@ return new class extends Migration
             $table->string('label')->nullable();
             $table->text('webhook_url');
             $table->text('signing_secret')->nullable();
-            $table->enum('status', ['active', 'paused', 'error'])->default('paused');
+            $table->enum('status', ['pending', 'active', 'paused', 'error'])->default('pending'); // pending = belum pernah menerima webhook
             $table->timestamp('last_received_at')->nullable();
             $table->timestamp('last_tested_at')->nullable();
             $table->string('last_error')->nullable();

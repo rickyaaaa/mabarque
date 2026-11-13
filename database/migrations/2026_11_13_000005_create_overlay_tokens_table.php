@@ -12,6 +12,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->unique()->constrained()->cascadeOnDelete();
             $table->string('token_hash', 64)->unique();
+            $table->text('token_encrypted')->nullable(); // supaya link overlay bisa ditampilkan ulang ke streamer
             $table->timestamp('last_used_at')->nullable();
             $table->timestamp('revoked_at')->nullable();
             $table->timestamps();

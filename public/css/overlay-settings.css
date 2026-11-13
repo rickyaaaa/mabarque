@@ -39,3 +39,9 @@
 .overlay-url .icon-button { color: var(--cream); background: transparent; border-color: var(--cream); }
 @media (max-width: 900px) { .overlay-layout { grid-template-columns: 1fr; } }
 @media (max-width: 780px) { .overlay-header { display: block; width: 100%; max-width: calc(100vw - 28px); } .overlay-header .button { display: flex; width: 100%; margin-top: 17px; justify-content: center; } .overlay-layout { gap: 14px; } .overlay-controls, .overlay-preview-panel { padding: 15px; } .overlay-stage { min-height: 320px; padding: 12px; } .control-actions { display: grid; grid-template-columns: 1fr 1fr; } .control-actions .button { padding-inline: 7px; } }
+
+/* ── Overlay (Livewire) ────────────────────────────────────────────── */
+.overlay-stage.is-solid { background: #241429; border-style: solid; }
+.overlay-link { padding: 0; color: var(--orange); background: transparent; border: 0; font: inherit; font-weight: 800; text-decoration: underline; cursor: pointer; }
+.overlay-preview { transform-origin: top center; }
+.control-actions .button:disabled { opacity: .5; }

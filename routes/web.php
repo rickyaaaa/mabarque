@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AccountPageController;
 use App\Http\Controllers\DashboardPageController;
+use App\Http\Controllers\OverlayController;
 use App\Http\Controllers\PublicChannelPageController;
 use App\Http\Middleware\EnsureActiveBeta;
 use Illuminate\Support\Facades\Auth;
@@ -36,6 +37,9 @@ Route::middleware(['auth', EnsureActiveBeta::class])->group(function (): void {
     Route::view('/donations', 'pages.donations')->name('donations');
     Route::view('/overlay-settings', 'pages.overlay-settings')->name('overlay-settings');
 });
+
+// ── Overlay OBS (browser source, akses lewat token) ─────────────────────
+Route::get('/o/{token}', [OverlayController::class, 'page'])->where('token', '[A-Za-z0-9]{20,100}')->name('overlay');
 
 // ── Halaman antrean publik /{slug} — paling akhir supaya tidak menutupi rute lain ──
 Route::get('/{slug}', PublicChannelPageController::class)

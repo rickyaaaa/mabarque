@@ -1,71 +1,127 @@
-let publicPlayers = [
-  { position: 1, name: "Nisa Gaming", provider: "SociaBuzz", matches: 8, status: "Siap" },
-  { position: 2, name: "Bimo Stream", provider: "Manual", matches: 5, status: "Menunggu" },
-  { position: 3, name: "Daffa ML", provider: "Saweria", matches: 14, status: "Siap" },
-  { position: 4, name: "Lutfi Pro", provider: "SociaBuzz", matches: 3, status: "Siap" },
-  { position: 5, name: "Citra ML", provider: "Saweria", matches: 7, status: "Siap" },
-  { position: 6, name: "Rendi GG", provider: "Manual", matches: 4, status: "Offline" }
-];
-const publicList = document.querySelector("#public-queue-list");
-const publicEmpty = document.querySelector("#public-empty");
-const publicToast = document.querySelector("#public-toast");
-let queueQuery = "";
+// Halaman antrean publik: data awal dari server, diperbarui tiap 5 detik dari /api/channels/{slug}/queue.
+// Nama pemain berasal dari donatur — selalu dimasukkan lewat textContent, tidak pernah innerHTML.
+(function () {
+  const POLL_MS = 5000;
+  const PROVIDERS = { manual: "Manual", saweria: "Saweria", sociabuzz: "SociaBuzz", trakteer: "Trakteer" };
+  const slug = document.body.dataset.channelId;
+  const $ = (selector) => document.querySelector(selector);
+  const list = $("#public-queue-list");
+  const toast = $("#public-toast");
+  let waiting = null; // null = belum ada data dari API, render awal dari server dipertahankan
+  let query = "";
+  let lastUpdate = Date.now();
 
-function showPublicToast(message) {
-  publicToast.textContent = message;
-  publicToast.classList.add("is-visible");
-  window.clearTimeout(showPublicToast.timeout);
-  showPublicToast.timeout = window.setTimeout(() => publicToast.classList.remove("is-visible"), 2500);
-}
-
-function renderPublicQueue() {
-  const visiblePlayers = publicPlayers.filter((player) => player.name.toLowerCase().includes(queueQuery));
-  publicList.innerHTML = visiblePlayers.map((player) => `<article class="public-queue-item ${queueQuery ? "is-match" : ""}" aria-label="Posisi ${player.position}, ${player.name}, ${player.matches} match tersisa, status ${player.status}"><span class="public-queue-number" aria-hidden="true">${player.position}</span><div><strong>${player.name}</strong><span>${player.provider}</span></div><span class="public-match-left">${player.matches} <small>match</small></span><span class="public-ready ${player.status === "Menunggu" ? "public-waiting" : ""}">${player.status}</span></article>`).join("");
-  publicEmpty.hidden = visiblePlayers.length > 0;
-  document.querySelector("#queue-total").textContent = publicPlayers.length + 5;
-  const positionNote = document.querySelector("#public-position-note");
-  positionNote.classList.toggle("is-found", Boolean(queueQuery && visiblePlayers.length));
-  positionNote.textContent = queueQuery && visiblePlayers.length ? `${visiblePlayers[0].name} berada di posisi #${visiblePlayers[0].position}.` : queueQuery ? "Nama belum ditemukan di antrean aktif." : "Cari nama kamu untuk melihat posisi di antrean.";
-}
-
-async function loadPublicQueue() {
-  const channelId = document.body.dataset.channelId;
-  if (!channelId) return;
-
-  try {
-    const response = await fetch(`/api/channels/${encodeURIComponent(channelId)}/queue`, { headers: { Accept: "application/json" } });
-    if (!response.ok) return;
-    const payload = await response.json();
-    const queue = payload?.data?.queue;
-    if (!Array.isArray(queue)) return;
-    publicPlayers = queue.map((entry) => ({
-      position: entry.position,
-      name: entry.player_name,
-      provider: entry.provider ?? "VIP",
-      matches: entry.matches_remaining,
-      status: entry.status === "playing" ? "Sedang bermain" : entry.status === "offline" ? "Offline" : "Siap"
-    }));
-    document.querySelector("#last-update").textContent = "Baru saja";
-    renderPublicQueue();
-  } catch {
-    // Keep prototype data visible when the public API is unavailable.
+  function showToast(message) {
+    toast.textContent = message;
+    toast.classList.add("is-visible");
+    window.clearTimeout(showToast.timeout);
+    showToast.timeout = window.setTimeout(() => toast.classList.remove("is-visible"), 2500);
   }
-}
 
-document.querySelector("#queue-search").addEventListener("input", (event) => {
-  queueQuery = event.target.value.trim().toLowerCase();
-  renderPublicQueue();
-});
+  function el(tag, className, text) {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined) node.textContent = text;
+    return node;
+  }
 
-document.querySelector("#refresh-public-queue").addEventListener("click", () => {
-  document.querySelector("#last-update").textContent = "Baru saja";
-  showPublicToast("Antrean diperbarui dari data tiruan.");
-  renderPublicQueue();
-});
-document.querySelector("#share-queue").addEventListener("click", async () => {
-  const link = "https://mabarqueue.test/andra/queue";
-  try { await navigator.clipboard.writeText(link); showPublicToast("Link antrean disalin."); } catch { showPublicToast(`Link antrean tiruan: ${link}`); }
-});
-window.setInterval(() => { document.querySelector("#last-update").textContent = "Baru saja"; renderPublicQueue(); loadPublicQueue(); }, 5000);
-renderPublicQueue();
-loadPublicQueue();
+  function initials(name) {
+    return name.trim().split(/\s+/).slice(0, 2).map((part) => part[0] || "").join("").toUpperCase() || "?";
+  }
+
+  function renderList() {
+    if (waiting === null) return;
+    const q = query.toLowerCase();
+    const visible = waiting.map((entry, index) => ({ ...entry, number: index + 1 })).filter((entry) => entry.player_name.toLowerCase().includes(q));
+
+    list.replaceChildren(...visible.map((entry) => {
+      const item = el("article", `public-queue-item${q ? " is-match" : ""}`);
+      item.setAttribute("aria-label", `Posisi ${entry.number}, ${entry.player_name}, ${entry.matches_remaining} match tersisa`);
+      const number = el("span", "public-queue-number", String(entry.number));
+      number.setAttribute("aria-hidden", "true");
+      const who = el("div");
+      who.append(el("strong", null, entry.player_name), el("span", null, PROVIDERS[entry.provider] || "VIP"));
+      const left = el("span", "public-match-left", `${entry.matches_remaining} `);
+      left.append(el("small", null, "match"));
+      item.append(number, who, left, el("span", "public-ready", "Siap"));
+      return item;
+    }));
+
+    $("#public-empty").hidden = visible.length > 0;
+    const note = $("#public-position-note");
+    note.classList.toggle("is-found", Boolean(q && visible.length));
+    note.textContent = q && visible.length
+      ? `${visible[0].player_name} berada di posisi #${visible[0].number} (${visible[0].matches_remaining} match tersisa).`
+      : q ? "Nama belum ditemukan di antrean aktif." : "Cari nama kamu untuk melihat posisi di antrean.";
+  }
+
+  function render(data) {
+    const live = data.status === "live";
+    const entries = data.queue || [];
+    const playing = entries.find((entry) => entry.status === "playing");
+    waiting = entries.filter((entry) => entry.status !== "playing");
+
+    $("#live-badge").classList.toggle("is-offline", !live);
+    $("#live-label").textContent = live ? "Live sekarang" : "Belum live";
+    $("#session-state").textContent = live ? "Live" : "Offline";
+    $("#queue-total").textContent = String(waiting.length);
+    $("#matches-done").textContent = String(data.session?.total_matches ?? 0);
+
+    $("#current-section").hidden = !playing;
+    if (playing) {
+      $("#public-current-title").textContent = playing.player_name;
+      $("#current-meta").textContent = `${PROVIDERS[playing.provider] || "VIP"} · sisa ${playing.matches_remaining} match`;
+      $("#current-avatar").textContent = initials(playing.player_name);
+    }
+
+    const emptyTitle = $("#public-empty strong");
+    emptyTitle.textContent = live ? "Antrean masih kosong" : "Sesi belum dimulai";
+    renderList();
+  }
+
+  async function load(manual) {
+    try {
+      const response = await fetch(`/api/channels/${encodeURIComponent(slug)}/queue`, { headers: { Accept: "application/json" }, cache: "no-store" });
+      if (!response.ok) throw new Error(String(response.status));
+      render((await response.json()).data);
+      lastUpdate = Date.now();
+      if (manual) showToast("Antrean diperbarui.");
+    } catch (error) {
+      if (manual) showToast("Gagal memuat antrean. Coba lagi sebentar.");
+    }
+  }
+
+  function tickLastUpdate() {
+    const seconds = Math.round((Date.now() - lastUpdate) / 1000);
+    $("#last-update").textContent = seconds < 5 ? "Baru saja" : `${seconds} detik lalu`;
+  }
+
+  $("#queue-search").addEventListener("input", (event) => {
+    query = event.target.value.trim();
+    if (waiting === null) {
+      // Belum ada data API: ambil dulu supaya pencarian memakai daftar terbaru.
+      load(false);
+      return;
+    }
+    renderList();
+  });
+
+  $("#refresh-public-queue").addEventListener("click", () => load(true));
+
+  $("#share-queue").addEventListener("click", async () => {
+    const link = window.location.href.split("?")[0];
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: document.title, url: link });
+      } else {
+        await navigator.clipboard.writeText(link);
+        showToast("Link antrean disalin.");
+      }
+    } catch (error) {
+      if (error?.name !== "AbortError") showToast(`Salin link ini: ${link}`);
+    }
+  });
+
+  window.setInterval(() => load(false), POLL_MS);
+  window.setInterval(tickLastUpdate, 1000);
+})();

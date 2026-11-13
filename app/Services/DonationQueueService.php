@@ -9,6 +9,66 @@ use Illuminate\Support\Facades\DB;
 
 class DonationQueueService
 {
+    /**
+     * Masukkan donasi yang perlu dicek (nominal tidak cocok / masuk sebelum sesi dibuka) ke antrean
+     * sesi aktif secara manual dengan paket pilihan streamer.
+     *
+     * @throws \InvalidArgumentException donasi sudah diproses, atau paket/sesi bukan milik streamer yang sama
+     */
+    public function queueWithPackage(Donation $donation, VipPackage $package, \App\Models\LiveSession $session): Donation
+    {
+        return DB::transaction(function () use ($donation, $package, $session): Donation {
+            $donation = Donation::query()->with('platformConnection')->lockForUpdate()->findOrFail($donation->id);
+            $ownerId = (int) $donation->platformConnection?->user_id;
+
+            if (! in_array($donation->status, ['received', 'review'], true) || $donation->queue_entry_id !== null) {
+                throw new \InvalidArgumentException('Donasi ini sudah diproses.');
+            }
+
+            if ($ownerId !== (int) $session->user_id || $ownerId !== (int) $package->user_id || $session->status !== 'active') {
+                throw new \InvalidArgumentException('Paket atau sesi tidak valid untuk donasi ini.');
+            }
+
+            $entry = QueueEntry::query()->create([
+                'live_session_id' => $session->id,
+                'vip_package_id' => $package->id,
+                'player_name' => $donation->donor_name,
+                'provider' => $donation->provider,
+                'donation_amount' => $donation->amount,
+                'matches_total' => $package->match_count,
+                'matches_played' => 0,
+                'status' => 'ready',
+                'position' => ((int) $session->queueEntries()->reorder()->max('position')) + 1,
+                'joined_at' => now(),
+            ]);
+
+            $donation->forceFill([
+                'live_session_id' => $session->id,
+                'vip_package_id' => $package->id,
+                'queue_entry_id' => $entry->id,
+                'status' => 'queued',
+                'processed_at' => now(),
+            ])->save();
+
+            $session->increment('total_players');
+            $session->increment('total_donation', $donation->amount);
+
+            return $donation->fresh();
+        });
+    }
+
+    /** Tandai donasi tidak masuk antrean (mis. donasi biasa, bukan VIP). */
+    public function ignore(Donation $donation): Donation
+    {
+        if (! in_array($donation->status, ['received', 'review'], true)) {
+            throw new \InvalidArgumentException('Donasi ini sudah diproses.');
+        }
+
+        $donation->forceFill(['status' => 'ignored', 'processed_at' => now()])->save();
+
+        return $donation->fresh();
+    }
+
     public function process(Donation $donation): Donation
     {
         if ($donation->queue_entry_id !== null || $donation->live_session_id === null) {

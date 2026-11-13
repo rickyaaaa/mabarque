@@ -1,0 +1,21 @@
+/* Overlay OBS (browser source). Warna aksen & skala huruf diatur lewat --accent dan --scale dari pengaturan streamer. */
+:root { --accent: #d82a1c; --scale: 1; --cream: #fff7de; --paper: #f8dba3; --ink: #100a16; }
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body.overlay-body { min-height: 100vh; padding: 16px; color: var(--cream); background: #241429; font-family: "Bricolage Grotesque", system-ui, sans-serif; font-size: calc(16px * var(--scale)); }
+body.overlay-body.is-transparent { background: transparent; }
+
+.overlay-card { width: min(100%, 440px); padding: 1.1em; background: rgba(16, 10, 22, .93); border: 3px solid var(--accent); box-shadow: 7px 7px 0 var(--accent); }
+.overlay-card.is-offline { opacity: .85; }
+.overlay-brand { margin-bottom: .8em; font: 700 1.8em/.85 "Agdasima", sans-serif; letter-spacing: .05em; text-transform: uppercase; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.overlay-brand em { color: var(--accent); font-style: normal; }
+
+.overlay-now { padding: .75em; color: var(--ink); background: var(--accent); border: 2px solid var(--cream); }
+.overlay-now-label, .overlay-now small { display: block; font-size: .65em; font-weight: 800; letter-spacing: .12em; }
+.overlay-now strong { display: block; margin: .25em 0 .15em; font: 700 2.2em/.85 "Agdasima", sans-serif; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+
+.overlay-queue { display: grid; gap: .4em; margin: .8em 0 0; padding: 0; list-style: none; }
+.overlay-entry { display: flex; justify-content: space-between; gap: .6em; padding: .45em .55em; border: 2px solid rgba(248, 219, 163, .8); font-size: .8em; font-weight: 700; }
+.overlay-entry-name { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.overlay-entry-left { flex: 0 0 auto; color: var(--paper); }
+.overlay-empty { margin: .8em 0 0; color: var(--paper); font-size: .8em; font-weight: 700; }
