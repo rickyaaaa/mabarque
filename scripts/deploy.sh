@@ -38,7 +38,10 @@ git fetch --prune origin "$BRANCH"
 git reset --hard "origin/$BRANCH"
 
 step "Install dependensi produksi"
-$COMPOSER install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader
+# --no-scripts: Hostinger menonaktifkan proc_open di PHP CLI, padahal Composer memakainya untuk menjalankan
+# script "@php artisan package:discover". Script itu dijalankan langsung di bawah ini.
+$COMPOSER install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader --no-scripts
+$PHP artisan package:discover --ansi
 
 step "Migrasi database"
 $PHP artisan migrate --force

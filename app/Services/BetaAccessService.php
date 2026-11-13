@@ -62,6 +62,7 @@ class BetaAccessService
     {
         return User::query()
             ->streamers()
+            ->withCount(['liveSessions', 'platformConnections'])
             ->when($status, fn ($query) => $query->where('beta_status', $status))
             ->when($search, function ($query, string $search) {
                 $like = '%'.str_replace(['%', '_'], ['\%', '\_'], $search).'%';

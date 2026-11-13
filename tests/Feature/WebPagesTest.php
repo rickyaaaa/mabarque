@@ -17,7 +17,7 @@ class WebPagesTest extends TestCase
     public function test_root_redirects_by_auth_state(): void
     {
         $this->get('/')->assertRedirect('/login');
-        $this->actingAs(User::factory()->create())->get('/')->assertRedirect('/dashboard');
+        $this->actingAs(User::factory()->create())->get('/')->assertRedirect('/live-session');
     }
 
     public function test_guest_pages_render_with_csrf_and_api_helper(): void

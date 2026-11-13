@@ -28,7 +28,7 @@ class AuthenticatedSessionController extends Controller
 
         return response()->json([
             'data' => $presenter->present($user),
-            'redirect' => $user->hasActiveBeta() ? '/live-session' : '/account',
+            'redirect' => $user->homePath(),
         ]);
     }
 

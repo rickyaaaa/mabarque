@@ -20,7 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: ['api/webhooks/*']);
 
         $middleware->redirectGuestsTo('/login');
-        $middleware->redirectUsersTo('/live-session');
+        $middleware->redirectUsersTo(fn (Request $request) => $request->user()?->homePath() ?? '/live-session');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Semua error di /api dibalas JSON (401/403/404/422), bukan halaman HTML atau redirect.

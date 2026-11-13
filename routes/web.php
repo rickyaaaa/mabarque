@@ -5,14 +5,17 @@ use App\Http\Controllers\DashboardPageController;
 use App\Http\Controllers\OverlayController;
 use App\Http\Controllers\PublicChannelPageController;
 use App\Http\Middleware\EnsureActiveBeta;
+use App\Http\Middleware\EnsureSuperAdmin;
+use App\Http\Middleware\RedirectSuperAdminToPanel;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 /*
  * Halaman web MabarQueue. Data diambil/dikirim halaman lewat /api (session + CSRF, lihat public/js/api.js).
+ * Satu login (/login) untuk semua; setelah masuk, tiap peran diarahkan ke areanya (User::homePath()).
  */
 
-Route::get('/', fn () => redirect(Auth::check() ? '/dashboard' : '/login'));
+Route::get('/', fn () => redirect(Auth::user()?->homePath() ?? '/login'));
 
 // ── Tamu ────────────────────────────────────────────────────────────────
 Route::middleware('guest')->group(function (): void {
@@ -22,14 +25,19 @@ Route::middleware('guest')->group(function (): void {
 // Bisa dibuka saat sudah login juga: link reset dari email harus selalu berfungsi.
 Route::view('/forgot-password', 'pages.forgot-password')->name('password.request');
 
-// ── Sudah login (termasuk beta "pending") ───────────────────────────────
-Route::middleware('auth')->group(function (): void {
+// ── Panel Super Admin (streamer biasa mendapat 404) ─────────────────────
+Route::middleware(['auth', EnsureSuperAdmin::class])->group(function (): void {
+    Route::view('/admin', 'pages.admin')->name('admin');
+});
+
+// ── Workspace streamer: sudah login (termasuk beta "pending") ───────────
+Route::middleware(['auth', RedirectSuperAdminToPanel::class])->group(function (): void {
     Route::get('/account', AccountPageController::class)->name('account');
     Route::view('/profile', 'pages.profile')->name('profile');
 });
 
-// ── Dashboard streamer: wajib akses beta aktif ──────────────────────────
-Route::middleware(['auth', EnsureActiveBeta::class])->group(function (): void {
+// ── Workspace streamer: wajib akses beta aktif ──────────────────────────
+Route::middleware(['auth', RedirectSuperAdminToPanel::class, EnsureActiveBeta::class])->group(function (): void {
     Route::get('/dashboard', [DashboardPageController::class, 'queue'])->name('dashboard');
     Route::view('/live-session', 'pages.live-session')->name('live-session');
     Route::get('/match-count', [DashboardPageController::class, 'matches'])->name('match-count');

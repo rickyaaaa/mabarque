@@ -140,6 +140,16 @@ class User extends Authenticatable
         return $this->role === self::ROLE_STREAMER;
     }
 
+    /** Halaman tujuan setelah login: Super Admin ke panel admin, streamer ke workspace-nya. */
+    public function homePath(): string
+    {
+        return match (true) {
+            $this->isSuperAdmin() => '/admin',
+            $this->hasActiveBeta() => '/live-session',
+            default => '/account',
+        };
+    }
+
     public function hasActiveBeta(): bool
     {
         return $this->isSuperAdmin() || $this->beta_status === self::BETA_ACTIVE;

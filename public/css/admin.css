@@ -1,0 +1,46 @@
+/* Panel Super Admin — gaya Neo-Brutalism yang sama dengan workspace, tanpa sidebar streamer. */
+.admin-body { min-width: 320px; background: var(--paper); }
+.admin-topbar { padding: 14px clamp(14px, 4vw, 40px); background: var(--navy); border-bottom: 4px solid var(--line); }
+.admin-topbar .public-brand em { color: var(--orange); font-style: normal; }
+.admin-shell { width: min(1180px, calc(100% - 28px)); margin: 0 auto; padding: 26px 0 48px; }
+
+.admin-header { display: flex; align-items: end; justify-content: space-between; gap: 18px; padding-bottom: 22px; border-bottom: 4px solid var(--line); }
+.admin-header h1 { margin: 0; font: 700 clamp(48px, 6vw, 84px)/.8 "Agdasima", sans-serif; text-transform: uppercase; }
+.admin-header .session-meta { margin-bottom: 0; }
+.admin-header-actions { display: flex; align-items: center; gap: 10px; }
+.admin-who { color: var(--muted); font-size: 12px; font-weight: 700; }
+
+.admin-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin: 22px 0; }
+.admin-stat { padding: 14px; background: var(--cream); border: 4px solid var(--line); box-shadow: var(--shadow); }
+.admin-stat span { display: block; color: var(--muted); font-size: 11px; font-weight: 800; text-transform: uppercase; }
+.admin-stat strong { display: block; margin-top: 6px; font: 700 46px/.8 "Agdasima", sans-serif; }
+.admin-stat.is-pending { background: #ffe6a4; }
+.admin-stat.is-active { background: #c8f3c8; }
+.admin-stat.is-inactive { background: #dedbd0; }
+
+.admin-panel { padding: 16px; background: rgba(255, 247, 222, .6); border: 4px solid var(--line); box-shadow: var(--shadow); }
+.admin-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.admin-search { flex: 1 1 260px; max-width: 360px; }
+
+.admin-table-wrap { overflow-x: auto; border: 3px solid var(--line); background: var(--cream); }
+.admin-table { width: 100%; min-width: 820px; border-collapse: collapse; font-size: 13px; }
+.admin-table th { padding: 10px; color: var(--cream); background: var(--navy); font-size: 11px; letter-spacing: .08em; text-align: left; text-transform: uppercase; }
+.admin-table td { padding: 10px; border-top: 2px solid rgba(59, 25, 69, .3); vertical-align: middle; }
+.admin-table td strong, .admin-table td small { display: block; }
+.admin-table td small { margin-top: 2px; color: var(--muted); font-size: 11px; }
+.admin-table td a { color: var(--red-dark); font-weight: 800; }
+.admin-empty { padding: 32px 10px !important; color: var(--muted); text-align: center; font-weight: 700; }
+
+.admin-status { display: inline-flex; min-height: 24px; align-items: center; padding: 2px 9px; border: 2px solid var(--line); font-size: 11px; font-weight: 800; }
+.admin-status.is-pending { background: #ffe6a4; }
+.admin-status.is-active { color: var(--cream); background: var(--green); }
+.admin-status.is-inactive { background: #dedbd0; }
+.admin-actions { display: flex; flex-wrap: wrap; justify-content: end; gap: 6px; }
+.admin-pagination { margin-top: 14px; font-size: 12px; }
+.admin-pagination nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+
+@media (max-width: 860px) {
+  .admin-header { display: block; }
+  .admin-header-actions { justify-content: space-between; margin-top: 14px; }
+  .admin-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
