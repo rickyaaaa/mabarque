@@ -20,9 +20,10 @@ Route::middleware(['auth', EnsureSuperAdmin::class])->prefix('admin')->group(fun
 Route::middleware('guest')->group(function (): void {
     Route::post('/auth/register', [RegisteredStreamerController::class, 'store'])->middleware('throttle:6,1');
     Route::post('/auth/login', [AuthenticatedSessionController::class, 'store'])->middleware('throttle:10,1');
-    Route::post('/auth/forgot-password', [PasswordResetController::class, 'sendLink'])->middleware('throttle:5,1');
-    Route::post('/auth/reset-password', [PasswordResetController::class, 'reset'])->middleware('throttle:6,1');
 });
+// Lupa/reset password tidak dibatasi "guest": link dari email harus tetap jalan walau browser masih login.
+Route::post('/auth/forgot-password', [PasswordResetController::class, 'sendLink'])->middleware('throttle:5,1');
+Route::post('/auth/reset-password', [PasswordResetController::class, 'reset'])->middleware('throttle:6,1');
 
 // ── Publik (tanpa akun): webhook provider, overlay OBS, halaman antrean penonton ──
 Route::post('/webhooks/donations/{provider}/{platformConnection}', [\App\Http\Controllers\DonationWebhookController::class, 'store'])

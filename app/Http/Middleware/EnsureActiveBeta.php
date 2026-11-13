@@ -24,12 +24,16 @@ class EnsureActiveBeta
         }
 
         if (! $user->hasActiveBeta()) {
-            return response()->json([
-                'message' => $user->beta_status === User::BETA_INACTIVE
-                    ? 'Akun ini sedang dinonaktifkan.'
-                    : 'Akses private alpha kamu masih menunggu persetujuan admin.',
-                'beta_status' => $user->beta_status,
-            ], 403);
+            $message = $user->beta_status === User::BETA_INACTIVE
+                ? 'Akun ini sedang dinonaktifkan.'
+                : 'Akses private alpha kamu masih menunggu persetujuan admin.';
+
+            // Halaman web: arahkan ke halaman akun yang menampilkan status beta.
+            if (! $request->expectsJson() && ! $request->is('api/*')) {
+                return redirect()->route('account')->with('beta_notice', $message);
+            }
+
+            return response()->json(['message' => $message, 'beta_status' => $user->beta_status], 403);
         }
 
         return $next($request);

@@ -1,27 +1,27 @@
 <!doctype html>
 <html lang="id">
   <head>
-    <meta charset="UTF-8" />
+    <meta charset="UTF-8" /><meta name="csrf-token" content="{{ csrf_token() }}" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="MabarQueue — hitungan match pemain VIP." />
     <title>MabarQueue — Hitungan Match</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Agdasima:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css" />
-    <link rel="stylesheet" href="match-count.css" />
+    <link rel="stylesheet" href="{{ asset('css/styles.css') }}" />
+    <link rel="stylesheet" href="{{ asset('css/match-count.css') }}" />
   </head>
   <body>
     <div class="app-shell match-shell">
       <aside class="sidebar" aria-label="Navigasi utama">
         <div class="brand-lockup"><div class="brand-mark" aria-hidden="true">MQ</div><div><p class="brand-name">MabarQueue</p><p class="brand-subtitle">Dashboard streamer<br />VIP mabar Mobile Legends</p></div></div>
         <nav class="main-nav">
-          <a class="nav-link" href="live-session.html"><span class="nav-icon" aria-hidden="true">⌂</span><span>Dashboard</span></a>
-          <a class="nav-link" href="index.html#queue"><span class="nav-icon" aria-hidden="true">☷</span><span>Antrean</span></a>
-          <a class="nav-link" href="index.html#queue"><span class="nav-icon" aria-hidden="true">♟</span><span>Pemain</span></a>
-          <a class="nav-link" href="donations.html"><span class="nav-icon" aria-hidden="true">★</span><span>VIP &amp; Donasi</span></a>
-          <a class="nav-link is-active" href="match-count.html" aria-current="page"><span class="nav-icon" aria-hidden="true">▥</span><span>Statistik</span></a>
-          <a class="nav-link" href="overlay-settings.html"><span class="nav-icon" aria-hidden="true">⚙</span><span>Pengaturan</span></a>
+          <a class="nav-link" href="/live-session"><span class="nav-icon" aria-hidden="true">⌂</span><span>Dashboard</span></a>
+          <a class="nav-link" href="/dashboard#queue"><span class="nav-icon" aria-hidden="true">☷</span><span>Antrean</span></a>
+          <a class="nav-link" href="/dashboard#queue"><span class="nav-icon" aria-hidden="true">♟</span><span>Pemain</span></a>
+          <a class="nav-link" href="/donations"><span class="nav-icon" aria-hidden="true">★</span><span>VIP &amp; Donasi</span></a>
+          <a class="nav-link is-active" href="/match-count" aria-current="page"><span class="nav-icon" aria-hidden="true">▥</span><span>Statistik</span></a>
+          <a class="nav-link" href="/overlay-settings"><span class="nav-icon" aria-hidden="true">⚙</span><span>Pengaturan</span></a>
         </nav>
         <div class="sidebar-divider"></div>
         <section class="stream-status" aria-label="Status stream"><div class="status-line"><span class="status-dot is-live"></span><strong>Stream: Online</strong></div><p>Mode: Mabar VIP</p><p>Antrean: <strong>11 pemain</strong></p></section>
@@ -30,7 +30,7 @@
       <main class="main-content match-content">
         <header class="match-header">
           <div><p class="eyebrow">Fase 2 · Closed beta</p><h1>Hitungan match</h1><p class="session-meta">Pantau jatah pemain selama sesi <strong>Sesi Mabar VIP</strong>.</p></div>
-          <a class="button button-outline" href="index.html#queue">Kembali ke antrean</a>
+          <a class="button button-outline" href="/dashboard#queue">Kembali ke antrean</a>
         </header>
 
         <section class="match-summary" aria-label="Ringkasan match">
@@ -56,6 +56,6 @@
       </main>
     </div>
     <div class="toast" id="match-toast" role="status" aria-live="polite"></div>
-    <script src="match-count.js" defer></script>
+    <script src="{{ asset('js/api.js') }}" defer></script><script src="{{ asset('js/match-count.js') }}" defer></script>
   </body>
 </html>

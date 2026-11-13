@@ -1,21 +1,17 @@
-// Alur lupa password dengan data tiruan: minta link → cek email → password baru → selesai.
-// Belum ada backend; akun terdaftar disimulasikan lewat MOCK_ACCOUNTS.
-const MOCK_ACCOUNTS = {
-  "andra@mabarqueue.id": "Andra Rizky",
-  "demo@mabarqueue.id": "Demo Streamer",
-};
+// Alur lupa password: minta link (POST /api/auth/forgot-password) → cek email →
+// buka link dari email (?token=&email=) → password baru (POST /api/auth/reset-password) → selesai.
 const RESEND_SECONDS = 30;
 
 const steps = document.querySelectorAll("[data-step]");
 const indicators = document.querySelectorAll("[data-step-indicator]");
 const toast = document.querySelector("#reset-toast");
-const state = { email: "", countdownTimer: null };
+const state = { email: "", token: "", countdownTimer: null };
 
 function showToast(message) {
   toast.textContent = message;
   toast.classList.add("is-visible");
   window.clearTimeout(showToast.timeout);
-  showToast.timeout = window.setTimeout(() => toast.classList.remove("is-visible"), 2500);
+  showToast.timeout = window.setTimeout(() => toast.classList.remove("is-visible"), 3000);
 }
 
 function goToStep(name) {
@@ -36,27 +32,28 @@ function showError(element, message) {
   element.hidden = !message;
 }
 
-function withLoading(button, label, action) {
+async function busy(button, label, action) {
   const original = button.textContent;
   button.disabled = true;
   button.textContent = label;
-  window.setTimeout(() => {
+  try {
+    return await action();
+  } finally {
     button.disabled = false;
     button.textContent = original;
-    action();
-  }, 700);
+  }
 }
 
-// Langkah 1 — minta link reset
+// ── Langkah 1: minta link reset ─────────────────────────────────────────
 const requestForm = document.querySelector("#request-form");
 const emailInput = document.querySelector("#reset-email");
 const requestError = document.querySelector("#request-error");
 
-document.querySelectorAll("[data-fill-email]").forEach((button) => {
-  button.addEventListener("click", () => { emailInput.value = button.dataset.fillEmail; emailInput.focus(); });
-});
+async function sendLink(email) {
+  return MQApi.post("/api/auth/forgot-password", { email });
+}
 
-requestForm.addEventListener("submit", (event) => {
+requestForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const email = emailInput.value.trim().toLowerCase();
   const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -66,21 +63,22 @@ requestForm.addEventListener("submit", (event) => {
     emailInput.focus();
     return;
   }
+
   showError(requestError, "");
-  withLoading(requestForm.querySelector(".reset-submit"), "Mengirim…", () => {
-    state.email = email;
-    document.querySelector("#sent-email").textContent = email;
-    // Pesan sama untuk email terdaftar/tidak, supaya tidak membocorkan akun mana yang ada.
-    const name = MOCK_ACCOUNTS[email];
-    document.querySelector("#mock-inbox-name").textContent = name || "streamer";
-    document.querySelector(".mock-inbox").hidden = !name;
-    startResendCountdown();
-    goToStep("sent");
-    if (!name) showToast("Email ini tidak ada di data tiruan — inbox kosong.");
-  });
+  const result = await busy(requestForm.querySelector(".reset-submit"), "Mengirim…", () => sendLink(email));
+
+  if (!result.ok) {
+    showError(requestError, MQApi.firstError(result));
+    return;
+  }
+
+  state.email = email;
+  document.querySelector("#sent-email").textContent = email;
+  startResendCountdown();
+  goToStep("sent");
 });
 
-// Langkah 2 — cek email
+// ── Langkah 2: cek email ────────────────────────────────────────────────
 const resendButton = document.querySelector("#resend-link");
 
 function startResendCountdown() {
@@ -100,9 +98,14 @@ function startResendCountdown() {
   }, 1000);
 }
 
-resendButton.addEventListener("click", () => {
+resendButton.addEventListener("click", async () => {
+  const result = await sendLink(state.email);
+  if (!result.ok) {
+    showToast(MQApi.firstError(result));
+    return;
+  }
   document.querySelector("#mock-inbox-time").textContent = "baru saja (dikirim ulang)";
-  showToast(`Link reset tiruan dikirim ulang ke ${state.email}.`);
+  showToast(`Link reset dikirim ulang ke ${state.email}.`);
   startResendCountdown();
 });
 
@@ -112,14 +115,7 @@ document.querySelector("#change-email").addEventListener("click", () => {
   emailInput.select();
 });
 
-document.querySelector("#open-reset-link").addEventListener("click", () => {
-  window.clearInterval(state.countdownTimer);
-  document.querySelector("#reset-account").textContent = state.email;
-  goToStep("reset");
-  document.querySelector("#new-password").focus();
-});
-
-// Langkah 3 — password baru
+// ── Langkah 3: password baru ────────────────────────────────────────────
 const resetForm = document.querySelector("#reset-form");
 const newPassword = document.querySelector("#new-password");
 const confirmPassword = document.querySelector("#confirm-password");
@@ -165,7 +161,7 @@ function checkRules() {
 newPassword.addEventListener("input", checkRules);
 confirmPassword.addEventListener("input", checkRules);
 
-resetForm.addEventListener("submit", (event) => {
+resetForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const rules = checkRules();
   if (!rules.length || !rules.mixed) {
@@ -183,13 +179,34 @@ resetForm.addEventListener("submit", (event) => {
   }
   confirmPassword.classList.remove("is-invalid");
   showError(resetError, "");
-  withLoading(resetForm.querySelector(".reset-submit"), "Menyimpan…", () => goToStep("done"));
+
+  const result = await busy(resetForm.querySelector(".reset-submit"), "Menyimpan…", () => MQApi.post("/api/auth/reset-password", {
+    token: state.token,
+    email: state.email,
+    password: newPassword.value,
+    password_confirmation: confirmPassword.value,
+  }));
+
+  if (!result.ok) {
+    showError(resetError, MQApi.firstError(result));
+    return;
+  }
+
+  // Bersihkan token dari URL supaya tidak tersimpan di riwayat/bookmark.
+  window.history.replaceState({}, "", "/forgot-password");
+  goToStep("done");
 });
 
-// Dukung link langsung dari email tiruan: forgot-password.html?token=demo&email=...
+document.querySelector('[data-step="done"] a').addEventListener("click", (event) => {
+  event.preventDefault();
+  window.location.href = "/login?notice=reset";
+});
+
+// ── Dibuka dari link email: /forgot-password?token=…&email=… ────────────
 const params = new URLSearchParams(window.location.search);
-if (params.get("token")) {
-  state.email = (params.get("email") || "andra@mabarqueue.id").toLowerCase();
+if (params.get("token") && params.get("email")) {
+  state.token = params.get("token");
+  state.email = params.get("email").toLowerCase();
   document.querySelector("#reset-account").textContent = state.email;
   goToStep("reset");
 }

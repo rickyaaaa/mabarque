@@ -35,7 +35,12 @@ class User extends Authenticatable
     public const MAIN_ROLES = ['jungler', 'roamer', 'mid', 'gold', 'exp', 'flex'];
 
     /** Slug yang tidak boleh dipakai streamer (bentrok dengan rute/brand). */
-    public const RESERVED_SLUGS = ['admin', 'api', 'login', 'logout', 'signup', 'daftar', 'masuk', 'o', 'overlay', 'settings', 'mabarqueue', 'support', 'help'];
+    public const RESERVED_SLUGS = [
+        'admin', 'api', 'login', 'logout', 'signup', 'daftar', 'masuk', 'o', 'overlay', 'settings', 'mabarqueue', 'support', 'help',
+        // Path halaman web di routes/web.php — tidak boleh tertutup halaman publik /{slug}.
+        'dashboard', 'live-session', 'match-count', 'vip-packages', 'donations', 'overlay-settings', 'account', 'profile',
+        'forgot-password', 'reset-password', 'register', 'up', 'storage', 'css', 'js', 'livewire', 'sanctum', 'build',
+    ];
 
     /** Format slug: 3–24 karakter, huruf kecil/angka, tanda hubung hanya di tengah. */
     public const SLUG_PATTERN = '/^(?=.{3,24}$)[a-z0-9]+(?:-[a-z0-9]+)*$/';

@@ -1,20 +1,20 @@
 <!doctype html>
 <html lang="id">
   <head>
-    <meta charset="UTF-8" />
+    <meta charset="UTF-8" /><meta name="csrf-token" content="{{ csrf_token() }}" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Antrean publik VIP MabarQueue untuk sesi Andra Rizky." />
-    <title>MabarQueue — Antrean Publik</title>
+    <meta name="description" content="Antrean publik VIP MabarQueue untuk sesi {{ $channel['channel_name'] }}." />
+    <title>{{ $channel['channel_name'] }} — Antrean VIP · MabarQueue</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Agdasima:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css" />
-    <link rel="stylesheet" href="public-queue.css" />
+    <link rel="stylesheet" href="{{ asset('css/styles.css') }}" />
+    <link rel="stylesheet" href="{{ asset('css/public-queue.css') }}" />
   </head>
-  <body class="public-body" data-channel-id="">
+  <body class="public-body" data-channel-id="{{ $channel['slug'] }}">
     <main class="public-shell">
-      <header class="public-header"><a class="public-brand" href="live-session.html"><span class="brand-mark" aria-hidden="true">MQ</span><span>MabarQueue</span></a><div class="public-header-actions"><span class="public-live-badge" role="status" aria-live="polite"><i></i>Live sekarang</span><button class="button button-light button-small" id="share-queue" type="button">↗ Bagikan antrean</button></div></header>
-      <section class="public-intro"><div><p class="eyebrow">Antrean VIP publik</p><h1>Sesi mabar<br /><span>Andra Rizky</span></h1><p class="public-meta">Rabu, 29 Januari 2025 <span>•</span> Live sejak 19:02 WIB</p></div><div class="public-update" role="status" aria-live="polite"><span class="status-dot is-live"></span><div><strong>Diperbarui otomatis</strong><span id="last-update">Baru saja</span></div></div></section>
+      <header class="public-header"><a class="public-brand" href="/live-session"><span class="brand-mark" aria-hidden="true">MQ</span><span>MabarQueue</span></a><div class="public-header-actions"><span class="public-live-badge" role="status" aria-live="polite"><i></i>Live sekarang</span><button class="button button-light button-small" id="share-queue" type="button">↗ Bagikan antrean</button></div></header>
+      <section class="public-intro"><div><p class="eyebrow">Antrean VIP publik</p><h1>Sesi mabar<br /><span>{{ $channel['channel_name'] }}</span></h1><p class="public-meta">Rabu, 29 Januari 2025 <span>•</span> Live sejak 19:02 WIB</p></div><div class="public-update" role="status" aria-live="polite"><span class="status-dot is-live"></span><div><strong>Diperbarui otomatis</strong><span id="last-update">Baru saja</span></div></div></section>
       <section class="public-current" aria-labelledby="public-current-title"><div class="public-current-label"><span class="status-dot is-live"></span>Sedang bermain</div><div class="public-current-body"><div><p class="eyebrow">Giliran sekarang</p><h2 id="public-current-title">Raka ML</h2><p>Saweria <span>•</span> role jungler <span>•</span> match ke-2 dari 5</p></div><div class="public-current-avatar">RM</div></div></section>
       <section class="public-summary" aria-label="Ringkasan antrean"><article><span>Antrean</span><strong id="queue-total">11</strong><small>pemain terdaftar</small></article><article><span>Estimasi tunggu</span><strong>±34 mnt</strong><small>berdasarkan sesi ini</small></article><article><span>Match selesai</span><strong>47</strong><small>sejak live dimulai</small></article></section>
       <section class="public-packages" aria-labelledby="public-packages-title"><div class="public-section-heading"><div><p class="eyebrow">Pilihan VIP</p><h2 id="public-packages-title">Paket aktif</h2></div><span class="public-package-note">Harga dari streamer</span></div><div class="public-package-list"><article><strong>VIP 2 Match</strong><span>Rp 25.000</span><small>Masuk antrean standar</small></article><article class="is-featured"><strong>VIP 5 Match</strong><span>Rp 50.000</span><small>Paket paling dipilih</small></article><article><strong>VIP 10 Match</strong><span>Rp 100.000</span><small>Prioritas sesi panjang</small></article></div></section>
@@ -22,6 +22,6 @@
       <footer class="public-footer"><span>Data antrean diperbarui otomatis setiap 5 detik</span><span>Powered by <strong>MabarQueue</strong></span></footer>
     </main>
     <div class="toast" id="public-toast" role="status" aria-live="polite"></div>
-    <script src="public-queue.js" defer></script>
+    <script src="{{ asset('js/api.js') }}" defer></script><script src="{{ asset('js/public-queue.js') }}" defer></script>
   </body>
 </html>

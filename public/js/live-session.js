@@ -54,8 +54,8 @@ async function loadArchivedSessions() {
 
 toggleSession.addEventListener("click", setDonationState);
 document.querySelector("#accept-donations").addEventListener("click", setDonationState);
-document.querySelector("#open-queue").addEventListener("click", () => { window.location.href = "index.html#queue"; });
-document.querySelector("#show-overlay").addEventListener("click", () => { window.location.href = "overlay-settings.html"; });
+document.querySelector("#open-queue").addEventListener("click", () => { window.location.href = "/dashboard#queue"; });
+document.querySelector("#show-overlay").addEventListener("click", () => { window.location.href = "/overlay-settings"; });
 document.querySelector("#copy-public-queue").addEventListener("click", async () => {
   const link = "https://mabarqueue.test/andra/queue";
   try { await navigator.clipboard.writeText(link); showLiveToast("Link antrean publik disalin."); } catch { showLiveToast(`Link antrean tiruan: ${link}`); }

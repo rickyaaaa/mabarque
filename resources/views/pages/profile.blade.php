@@ -1,26 +1,26 @@
 <!doctype html>
 <html lang="id">
   <head>
-    <meta charset="UTF-8" />
+    <meta charset="UTF-8" /><meta name="csrf-token" content="{{ csrf_token() }}" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="MabarQueue — atur profil channel yang tampil di halaman publik dan overlay." />
     <title>MabarQueue — Pengaturan Profil</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Agdasima:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css" /><link rel="stylesheet" href="account.css" /><link rel="stylesheet" href="profile-settings.css" />
+    <link rel="stylesheet" href="{{ asset('css/styles.css') }}" /><link rel="stylesheet" href="{{ asset('css/account.css') }}" /><link rel="stylesheet" href="{{ asset('css/profile-settings.css') }}" />
   </head>
   <body>
     <div class="app-shell account-shell">
-      <aside class="sidebar" aria-label="Navigasi utama"><div class="brand-lockup"><div class="brand-mark" aria-hidden="true">MQ</div><div><p class="brand-name">MabarQueue</p><p class="brand-subtitle">Dashboard streamer<br />VIP mabar Mobile Legends</p></div></div><nav class="main-nav"><a class="nav-link" href="live-session.html"><span class="nav-icon" aria-hidden="true">⌂</span><span>Dashboard</span></a><a class="nav-link" href="index.html#queue"><span class="nav-icon" aria-hidden="true">☷</span><span>Antrean</span></a><a class="nav-link" href="index.html#queue"><span class="nav-icon" aria-hidden="true">♟</span><span>Pemain</span></a><a class="nav-link" href="donations.html"><span class="nav-icon" aria-hidden="true">★</span><span>VIP &amp; Donasi</span></a><a class="nav-link" href="match-count.html"><span class="nav-icon" aria-hidden="true">▥</span><span>Statistik</span></a><a class="nav-link is-active" href="account.html" aria-current="page"><span class="nav-icon" aria-hidden="true">◎</span><span>Akun</span></a></nav><div class="sidebar-divider"></div><section class="stream-status" aria-label="Status stream"><div class="status-line"><span class="status-dot is-live"></span><strong>Stream: Online</strong></div><p>Mode: Mabar VIP</p><p>Antrean: <strong>11 pemain</strong></p></section></aside>
+      @include('partials.sidebar', ['active' => 'account'])
 
       <main class="main-content account-content">
         <header class="account-header">
           <div>
-            <p class="eyebrow"><a class="crumb" href="account.html">Akun</a> / Profil</p>
+            <p class="eyebrow"><a class="crumb" href="/account">Akun</a> / Profil</p>
             <h1>Profil streamer</h1>
             <p class="session-meta">Identitas ini tampil di halaman antrean publik dan overlay OBS kamu.</p>
           </div>
-          <a class="button button-outline" href="account.html">← Kembali ke akun</a>
+          <a class="button button-outline" href="/account">← Kembali ke akun</a>
         </header>
 
         <div class="profile-layout">
@@ -43,7 +43,7 @@
                 <div>
                   <label class="field-label" for="profile-role">Role utama</label>
                   <select class="field-input" id="profile-role" name="main_role">
-                    <option value="jungler">Jungler</option><option value="roamer">Roamer</option><option value="mid">Mid Lane</option><option value="gold">Gold Lane</option><option value="exp">EXP Lane</option><option value="flex">Flex</option>
+                    <option value="">Pilih role</option><option value="jungler">Jungler</option><option value="roamer">Roamer</option><option value="mid">Mid Lane</option><option value="gold">Gold Lane</option><option value="exp">EXP Lane</option><option value="flex">Flex</option>
                   </select>
                 </div>
                 <div>
@@ -75,8 +75,8 @@
             <fieldset>
               <legend class="panel-heading"><span><span class="eyebrow">Akun</span><span class="legend-title">Login</span></span></legend>
               <label class="field-label" for="profile-email">Email login <span>(tidak tampil publik)</span></label>
-              <input class="field-input" id="profile-email" type="email" value="andra@mabarqueue.id" readonly aria-describedby="email-help" />
-              <p class="field-help" id="email-help">Ganti email lewat admin selama private alpha. <a href="forgot-password.html">Reset password →</a></p>
+              <input class="field-input" id="profile-email" type="email" value="{{ auth()->user()->email }}" readonly aria-describedby="email-help" />
+              <p class="field-help" id="email-help">Ganti email lewat admin selama private alpha. <a href="/forgot-password">Reset password →</a></p>
             </fieldset>
 
             <p class="form-error" id="profile-error" role="alert" hidden></p>
@@ -126,13 +126,13 @@
                   <ol class="mini-overlay-queue"><li><span>1. Nadia</span><small>5 match</small></li><li><span>2. Bimo Gaming</span><small>3 match</small></li><li><span>3. Sasa</span><small>1 match</small></li></ol>
                 </div>
               </div>
-              <p class="field-help">Warna aksen di sini hanya untuk identitas; pengaturan detail overlay ada di <a href="overlay-settings.html">Tampilan OBS</a>.</p>
+              <p class="field-help">Warna aksen di sini hanya untuk identitas; pengaturan detail overlay ada di <a href="/overlay-settings">Tampilan OBS</a>.</p>
             </div>
           </aside>
         </div>
       </main>
     </div>
     <div class="toast" id="profile-toast" role="status" aria-live="polite"></div>
-    <script src="profile-settings.js" defer></script>
+    <script src="{{ asset('js/api.js') }}" defer></script><script src="{{ asset('js/profile-settings.js') }}" defer></script>
   </body>
 </html>

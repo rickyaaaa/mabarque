@@ -58,8 +58,12 @@ Mencakup registrasi (email unik, slug), login/logout + rate limit, proteksi akse
 - `app/Services` — logika bisnis (Queue Engine, VIP Pricing, Session & Match, Webhook, Auth, Profil).
 - `app/Http/Controllers`, `app/Http/Requests`, `app/Http/Middleware` — lapisan HTTP/API (`routes/api.php`).
 - `app/Livewire` + `resources/views/livewire` — papan antrean Livewire.
-- File `*.html/*.css/*.js` di root — **prototipe frontend statis (data tiruan)**, belum dipindah ke Blade.
+- `resources/views/pages` — halaman web (Blade); `routes/web.php` mengatur akses (tamu, login, beta aktif, publik `/{slug}`).
+- `public/css`, `public/js` — gaya & script halaman; `public/js/api.js` memanggil `/api` dengan session + CSRF.
+
+Buka aplikasi di **http://127.0.0.1:8000** (sama dengan `APP_URL`), bukan `localhost:8000` — login memakai cookie Sanctum yang hanya berlaku untuk domain di `APP_URL`/`SANCTUM_STATEFUL_DOMAINS`.
 
 ## Status
 
-Backend API sudah teruji lewat feature test. Halaman dashboard/publik/overlay masih prototipe statis dan belum disambungkan ke Blade/Livewire.
+- ✅ Tersambung ke backend: masuk, daftar, lupa/reset password, keluar, halaman akun, dan pengaturan profil.
+- ⏳ Masih data tiruan (tahap berikutnya): papan antrean, sesi live, hitungan match, paket VIP, donasi, overlay OBS, dan isi halaman antrean publik.

@@ -283,3 +283,10 @@ h1 { margin-bottom: 0; font-size: clamp(43px, 5vw, 80px); line-height: .82; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
 }
+
+/* Logo teks di header halaman tamu & publik (login, daftar, lupa password, antrean publik). */
+.public-brand { display: inline-flex; align-items: center; gap: 10px; color: var(--cream); text-decoration: none; font: 700 29px/.8 "Agdasima", sans-serif; text-transform: uppercase; }
+.public-brand .brand-mark { width: 37px; height: 37px; color: var(--navy); border-width: 2px; box-shadow: 3px 3px 0 var(--cream); font-size: 15px; }
+
+/* Sidebar: titik status abu-abu saat belum ada sesi live (status juga tertulis, tidak hanya warna). */
+.stream-status .status-dot:not(.is-live) { background: #a99aa3; box-shadow: none; }

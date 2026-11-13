@@ -1,16 +1,6 @@
-// Pengaturan profil streamer dengan pratinjau tiruan (halaman publik + overlay OBS).
-// Masih data tiruan: profil awal dari MOCK_PROFILE, slug yang "sudah dipakai" dari TAKEN_SLUGS.
-// Kunci objek = kontrak GET/PUT /api/profile (nama kolom tabel users).
-const MOCK_PROFILE = {
-  channel_name: "Andra Rizky",
-  slug: "andrarizky",
-  tagline: "Mabar santai, push mythic bareng viewer",
-  main_role: "jungler",
-  live_schedule: "Rabu & Sabtu, 19:00 WIB",
-  avatar_initials: "AR",
-  profile_accent: "#f8a917",
-};
-const TAKEN_SLUGS = ["admin", "mabarqueue", "rrq", "evos", "onic", "lemon"];
+// Pengaturan profil streamer: data dari GET /api/profile, disimpan lewat PUT /api/profile,
+// dengan pratinjau langsung halaman publik + overlay OBS. Ketersediaan slug dicek server saat menyimpan.
+const PROFILE_KEYS = ["channel_name", "slug", "tagline", "main_role", "live_schedule", "avatar_initials", "profile_accent"];
 const ROLE_LABELS = { jungler: "Jungler", roamer: "Roamer", mid: "Mid Lane", gold: "Gold Lane", exp: "EXP Lane", flex: "Flex" };
 
 const form = document.querySelector("#profile-form");
@@ -28,7 +18,17 @@ const saveState = document.querySelector("#save-state");
 const slugStatus = document.querySelector("#slug-status");
 const profileError = document.querySelector("#profile-error");
 const toast = document.querySelector("#profile-toast");
-let saved = { ...MOCK_PROFILE };
+let saved = null;
+
+/** Samakan bentuk data server (null) dengan nilai form (string kosong) supaya deteksi perubahan akurat. */
+function normalize(profile) {
+  const result = {};
+  PROFILE_KEYS.forEach((key) => { result[key] = profile[key] ?? ""; });
+  if (!form.querySelector(`input[name="profile_accent"][value="${result.profile_accent}"]`)) {
+    result.profile_accent = form.querySelector('input[name="profile_accent"]').value;
+  }
+  return result;
+}
 
 function showToast(message) {
   toast.textContent = message;
@@ -62,8 +62,7 @@ function validateSlug(slug) {
   if (!slug) return { ok: false, message: "Alamat publik wajib diisi." };
   if (!/^[a-z0-9-]{3,24}$/.test(slug)) return { ok: false, message: "Pakai 3–24 huruf kecil, angka, atau tanda hubung." };
   if (slug.startsWith("-") || slug.endsWith("-")) return { ok: false, message: "Tidak boleh diawali atau diakhiri tanda hubung." };
-  if (slug !== saved.slug && TAKEN_SLUGS.includes(slug)) return { ok: false, message: `mabarqueue.id/${slug} sudah dipakai streamer lain.` };
-  return { ok: true, message: slug === saved.slug ? "Alamat kamu saat ini." : "✓ Alamat tersedia (data tiruan)." };
+  return { ok: true, message: slug === saved?.slug ? "Alamat kamu saat ini." : "Format valid — ketersediaan dicek saat menyimpan." };
 }
 
 function renderPreview(profile) {
@@ -84,6 +83,7 @@ function renderPreview(profile) {
 }
 
 function update() {
+  if (saved === null) return;
   const profile = readForm();
   const slugCheck = validateSlug(profile.slug);
   slugStatus.textContent = slugCheck.message;
@@ -117,7 +117,7 @@ resetButton.addEventListener("click", () => {
   showToast("Perubahan dibatalkan.");
 });
 
-form.addEventListener("submit", (event) => {
+form.addEventListener("submit", async (event) => {
   event.preventDefault();
   const profile = readForm();
   const problems = [];
@@ -134,13 +134,23 @@ form.addEventListener("submit", (event) => {
   profileError.hidden = true;
   saveButton.disabled = true;
   saveButton.textContent = "Menyimpan…";
-  window.setTimeout(() => {
-    const slugChanged = profile.slug !== saved.slug;
-    saved = { ...profile };
-    saveButton.textContent = "Simpan profil";
-    update();
-    showToast(slugChanged ? `Profil disimpan. Link publik & overlay kini mabarqueue.id/${profile.slug}.` : "Profil streamer disimpan di data tiruan.");
-  }, 600);
+
+  const result = await MQApi.put("/api/profile", profile);
+  saveButton.textContent = "Simpan profil";
+
+  if (!result.ok) {
+    saveButton.disabled = false;
+    profileError.textContent = MQApi.firstError(result);
+    profileError.hidden = false;
+    const field = fields[Object.keys(result.errors)[0]];
+    if (field) field.focus();
+    return;
+  }
+
+  saved = normalize(result.data);
+  fillForm(saved);
+  update();
+  showToast(result.message || "Profil streamer disimpan.");
 });
 
 window.addEventListener("beforeunload", (event) => {
@@ -167,5 +177,17 @@ tabs.forEach((tab, index) => {
   });
 });
 
-fillForm(saved);
-update();
+(async function loadProfile() {
+  saveState.textContent = "Memuat profil…";
+  const result = await MQApi.get("/api/profile");
+
+  if (!result.ok) {
+    profileError.textContent = MQApi.firstError(result, "Gagal memuat profil. Muat ulang halaman.");
+    profileError.hidden = false;
+    return;
+  }
+
+  saved = normalize(result.data);
+  fillForm(saved);
+  update();
+})();

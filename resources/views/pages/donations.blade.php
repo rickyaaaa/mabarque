@@ -1,15 +1,15 @@
 <!doctype html>
 <html lang="id">
   <head>
-    <meta charset="UTF-8" />
+    <meta charset="UTF-8" /><meta name="csrf-token" content="{{ csrf_token() }}" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="MabarQueue — pantau donasi VIP yang masuk dari berbagai provider." />
     <title>MabarQueue — Donasi Masuk</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Agdasima:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css" />
-    <link rel="stylesheet" href="donations.css" />
+    <link rel="stylesheet" href="{{ asset('css/styles.css') }}" />
+    <link rel="stylesheet" href="{{ asset('css/donations.css') }}" />
   </head>
   <body>
     <div class="app-shell donation-shell">
@@ -19,12 +19,12 @@
           <div><p class="brand-name">MabarQueue</p><p class="brand-subtitle">Dashboard streamer<br />VIP mabar Mobile Legends</p></div>
         </div>
         <nav class="main-nav">
-          <a class="nav-link" href="live-session.html"><span class="nav-icon" aria-hidden="true">⌂</span><span>Dashboard</span></a>
-          <a class="nav-link" href="index.html#queue"><span class="nav-icon" aria-hidden="true">☷</span><span>Antrean</span></a>
-          <a class="nav-link" href="index.html#queue"><span class="nav-icon" aria-hidden="true">♟</span><span>Pemain</span></a>
-          <a class="nav-link is-active" href="donations.html" aria-current="page"><span class="nav-icon" aria-hidden="true">★</span><span>VIP &amp; Donasi</span></a>
-          <a class="nav-link" href="match-count.html"><span class="nav-icon" aria-hidden="true">▥</span><span>Statistik</span></a>
-          <a class="nav-link" href="overlay-settings.html"><span class="nav-icon" aria-hidden="true">⚙</span><span>Pengaturan</span></a>
+          <a class="nav-link" href="/live-session"><span class="nav-icon" aria-hidden="true">⌂</span><span>Dashboard</span></a>
+          <a class="nav-link" href="/dashboard#queue"><span class="nav-icon" aria-hidden="true">☷</span><span>Antrean</span></a>
+          <a class="nav-link" href="/dashboard#queue"><span class="nav-icon" aria-hidden="true">♟</span><span>Pemain</span></a>
+          <a class="nav-link is-active" href="/donations" aria-current="page"><span class="nav-icon" aria-hidden="true">★</span><span>VIP &amp; Donasi</span></a>
+          <a class="nav-link" href="/match-count"><span class="nav-icon" aria-hidden="true">▥</span><span>Statistik</span></a>
+          <a class="nav-link" href="/overlay-settings"><span class="nav-icon" aria-hidden="true">⚙</span><span>Pengaturan</span></a>
         </nav>
         <div class="sidebar-divider"></div>
         <section class="stream-status" aria-label="Status stream"><div class="status-line"><span class="status-dot is-live"></span><strong>Stream: Online</strong></div><p>Mode: Mabar VIP</p><p>Antrean: <strong>11 pemain</strong></p></section>
@@ -39,7 +39,7 @@
           </div>
           <div class="donation-header-actions">
             <button class="button button-outline" id="refresh-donations" type="button">↻ Refresh</button>
-            <a class="button button-primary" href="index.html#queue">Buka antrean</a>
+            <a class="button button-primary" href="/dashboard#queue">Buka antrean</a>
           </div>
           <div class="sync-line" role="status" aria-live="polite"><span class="status-dot is-live"></span><span>Webhook aktif</span><span class="meta-separator">•</span><span id="last-synced">Terakhir dicek barusan</span></div>
         </header>
@@ -124,6 +124,6 @@
         <div class="modal-actions"><button class="button button-outline" value="cancel" type="button" id="close-connection">Batal</button><button class="button button-light" id="test-connection" type="button">Tes koneksi</button><button class="button button-primary" value="default" type="submit">Simpan koneksi</button></div>
       </form>
     </dialog>
-    <script src="donations.js" defer></script>
+    <script src="{{ asset('js/api.js') }}" defer></script><script src="{{ asset('js/donations.js') }}" defer></script>
   </body>
 </html>

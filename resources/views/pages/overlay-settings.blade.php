@@ -1,27 +1,27 @@
 <!doctype html>
 <html lang="id">
   <head>
-    <meta charset="UTF-8" />
+    <meta charset="UTF-8" /><meta name="csrf-token" content="{{ csrf_token() }}" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Pengaturan tampilan overlay OBS MabarQueue." />
     <title>MabarQueue — Pengaturan Overlay OBS</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Agdasima:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css" />
-    <link rel="stylesheet" href="overlay-settings.css" />
+    <link rel="stylesheet" href="{{ asset('css/styles.css') }}" />
+    <link rel="stylesheet" href="{{ asset('css/overlay-settings.css') }}" />
   </head>
   <body data-overlay-token="">
     <div class="app-shell overlay-shell">
       <aside class="sidebar" aria-label="Navigasi utama">
         <div class="brand-lockup"><div class="brand-mark" aria-hidden="true">MQ</div><div><p class="brand-name">MabarQueue</p><p class="brand-subtitle">Dashboard streamer<br />VIP mabar Mobile Legends</p></div></div>
         <nav class="main-nav">
-          <a class="nav-link" href="live-session.html"><span class="nav-icon" aria-hidden="true">⌂</span><span>Dashboard</span></a>
-          <a class="nav-link" href="index.html#queue"><span class="nav-icon" aria-hidden="true">☷</span><span>Antrean</span></a>
-          <a class="nav-link" href="index.html#queue"><span class="nav-icon" aria-hidden="true">♟</span><span>Pemain</span></a>
-          <a class="nav-link" href="donations.html"><span class="nav-icon" aria-hidden="true">★</span><span>VIP &amp; Donasi</span></a>
-          <a class="nav-link" href="match-count.html"><span class="nav-icon" aria-hidden="true">▥</span><span>Statistik</span></a>
-          <a class="nav-link is-active" href="overlay-settings.html" aria-current="page"><span class="nav-icon" aria-hidden="true">⚙</span><span>Pengaturan</span></a>
+          <a class="nav-link" href="/live-session"><span class="nav-icon" aria-hidden="true">⌂</span><span>Dashboard</span></a>
+          <a class="nav-link" href="/dashboard#queue"><span class="nav-icon" aria-hidden="true">☷</span><span>Antrean</span></a>
+          <a class="nav-link" href="/dashboard#queue"><span class="nav-icon" aria-hidden="true">♟</span><span>Pemain</span></a>
+          <a class="nav-link" href="/donations"><span class="nav-icon" aria-hidden="true">★</span><span>VIP &amp; Donasi</span></a>
+          <a class="nav-link" href="/match-count"><span class="nav-icon" aria-hidden="true">▥</span><span>Statistik</span></a>
+          <a class="nav-link is-active" href="/overlay-settings" aria-current="page"><span class="nav-icon" aria-hidden="true">⚙</span><span>Pengaturan</span></a>
         </nav>
         <div class="sidebar-divider"></div>
         <section class="stream-status" aria-label="Status stream"><div class="status-line"><span class="status-dot is-live"></span><strong>Stream: Online</strong></div><p>Mode: Mabar VIP</p><p>Antrean: <strong>11 pemain</strong></p></section>
@@ -49,6 +49,6 @@
       </main>
     </div>
     <div class="toast" id="overlay-toast" role="status" aria-live="polite"></div>
-    <script src="overlay-settings.js" defer></script>
+    <script src="{{ asset('js/api.js') }}" defer></script><script src="{{ asset('js/overlay-settings.js') }}" defer></script>
   </body>
 </html>

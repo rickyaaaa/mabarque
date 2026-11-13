@@ -1,23 +1,23 @@
 <!doctype html>
 <html lang="id">
   <head>
-    <meta charset="UTF-8" />
+    <meta charset="UTF-8" /><meta name="csrf-token" content="{{ csrf_token() }}" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Pulihkan akses akun streamer MabarQueue." />
     <title>MabarQueue — Lupa Password</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Agdasima:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css" />
-    <link rel="stylesheet" href="signup.css" />
-    <link rel="stylesheet" href="login.css" />
-    <link rel="stylesheet" href="forgot-password.css" />
+    <link rel="stylesheet" href="{{ asset('css/styles.css') }}" />
+    <link rel="stylesheet" href="{{ asset('css/signup.css') }}" />
+    <link rel="stylesheet" href="{{ asset('css/login.css') }}" />
+    <link rel="stylesheet" href="{{ asset('css/forgot-password.css') }}" />
   </head>
   <body class="login-body">
     <main class="login-shell">
       <header class="signup-header">
-        <a class="public-brand" href="live-session.html"><span class="brand-mark" aria-hidden="true">MQ</span><span>MabarQueue</span></a>
-        <span>Ingat password? <a href="login.html">Masuk</a></span>
+        <a class="public-brand" href="/"><span class="brand-mark" aria-hidden="true">MQ</span><span>MabarQueue</span></a>
+        <span>Ingat password? <a href="/login">Masuk</a></span>
       </header>
 
       <section class="login-grid">
@@ -46,7 +46,7 @@
               <p class="form-error" id="request-error" role="alert" hidden></p>
               <button class="button button-primary full-width reset-submit" type="submit">Kirim link reset →</button>
             </form>
-            <p class="login-footnote">Coba <button class="text-link" type="button" data-fill-email="andra@mabarqueue.id">andra@mabarqueue.id</button> untuk data tiruan.</p>
+            <p class="login-footnote">Demi keamanan, kami tidak memberi tahu apakah sebuah email terdaftar.</p>
           </div>
 
           <!-- Langkah 2: cek email -->
@@ -56,14 +56,13 @@
               <h2 tabindex="-1">Cek email</h2>
               <p>Kalau <strong id="sent-email">email kamu</strong> terdaftar, link reset sudah dikirim. Link berlaku 60 menit.</p>
             </div>
-            <article class="mock-inbox" aria-label="Pratinjau email tiruan">
+            <article class="mock-inbox" aria-label="Petunjuk email reset">
               <header>
-                <span class="mock-inbox-badge">Inbox tiruan</span>
+                <span class="mock-inbox-badge">Email terkirim</span>
                 <small id="mock-inbox-time">baru saja</small>
               </header>
-              <strong>Reset password MabarQueue</strong>
-              <p>Hai <span id="mock-inbox-name">streamer</span>, klik tombol di bawah untuk membuat password baru.</p>
-              <button class="button button-primary button-small" id="open-reset-link" type="button">Buka link reset</button>
+              <strong>Subjek: Reset password MabarQueue</strong>
+              <p>Buka email itu lalu klik <b>Buat password baru</b>. Tidak ada di inbox? Cek folder Spam atau Promosi, atau kirim ulang setelah hitung mundur selesai.</p>
             </article>
             <div class="reset-secondary-actions">
               <button class="button button-outline button-small" id="resend-link" type="button" disabled>Kirim ulang (<span id="resend-countdown">30</span>)</button>
@@ -109,14 +108,14 @@
             <p class="eyebrow">Akses pulih</p>
             <h2 tabindex="-1">Password diganti.</h2>
             <p>Sesi di perangkat lain sudah dikeluarkan. Masuk lagi dengan password baru kamu.</p>
-            <a class="button button-primary full-width" href="login.html">Masuk ke workspace →</a>
+            <a class="button button-primary full-width" href="/login">Masuk ke workspace →</a>
           </div>
         </section>
       </section>
 
-      <footer class="signup-footer"><span>© 2025 MabarQueue</span><span>Data tiruan — tidak ada email yang benar-benar dikirim</span></footer>
+      <footer class="signup-footer"><span>© 2025 MabarQueue</span><span>Link reset berlaku 60 menit</span></footer>
     </main>
     <div class="toast" id="reset-toast" role="status" aria-live="polite"></div>
-    <script src="forgot-password.js" defer></script>
+    <script src="{{ asset('js/api.js') }}" defer></script><script src="{{ asset('js/forgot-password.js') }}" defer></script>
   </body>
 </html>

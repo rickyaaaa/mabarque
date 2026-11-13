@@ -1,14 +1,14 @@
 <!doctype html>
 <html lang="id">
   <head>
-    <meta charset="UTF-8" />
+    <meta charset="UTF-8" /><meta name="csrf-token" content="{{ csrf_token() }}" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="MabarQueue — papan antrean VIP mabar untuk streamer Mobile Legends." />
     <title>MabarQueue — Papan Antrean VIP</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Agdasima:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="{{ asset('css/styles.css') }}" />
   </head>
   <body>
     <div class="app-shell">
@@ -22,15 +22,15 @@
         </div>
 
         <nav class="main-nav">
-          <a class="nav-link" href="live-session.html">
+          <a class="nav-link" href="/live-session">
             <span class="nav-icon" aria-hidden="true">⌂</span>
             <span>Dashboard</span>
           </a>
           <a class="nav-link" href="#queue"><span class="nav-icon" aria-hidden="true">☷</span><span>Antrean</span></a>
           <a class="nav-link" href="#queue"><span class="nav-icon" aria-hidden="true">♟</span><span>Pemain</span></a>
-          <a class="nav-link" href="donations.html"><span class="nav-icon" aria-hidden="true">★</span><span>VIP &amp; Donasi</span></a>
-          <a class="nav-link" href="match-count.html"><span class="nav-icon" aria-hidden="true">▥</span><span>Statistik</span></a>
-          <a class="nav-link" href="overlay-settings.html"><span class="nav-icon" aria-hidden="true">⚙</span><span>Pengaturan</span></a>
+          <a class="nav-link" href="/donations"><span class="nav-icon" aria-hidden="true">★</span><span>VIP &amp; Donasi</span></a>
+          <a class="nav-link" href="/match-count"><span class="nav-icon" aria-hidden="true">▥</span><span>Statistik</span></a>
+          <a class="nav-link" href="/overlay-settings"><span class="nav-icon" aria-hidden="true">⚙</span><span>Pengaturan</span></a>
         </nav>
 
         <div class="sidebar-divider"></div>
@@ -168,6 +168,6 @@
       </form>
     </dialog>
 
-    <script src="app.js" defer></script>
+    <script src="{{ asset('js/api.js') }}" defer></script><script src="{{ asset('js/app.js') }}" defer></script>
   </body>
 </html>

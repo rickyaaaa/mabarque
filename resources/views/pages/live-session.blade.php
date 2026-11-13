@@ -1,27 +1,27 @@
 <!doctype html>
 <html lang="id">
   <head>
-    <meta charset="UTF-8" />
+    <meta charset="UTF-8" /><meta name="csrf-token" content="{{ csrf_token() }}" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="MabarQueue — kelola sesi live VIP mabar." />
     <title>MabarQueue — Sesi Live</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Agdasima:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css" />
-    <link rel="stylesheet" href="live-session.css" />
+    <link rel="stylesheet" href="{{ asset('css/styles.css') }}" />
+    <link rel="stylesheet" href="{{ asset('css/live-session.css') }}" />
   </head>
   <body>
     <div class="app-shell live-shell">
       <aside class="sidebar" aria-label="Navigasi utama">
         <div class="brand-lockup"><div class="brand-mark" aria-hidden="true">MQ</div><div><p class="brand-name">MabarQueue</p><p class="brand-subtitle">Dashboard streamer<br />VIP mabar Mobile Legends</p></div></div>
         <nav class="main-nav">
-          <a class="nav-link is-active" href="live-session.html" aria-current="page"><span class="nav-icon" aria-hidden="true">⌂</span><span>Dashboard</span></a>
-          <a class="nav-link" href="index.html#queue"><span class="nav-icon" aria-hidden="true">☷</span><span>Antrean</span></a>
-          <a class="nav-link" href="index.html#queue"><span class="nav-icon" aria-hidden="true">♟</span><span>Pemain</span></a>
-          <a class="nav-link" href="donations.html"><span class="nav-icon" aria-hidden="true">★</span><span>VIP &amp; Donasi</span></a>
-          <a class="nav-link" href="match-count.html"><span class="nav-icon" aria-hidden="true">▥</span><span>Statistik</span></a>
-          <a class="nav-link" href="overlay-settings.html"><span class="nav-icon" aria-hidden="true">⚙</span><span>Pengaturan</span></a>
+          <a class="nav-link is-active" href="/live-session" aria-current="page"><span class="nav-icon" aria-hidden="true">⌂</span><span>Dashboard</span></a>
+          <a class="nav-link" href="/dashboard#queue"><span class="nav-icon" aria-hidden="true">☷</span><span>Antrean</span></a>
+          <a class="nav-link" href="/dashboard#queue"><span class="nav-icon" aria-hidden="true">♟</span><span>Pemain</span></a>
+          <a class="nav-link" href="/donations"><span class="nav-icon" aria-hidden="true">★</span><span>VIP &amp; Donasi</span></a>
+          <a class="nav-link" href="/match-count"><span class="nav-icon" aria-hidden="true">▥</span><span>Statistik</span></a>
+          <a class="nav-link" href="/overlay-settings"><span class="nav-icon" aria-hidden="true">⚙</span><span>Pengaturan</span></a>
         </nav>
         <div class="sidebar-divider"></div>
         <section class="stream-status" aria-label="Status stream"><div class="status-line"><span class="status-dot is-live"></span><strong>Stream: Online</strong></div><p>Mode: Mabar VIP</p><p>Antrean: <strong>11 pemain</strong></p></section>
@@ -56,6 +56,6 @@
     <div class="toast" id="live-toast" role="status" aria-live="polite"></div>
     <dialog class="modal" id="session-settings-modal" aria-labelledby="session-settings-title"><form method="dialog" class="modal-card" id="session-settings-form"><div class="modal-header"><div><p class="eyebrow">Data tiruan</p><h2 id="session-settings-title">Pengaturan sesi</h2></div><button class="icon-button" value="cancel" aria-label="Tutup modal">×</button></div><label class="field-label" for="session-name">Nama sesi</label><input class="field-input" id="session-name" value="Rabu malam bareng viewer" required /><div class="field-grid"><div><label class="field-label" for="session-mode">Mode</label><select class="field-input" id="session-mode"><option>VIP Mabar</option><option>Ranked Party</option><option>Custom Room</option></select></div><div><label class="field-label" for="session-slots">Slot per match</label><input class="field-input" id="session-slots" type="number" min="1" max="10" value="5" required /></div></div><div class="modal-actions"><button class="button button-outline" value="cancel" type="button" id="close-session-settings">Batal</button><button class="button button-primary" value="default" type="submit">Simpan pengaturan</button></div></form></dialog>
     <dialog class="modal" id="start-session-modal" aria-labelledby="start-session-title"><form method="dialog" class="modal-card" id="start-session-form"><div class="modal-header"><div><p class="eyebrow">Konfirmasi sesi</p><h2 id="start-session-title">Mulai sesi live?</h2></div><button class="icon-button" value="cancel" aria-label="Tutup modal">×</button></div><div class="start-session-status"><span class="status-dot is-live"></span><div><strong>Semua siap untuk live</strong><span>Antrean lama akan tetap tersimpan.</span></div></div><ul class="start-session-checklist"><li><span>✓</span> Paket VIP aktif</li><li><span>✓</span> Webhook provider terhubung</li><li><span>✓</span> Overlay OBS siap dibuka</li></ul><p class="connection-help">Status sesi akan berubah menjadi aktif dan donasi baru mulai diproses.</p><div class="modal-actions"><button class="button button-outline" value="cancel" type="button" id="close-start-session">Batal</button><button class="button button-primary" value="default" type="submit">Mulai sesi live</button></div></form></dialog>
-    <script src="live-session.js" defer></script>
+    <script src="{{ asset('js/api.js') }}" defer></script><script src="{{ asset('js/live-session.js') }}" defer></script>
   </body>
 </html>
