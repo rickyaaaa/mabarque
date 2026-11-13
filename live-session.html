@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="MabarQueue — kelola sesi live VIP mabar." />
+    <title>MabarQueue — Sesi Live</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Agdasima:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="live-session.css" />
+  </head>
+  <body>
+    <div class="app-shell live-shell">
+      <aside class="sidebar" aria-label="Navigasi utama">
+        <div class="brand-lockup"><div class="brand-mark" aria-hidden="true">MQ</div><div><p class="brand-name">MabarQueue</p><p class="brand-subtitle">Dashboard streamer<br />VIP mabar Mobile Legends</p></div></div>
+        <nav class="main-nav">
+          <a class="nav-link is-active" href="live-session.html" aria-current="page"><span class="nav-icon" aria-hidden="true">⌂</span><span>Dashboard</span></a>
+          <a class="nav-link" href="index.html#queue"><span class="nav-icon" aria-hidden="true">☷</span><span>Antrean</span></a>
+          <a class="nav-link" href="index.html#queue"><span class="nav-icon" aria-hidden="true">♟</span><span>Pemain</span></a>
+          <a class="nav-link" href="donations.html"><span class="nav-icon" aria-hidden="true">★</span><span>VIP &amp; Donasi</span></a>
+          <a class="nav-link" href="match-count.html"><span class="nav-icon" aria-hidden="true">▥</span><span>Statistik</span></a>
+          <a class="nav-link" href="overlay-settings.html"><span class="nav-icon" aria-hidden="true">⚙</span><span>Pengaturan</span></a>
+        </nav>
+        <div class="sidebar-divider"></div>
+        <section class="stream-status" aria-label="Status stream"><div class="status-line"><span class="status-dot is-live"></span><strong>Stream: Online</strong></div><p>Mode: Mabar VIP</p><p>Antrean: <strong>11 pemain</strong></p></section>
+      </aside>
+
+      <main class="main-content live-content">
+        <header class="live-header">
+          <div><p class="eyebrow">Kelola sesi live</p><h1>Sesi mabar VIP</h1><p class="session-meta">Atur status siaran dan pantau sesi yang sedang berjalan dari satu layar.</p></div>
+          <div class="live-header-actions"><span class="session-state-badge" id="session-state"><i></i>Sedang live</span><button class="button button-outline" id="open-session-settings" type="button">⚙ Pengaturan sesi</button></div>
+        </header>
+
+        <section class="live-hero" aria-labelledby="active-session-title">
+          <div class="live-hero-main"><div class="live-hero-label"><span class="status-dot is-live"></span> Sesi aktif</div><h2 id="active-session-title">Rabu malam bareng viewer</h2><p>Dimulai 19:02 WIB <span>•</span> <strong id="elapsed-time">02:14:36</strong> berjalan</p><div class="live-hero-actions"><button class="button button-primary" id="toggle-session" type="button">Jeda donasi</button><button class="button button-light" id="open-queue" type="button">Lihat antrean</button><button class="button button-outline" id="end-session" type="button">Akhiri sesi</button></div></div>
+          <div class="live-hero-side"><span>Mode sesi</span><strong>VIP Mabar</strong><span>Slot per match</span><strong>5 pemain</strong><span>Target selesai</span><strong>22:30 WIB</strong></div>
+        </section>
+
+        <section class="live-stat-grid" aria-label="Statistik sesi berjalan">
+          <article class="live-stat live-stat-red"><span>Pemain di antrean</span><strong>11</strong><small>7 siap bermain</small></article>
+          <article class="live-stat live-stat-orange"><span>Nilai donasi</span><strong id="session-donation-total">Rp 720.000</strong><small>18 transaksi sesi ini</small></article>
+          <article class="live-stat live-stat-purple"><span>Match selesai</span><strong>47</strong><small>rata-rata 2 menit</small></article>
+          <article class="live-stat live-stat-cream"><span>Durasi live</span><strong>2j 14m</strong><small>dimulai 19:02 WIB</small></article>
+        </section>
+
+        <section class="live-queue-panel" aria-labelledby="live-queue-title"><div class="panel-heading"><div><p class="eyebrow">Snapshot sesi</p><h2 id="live-queue-title">Antrean berikutnya</h2></div><button class="button button-outline button-small" id="reset-live-queue" type="button">Reset data tiruan</button></div><div class="live-queue-list" id="live-queue-list"></div><div class="live-queue-empty" id="live-queue-empty" hidden><strong>Antrean sesi kosong</strong><p>Donasi baru akan muncul di sini saat webhook aktif.</p><button class="button button-primary button-small" id="restore-live-queue" type="button">Pulihkan data tiruan</button></div></section>
+
+        <section class="live-grid">
+          <article class="session-control-panel" aria-labelledby="quick-control-title"><div class="panel-heading"><div><p class="eyebrow">Kontrol cepat</p><h2 id="quick-control-title">Status sesi</h2></div><span class="panel-count" id="control-status">Menerima donasi</span></div><div class="control-list"><button class="control-row" id="accept-donations" type="button"><span class="control-icon control-icon-green">✓</span><span><strong>Terima donasi baru</strong><small>Webhook provider masuk ke antrean</small></span><span class="control-toggle is-on" aria-hidden="true"><i></i></span></button><button class="control-row" id="show-overlay" type="button"><span class="control-icon control-icon-purple">▣</span><span><strong>Tampilkan overlay OBS</strong><small>Browser source siap dipakai</small></span><span class="control-arrow" aria-hidden="true">→</span></button><button class="control-row" id="copy-public-queue" type="button"><span class="control-icon control-icon-orange">↗</span><span><strong>Bagikan antrean publik</strong><small>Link antrean untuk viewer</small></span><span class="control-arrow" aria-hidden="true">→</span></button></div></article>
+          <article class="recent-sessions-panel" aria-labelledby="recent-sessions-title"><div class="panel-heading"><div><p class="eyebrow">Riwayat</p><h2 id="recent-sessions-title">Arsip sesi selesai</h2></div><span class="panel-count">2 sesi</span></div><div class="session-history" id="session-history"><div class="session-history-row"><span class="session-history-icon">✓</span><div><strong>Selasa push rank</strong><small>28 Jan 2025 · 19:14–22:01</small></div><span class="session-history-value">39 match</span></div><div class="session-history-row"><span class="session-history-icon">✓</span><div><strong>Weekend mabar</strong><small>26 Jan 2025 · 18:40–21:33</small></div><span class="session-history-value">51 match</span></div></div><div class="session-history-actions"><button class="button button-outline button-small" id="load-more-sessions" type="button">Muat arsip lain</button><button class="button button-primary button-small" id="new-session" type="button">+ Mulai sesi baru</button></div></article>
+        </section>
+      </main>
+    </div>
+    <div class="toast" id="live-toast" role="status" aria-live="polite"></div>
+    <dialog class="modal" id="session-settings-modal" aria-labelledby="session-settings-title"><form method="dialog" class="modal-card" id="session-settings-form"><div class="modal-header"><div><p class="eyebrow">Data tiruan</p><h2 id="session-settings-title">Pengaturan sesi</h2></div><button class="icon-button" value="cancel" aria-label="Tutup modal">×</button></div><label class="field-label" for="session-name">Nama sesi</label><input class="field-input" id="session-name" value="Rabu malam bareng viewer" required /><div class="field-grid"><div><label class="field-label" for="session-mode">Mode</label><select class="field-input" id="session-mode"><option>VIP Mabar</option><option>Ranked Party</option><option>Custom Room</option></select></div><div><label class="field-label" for="session-slots">Slot per match</label><input class="field-input" id="session-slots" type="number" min="1" max="10" value="5" required /></div></div><div class="modal-actions"><button class="button button-outline" value="cancel" type="button" id="close-session-settings">Batal</button><button class="button button-primary" value="default" type="submit">Simpan pengaturan</button></div></form></dialog>
+    <dialog class="modal" id="start-session-modal" aria-labelledby="start-session-title"><form method="dialog" class="modal-card" id="start-session-form"><div class="modal-header"><div><p class="eyebrow">Konfirmasi sesi</p><h2 id="start-session-title">Mulai sesi live?</h2></div><button class="icon-button" value="cancel" aria-label="Tutup modal">×</button></div><div class="start-session-status"><span class="status-dot is-live"></span><div><strong>Semua siap untuk live</strong><span>Antrean lama akan tetap tersimpan.</span></div></div><ul class="start-session-checklist"><li><span>✓</span> Paket VIP aktif</li><li><span>✓</span> Webhook provider terhubung</li><li><span>✓</span> Overlay OBS siap dibuka</li></ul><p class="connection-help">Status sesi akan berubah menjadi aktif dan donasi baru mulai diproses.</p><div class="modal-actions"><button class="button button-outline" value="cancel" type="button" id="close-start-session">Batal</button><button class="button button-primary" value="default" type="submit">Mulai sesi live</button></div></form></dialog>
+    <script src="live-session.js" defer></script>
+  </body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "regions": [
+    { "id": "sidebar", "kind": "chrome", "grid": "A0:B9", "note": "dark navigation rail with product name, nav links, and stream status" },
+    { "id": "session-header", "kind": "chrome", "grid": "C0:J1", "note": "session title and live summary metrics" },
+    { "id": "current-player", "kind": "chrome", "grid": "C2:F4", "note": "current player panel with ready state, player name, provider, and matches" },
+    { "id": "quick-actions", "kind": "control", "grid": "G2:J4", "note": "queue controls and primary add-player action" },
+    { "id": "queue-title", "kind": "text", "grid": "C5:F5", "note": "queue heading with player count" },
+    { "id": "queue-filters", "kind": "control", "grid": "G5:J5", "note": "queue filter buttons" },
+    { "id": "queue-columns", "kind": "chrome", "grid": "C6:J6", "note": "table column headers" },
+    { "id": "queue-rows", "kind": "chrome", "grid": "C7:J9", "note": "ordered player rows with badges and actions" }
+  ]
+}

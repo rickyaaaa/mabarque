@@ -1,0 +1,591 @@
+{
+  "tool": "comp-spec",
+  "version": 1,
+  "createdAt": "2026-11-12T18:03:33.568Z",
+  "comp": ".impeccable\\mocks\\decision\\assigned.webp",
+  "warnings": [],
+  "uncoveredInkCells": [],
+  "compSize": {
+    "width": 1672,
+    "height": 941
+  },
+  "aspect": 1.7768,
+  "orientation": "landscape",
+  "palette": [
+    {
+      "hex": "#f8dba3",
+      "coverage": 0.5518
+    },
+    {
+      "hex": "#3b1945",
+      "coverage": 0.1964
+    },
+    {
+      "hex": "#d82a1c",
+      "coverage": 0.1342
+    },
+    {
+      "hex": "#f7f3cc",
+      "coverage": 0.0771
+    },
+    {
+      "hex": "#f8a917",
+      "coverage": 0.0404
+    }
+  ],
+  "bands": [
+    {
+      "y": 0.0278,
+      "strength": 0.3775
+    },
+    {
+      "y": 0.1528,
+      "strength": 0.5608
+    },
+    {
+      "y": 0.1806,
+      "strength": 0.3027
+    },
+    {
+      "y": 0.2222,
+      "strength": 0.3978
+    },
+    {
+      "y": 0.25,
+      "strength": 0.2315
+    },
+    {
+      "y": 0.2917,
+      "strength": 0.6305
+    },
+    {
+      "y": 0.3194,
+      "strength": 0.2684
+    },
+    {
+      "y": 0.3611,
+      "strength": 0.4234
+    },
+    {
+      "y": 0.3889,
+      "strength": 0.296
+    },
+    {
+      "y": 0.4167,
+      "strength": 0.3331
+    },
+    {
+      "y": 0.4861,
+      "strength": 1
+    },
+    {
+      "y": 0.5278,
+      "strength": 1
+    },
+    {
+      "y": 0.5833,
+      "strength": 0.3337
+    },
+    {
+      "y": 0.625,
+      "strength": 0.2389
+    },
+    {
+      "y": 0.6528,
+      "strength": 0.3105
+    },
+    {
+      "y": 0.6944,
+      "strength": 0.2777
+    },
+    {
+      "y": 0.8611,
+      "strength": 0.2132
+    },
+    {
+      "y": 0.9722,
+      "strength": 0.5602
+    }
+  ],
+  "regions": [
+    {
+      "id": "sidebar",
+      "kind": "chrome",
+      "note": "dark navigation rail with product name, nav links, and stream status",
+      "grid": "A0:B9",
+      "box": {
+        "x": 0,
+        "y": 0,
+        "w": 0.2,
+        "h": 1
+      },
+      "px": {
+        "x": 0,
+        "y": 0,
+        "w": 334,
+        "h": 941
+      },
+      "aspect": 0.3549,
+      "palette": [
+        {
+          "hex": "#371840",
+          "coverage": 0.612
+        },
+        {
+          "hex": "#e0301d",
+          "coverage": 0.1848
+        },
+        {
+          "hex": "#f8d48f",
+          "coverage": 0.1241
+        },
+        {
+          "hex": "#f6b364",
+          "coverage": 0.0413
+        },
+        {
+          "hex": "#f5f0c4",
+          "coverage": 0.0378
+        }
+      ],
+      "detail": {
+        "energy": 46.2398
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null,
+      "surface": {
+        "flat": false,
+        "rules": false
+      },
+      "flags": [
+        {
+          "id": "painted-pixels",
+          "message": "Looks painted: 23 colours beyond its two main tones and soft shading across 54% of it. Drawn in code, this becomes a flat copy."
+        }
+      ]
+    },
+    {
+      "id": "session-header",
+      "kind": "chrome",
+      "note": "session title and live summary metrics",
+      "grid": "C0:J1",
+      "box": {
+        "x": 0.2,
+        "y": 0,
+        "w": 0.8,
+        "h": 0.2
+      },
+      "px": {
+        "x": 334,
+        "y": 0,
+        "w": 1338,
+        "h": 188
+      },
+      "aspect": 7.117,
+      "palette": [
+        {
+          "hex": "#f8d597",
+          "coverage": 0.642
+        },
+        {
+          "hex": "#dd2e1e",
+          "coverage": 0.177
+        },
+        {
+          "hex": "#3e1a47",
+          "coverage": 0.1033
+        },
+        {
+          "hex": "#f8f6c6",
+          "coverage": 0.0409
+        },
+        {
+          "hex": "#f6b572",
+          "coverage": 0.0369
+        }
+      ],
+      "detail": {
+        "energy": 89.6757
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null,
+      "surface": {
+        "flat": false,
+        "rules": false
+      },
+      "flags": [
+        {
+          "id": "painted-pixels",
+          "message": "Looks painted: 35 colours beyond its two main tones and soft shading across 43% of it. Drawn in code, this becomes a flat copy."
+        }
+      ]
+    },
+    {
+      "id": "current-player",
+      "kind": "chrome",
+      "note": "current player panel with ready state, player name, provider, and matches",
+      "grid": "C2:F4",
+      "box": {
+        "x": 0.2,
+        "y": 0.2,
+        "w": 0.4,
+        "h": 0.3
+      },
+      "px": {
+        "x": 334,
+        "y": 188,
+        "w": 669,
+        "h": 282
+      },
+      "aspect": 2.3723,
+      "palette": [
+        {
+          "hex": "#f8daa3",
+          "coverage": 0.3613
+        },
+        {
+          "hex": "#f8b51f",
+          "coverage": 0.2665
+        },
+        {
+          "hex": "#44204c",
+          "coverage": 0.2513
+        },
+        {
+          "hex": "#1d0d33",
+          "coverage": 0.0663
+        },
+        {
+          "hex": "#f8960a",
+          "coverage": 0.0546
+        }
+      ],
+      "detail": {
+        "energy": 78.1941
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null,
+      "surface": {
+        "flat": false,
+        "rules": false
+      },
+      "flags": [
+        {
+          "id": "painted-pixels",
+          "message": "Looks painted: 34 colours beyond its two main tones and soft shading across 42% of it. Drawn in code, this becomes a flat copy."
+        }
+      ]
+    },
+    {
+      "id": "quick-actions",
+      "kind": "control",
+      "note": "queue controls and primary add-player action",
+      "grid": "G2:J4",
+      "box": {
+        "x": 0.6,
+        "y": 0.2,
+        "w": 0.4,
+        "h": 0.3
+      },
+      "px": {
+        "x": 1003,
+        "y": 188,
+        "w": 669,
+        "h": 282
+      },
+      "aspect": 2.3723,
+      "palette": [
+        {
+          "hex": "#f8daa3",
+          "coverage": 0.5686
+        },
+        {
+          "hex": "#c31a15",
+          "coverage": 0.2602
+        },
+        {
+          "hex": "#eb3d1d",
+          "coverage": 0.0697
+        },
+        {
+          "hex": "#f7f4c6",
+          "coverage": 0.0528
+        },
+        {
+          "hex": "#3a174d",
+          "coverage": 0.0486
+        }
+      ],
+      "detail": {
+        "energy": 70.7654
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null,
+      "surface": {
+        "flat": false,
+        "rules": false
+      }
+    },
+    {
+      "id": "queue-title",
+      "kind": "text",
+      "note": "queue heading with player count",
+      "grid": "C5:F5",
+      "box": {
+        "x": 0.2,
+        "y": 0.5,
+        "w": 0.4,
+        "h": 0.1
+      },
+      "px": {
+        "x": 334,
+        "y": 471,
+        "w": 669,
+        "h": 94
+      },
+      "aspect": 7.117,
+      "palette": [
+        {
+          "hex": "#f8dea9",
+          "coverage": 0.5437
+        },
+        {
+          "hex": "#39164a",
+          "coverage": 0.2429
+        },
+        {
+          "hex": "#f6f2d2",
+          "coverage": 0.1073
+        },
+        {
+          "hex": "#1a0e2c",
+          "coverage": 0.0632
+        },
+        {
+          "hex": "#402941",
+          "coverage": 0.043
+        }
+      ],
+      "detail": {
+        "energy": 72.7361
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null,
+      "surface": {
+        "flat": false,
+        "rules": false
+      },
+      "flags": [
+        {
+          "id": "painted-pixels",
+          "message": "Looks painted: 81 colours beyond its two main tones and soft shading across 23% of it. Drawn in code, this becomes a flat copy."
+        }
+      ],
+      "type": {
+        "comp": {
+          "lines": 2,
+          "glyphs": 18,
+          "capHeightPx": 26.5,
+          "inkIsDark": true,
+          "allCaps": true,
+          "advance": 4.2545,
+          "advTall": 4.2545,
+          "advX": null,
+          "gap": 0.0727,
+          "xRatio": null,
+          "stemW": 0.1545,
+          "contrast": 1.0856,
+          "serif": null,
+          "densTall": 0.6402,
+          "densX": null,
+          "weight": 0.6402
+        },
+        "widthClass": "wide",
+        "weightClass": "bold",
+        "chosen": {
+          "family": "Agdasima",
+          "weight": 700,
+          "fontSizePx": 38,
+          "source": "catalog",
+          "estimatedSize": true,
+          "stamp": "0d5d1b71adf3"
+        }
+      }
+    },
+    {
+      "id": "queue-filters",
+      "kind": "control",
+      "note": "queue filter buttons",
+      "grid": "G5:J5",
+      "box": {
+        "x": 0.6,
+        "y": 0.5,
+        "w": 0.4,
+        "h": 0.1
+      },
+      "px": {
+        "x": 1003,
+        "y": 471,
+        "w": 669,
+        "h": 94
+      },
+      "aspect": 7.117,
+      "palette": [
+        {
+          "hex": "#f8dfac",
+          "coverage": 0.6343
+        },
+        {
+          "hex": "#38164c",
+          "coverage": 0.2336
+        },
+        {
+          "hex": "#1a0f2c",
+          "coverage": 0.0462
+        },
+        {
+          "hex": "#f4f2de",
+          "coverage": 0.0443
+        },
+        {
+          "hex": "#43343d",
+          "coverage": 0.0417
+        }
+      ],
+      "detail": {
+        "energy": 63.3915
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null,
+      "surface": {
+        "flat": false,
+        "rules": false
+      }
+    },
+    {
+      "id": "queue-columns",
+      "kind": "chrome",
+      "note": "table column headers",
+      "grid": "C6:J6",
+      "box": {
+        "x": 0.2,
+        "y": 0.6,
+        "w": 0.8,
+        "h": 0.1
+      },
+      "px": {
+        "x": 334,
+        "y": 565,
+        "w": 1338,
+        "h": 94
+      },
+      "aspect": 14.234,
+      "palette": [
+        {
+          "hex": "#f8e0ad",
+          "coverage": 0.8042
+        },
+        {
+          "hex": "#f6efd2",
+          "coverage": 0.0955
+        },
+        {
+          "hex": "#b09c91",
+          "coverage": 0.0366
+        },
+        {
+          "hex": "#7a696c",
+          "coverage": 0.0349
+        },
+        {
+          "hex": "#d52a19",
+          "coverage": 0.0288
+        }
+      ],
+      "detail": {
+        "energy": 52.198
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null,
+      "surface": {
+        "flat": false,
+        "rules": false
+      },
+      "flags": [
+        {
+          "id": "painted-pixels",
+          "message": "Looks painted: 71 colours beyond its two main tones and soft shading across 19% of it. Drawn in code, this becomes a flat copy."
+        }
+      ]
+    },
+    {
+      "id": "queue-rows",
+      "kind": "chrome",
+      "note": "ordered player rows with badges and actions",
+      "grid": "C7:J9",
+      "box": {
+        "x": 0.2,
+        "y": 0.7,
+        "w": 0.8,
+        "h": 0.3
+      },
+      "px": {
+        "x": 334,
+        "y": 659,
+        "w": 1338,
+        "h": 282
+      },
+      "aspect": 4.7447,
+      "palette": [
+        {
+          "hex": "#f8dea8",
+          "coverage": 0.7641
+        },
+        {
+          "hex": "#e33121",
+          "coverage": 0.0851
+        },
+        {
+          "hex": "#f5eed2",
+          "coverage": 0.0743
+        },
+        {
+          "hex": "#0e0b1b",
+          "coverage": 0.0453
+        },
+        {
+          "hex": "#6c5e60",
+          "coverage": 0.0313
+        }
+      ],
+      "detail": {
+        "energy": 62.095
+      },
+      "medium": "semantic",
+      "plate": null,
+      "text": null,
+      "surface": {
+        "flat": false,
+        "rules": false
+      },
+      "flags": [
+        {
+          "id": "painted-pixels",
+          "message": "Looks painted: 76 colours beyond its two main tones and soft shading across 22% of it. Drawn in code, this becomes a flat copy."
+        }
+      ]
+    }
+  ],
+  "compSha256": "193860d4fe7f5187fbdf0eea6a57214baf72fb90e4127f37792cb6a09de949e8",
+  "regionsSource": {
+    "path": ".impeccable\\build\\regions.json",
+    "sha256": "f629a2436958cd43f13ba74faba1c50491896908ef2c11c8362ac04dbedd19b8"
+  }
+}

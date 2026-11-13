@@ -1,0 +1,41 @@
+.overlay-header { display: flex; align-items: end; justify-content: space-between; gap: 18px; padding: 8px 16px 28px 20px; border-bottom: 4px solid var(--line); }
+.overlay-header h1 { margin: 0; font-size: clamp(52px, 6vw, 88px); }
+.overlay-header .session-meta { margin-bottom: 0; }
+.overlay-layout { display: grid; grid-template-columns: minmax(280px, .8fr) minmax(420px, 1.2fr); gap: 20px; padding-top: 24px; }
+.overlay-controls, .overlay-preview-panel { padding: 20px; background: rgba(255,247,222,.65); border: 4px solid var(--line); box-shadow: var(--shadow); }
+.panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+.panel-heading h2 { margin: 0; font: 700 clamp(32px, 3.2vw, 48px)/.8 "Agdasima", sans-serif; text-transform: uppercase; }
+.save-status { color: var(--muted); font-size: 11px; font-weight: 700; }
+.control-label { display: flex; justify-content: space-between; gap: 12px; margin: 18px 0 7px; font-size: 12px; font-weight: 800; }
+.color-control { display: grid; grid-template-columns: 52px 1fr; gap: 8px; }
+.color-control input[type=color] { width: 52px; height: 43px; padding: 3px; border: 3px solid var(--line); background: var(--cream); }
+.overlay-controls input[type=range] { width: 100%; accent-color: var(--red); }
+.switch-control { display: grid; grid-template-columns: 42px 1fr; gap: 10px; align-items: start; margin: 18px 0; cursor: pointer; }
+.switch-control input { position: absolute; opacity: 0; }
+.switch-track { position: relative; width: 42px; height: 23px; border: 3px solid var(--line); background: #d8cbbb; transition: background 160ms ease; }
+.switch-track::after { content: ""; position: absolute; top: 2px; left: 2px; width: 13px; height: 13px; background: var(--line); transition: transform 160ms ease; }
+.switch-control input:checked + .switch-track { background: var(--green); }
+.switch-control input:checked + .switch-track::after { transform: translateX(17px); background: var(--cream); }
+.switch-control strong, .switch-control small { display: block; }
+.switch-control strong { font-size: 13px; }
+.switch-control small { margin-top: 3px; color: var(--muted); font-size: 11px; }
+.control-actions { display: flex; justify-content: end; gap: 8px; margin-top: 24px; }
+.overlay-preview-panel { background: var(--navy); }
+.overlay-preview-panel .panel-heading h2 { color: var(--cream); }
+.preview-live { display: inline-flex; align-items: center; gap: 6px; padding: 5px 8px; color: var(--cream); background: var(--red); border: 2px solid var(--line); font-size: 11px; font-weight: 800; }
+.overlay-stage { display: grid; min-height: 390px; place-items: center; padding: 22px; background: repeating-linear-gradient(45deg, rgba(255,255,255,.05) 0 8px, transparent 8px 16px); border: 3px dashed #f8dba3; }
+.overlay-preview { width: min(100%, 430px); padding: 18px; color: var(--cream); background: rgba(16,10,22,.93); border: 3px solid var(--preview-accent, var(--red)); box-shadow: 7px 7px 0 var(--preview-accent, var(--red)); transform: scale(var(--preview-scale, 1)); transform-origin: center; }
+.preview-brand { margin-bottom: 14px; font: 700 29px/.8 "Agdasima", sans-serif; letter-spacing: .06em; }
+.preview-brand span { color: var(--preview-accent, var(--red)); }
+.preview-now { padding: 12px; background: var(--preview-accent, var(--red)); border: 2px solid var(--cream); }
+.preview-now span, .preview-now small { display: block; font-size: 10px; font-weight: 800; letter-spacing: .12em; }
+.preview-now strong { display: block; margin: 5px 0 2px; font: 700 35px/.8 "Agdasima", sans-serif; }
+.preview-queue { display: grid; gap: 6px; margin-top: 13px; }
+.preview-entry { display: flex; justify-content: space-between; gap: 9px; padding: 7px 8px; border: 2px solid rgba(248,219,163,.8); font-size: 12px; font-weight: 700; }
+.preview-entry small { color: #f8dba3; }
+.overlay-url { display: flex; align-items: center; gap: 8px; margin-top: 15px; color: var(--cream); font-size: 11px; }
+.overlay-url span { color: #f8dba3; }
+.overlay-url code { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: inherit; font-weight: 700; }
+.overlay-url .icon-button { color: var(--cream); background: transparent; border-color: var(--cream); }
+@media (max-width: 900px) { .overlay-layout { grid-template-columns: 1fr; } }
+@media (max-width: 780px) { .overlay-header { display: block; width: 100%; max-width: calc(100vw - 28px); } .overlay-header .button { display: flex; width: 100%; margin-top: 17px; justify-content: center; } .overlay-layout { gap: 14px; } .overlay-controls, .overlay-preview-panel { padding: 15px; } .overlay-stage { min-height: 320px; padding: 12px; } .control-actions { display: grid; grid-template-columns: 1fr 1fr; } .control-actions .button { padding-inline: 7px; } }

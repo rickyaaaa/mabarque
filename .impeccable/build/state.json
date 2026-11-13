@@ -1,0 +1,281 @@
+{
+  "tool": "build-phase",
+  "version": 2,
+  "startedAt": "2026-11-12T17:58:49.328Z",
+  "comp": ".impeccable\\mocks\\decision\\assigned.webp",
+  "direction": "ae832aa4",
+  "breakpoint": "1672x941",
+  "artifact": null,
+  "phase": "responsive",
+  "phases": {
+    "comps": {
+      "status": "closed",
+      "openedAt": "2026-11-12T17:58:49.328Z",
+      "closedAt": "2026-11-12T18:02:02.611Z",
+      "attempts": 1,
+      "notes": [],
+      "gate": {
+        "ok": true,
+        "reasons": [],
+        "summary": "3 comps, 1 approved",
+        "approved": ".impeccable\\mocks\\decision\\assigned.webp",
+        "at": "2026-11-12T18:02:02.611Z"
+      },
+      "forced": null
+    },
+    "spec": {
+      "status": "closed",
+      "openedAt": "2026-11-12T18:02:02.626Z",
+      "closedAt": "2026-11-12T18:02:58.274Z",
+      "attempts": 1,
+      "notes": [],
+      "gate": {
+        "ok": true,
+        "reasons": [],
+        "summary": "9 regions, 1 plates, 1 text regions measured",
+        "at": "2026-11-12T18:02:58.274Z"
+      },
+      "forced": null
+    },
+    "plates": {
+      "status": "closed",
+      "openedAt": "2026-11-12T18:02:58.274Z",
+      "closedAt": "2026-11-12T18:06:32.029Z",
+      "attempts": 2,
+      "notes": [],
+      "gate": {
+        "ok": true,
+        "reasons": [],
+        "summary": "no plates owed",
+        "at": "2026-11-12T18:06:32.014Z"
+      },
+      "forced": null
+    },
+    "hero": {
+      "status": "closed",
+      "openedAt": "2026-11-12T18:06:32.029Z",
+      "closedAt": "2026-11-12T18:13:34.495Z",
+      "attempts": 1,
+      "notes": [],
+      "gate": {
+        "ok": true,
+        "reasons": [],
+        "summary": "hero 100% (match)",
+        "score": 1,
+        "verdict": "match",
+        "report": ".impeccable/review/diff/hero/report.json",
+        "sideBySide": "D:/Ricksite Studio/mabar-vip/.impeccable/review/diff/hero/side-by-side.png",
+        "regionVerdicts": {
+          "sidebar": "match",
+          "session-header": "match",
+          "current-player": "match",
+          "quick-actions": "match",
+          "queue-title": "match",
+          "queue-filters": "match",
+          "queue-columns": "match",
+          "queue-rows": "match"
+        },
+        "at": "2026-11-12T18:13:34.483Z"
+      },
+      "forced": null,
+      "readingsSeen": {},
+      "records": 1,
+      "history": [
+        {
+          "at": "2026-11-12T18:13:34.495Z",
+          "score": 1,
+          "worstIds": [],
+          "blockingReasons": [],
+          "regionVerdicts": {
+            "sidebar": "match",
+            "session-header": "match",
+            "current-player": "match",
+            "quick-actions": "match",
+            "queue-title": "match",
+            "queue-filters": "match",
+            "queue-columns": "match",
+            "queue-rows": "match"
+          },
+          "artifactHash": "0299ad414264"
+        }
+      ]
+    },
+    "sections": {
+      "status": "closed",
+      "openedAt": "2026-11-12T18:13:34.495Z",
+      "closedAt": "2026-11-12T18:13:40.350Z",
+      "attempts": 1,
+      "notes": [],
+      "gate": {
+        "ok": true,
+        "reasons": [],
+        "summary": "no mechanical gate",
+        "at": "2026-11-12T18:13:40.350Z"
+      },
+      "forced": null
+    },
+    "motion": {
+      "status": "closed",
+      "openedAt": "2026-11-12T18:13:40.350Z",
+      "closedAt": "2026-11-12T18:13:45.737Z",
+      "attempts": 1,
+      "notes": [],
+      "gate": {
+        "ok": true,
+        "reasons": [],
+        "summary": "no mechanical gate",
+        "at": "2026-11-12T18:13:45.737Z"
+      },
+      "forced": null
+    },
+    "responsive": {
+      "status": "open",
+      "openedAt": "2026-11-12T18:13:45.737Z",
+      "closedAt": null,
+      "attempts": 4,
+      "notes": [],
+      "gate": {
+        "ok": false,
+        "reasons": [
+          "the desktop capture (1440x811; its first viewport, the top 1672x941 rows at the comp's width, is compared) scores 53% against the comp, under 65%: the first viewport does not survive a common desktop width. The hero passed at 1672x941; the layout must hold from ~1280 up, not only at the comp's exact width (grid columns in fr / minmax, not fixed px that overflow and wrap).",
+          "at desktop width, region quick-actions (control) is contradicted (structure 16%)",
+          "at desktop width, region queue-title (text) is contradicted (structure 38%)",
+          "at desktop width, region queue-filters (control) is contradicted (structure 41%)"
+        ],
+        "regionReasons": {
+          "quick-actions": [
+            "at desktop width, region quick-actions (control) is contradicted (structure 16%)"
+          ],
+          "queue-title": [
+            "at desktop width, region queue-title (text) is contradicted (structure 38%)"
+          ],
+          "queue-filters": [
+            "at desktop width, region queue-filters (control) is contradicted (structure 41%)"
+          ]
+        },
+        "summary": "desktop 53% (contradicted)",
+        "score": 0.5284,
+        "verdict": "contradicted",
+        "report": ".impeccable/review/diff/desktop/report.json",
+        "sideBySide": "D:/Ricksite Studio/mabar-vip/.impeccable/review/diff/desktop/side-by-side.png",
+        "worst": [
+          "quick-actions contradicted 32%",
+          "queue-title contradicted 39%",
+          "queue-filters contradicted 44%"
+        ],
+        "worstIds": [
+          "quick-actions",
+          "queue-title",
+          "queue-filters"
+        ],
+        "worstCrops": [
+          {
+            "id": "quick-actions",
+            "verdict": "contradicted",
+            "score": {
+              "overall": 0.3209,
+              "structure": 0.161,
+              "color": 0.481,
+              "colorIntersection": 0.175,
+              "paletteMatch": 0.6457,
+              "detail": 0.4003,
+              "detailRaw": 0.4107,
+              "detailAdded": 0.0208,
+              "bands": 0.8235
+            },
+            "file": ".impeccable/review/diff/desktop/regions/quick-actions.png"
+          },
+          {
+            "id": "queue-title",
+            "verdict": "contradicted",
+            "score": {
+              "overall": 0.3927,
+              "structure": 0.3821,
+              "color": 0.477,
+              "colorIntersection": 0.1893,
+              "paletteMatch": 0.6319,
+              "detail": 0.2824,
+              "detailRaw": 0.3345,
+              "detailAdded": 0.1042,
+              "bands": 0.4
+            },
+            "file": ".impeccable/review/diff/desktop/regions/queue-title.png"
+          },
+          {
+            "id": "queue-filters",
+            "verdict": "contradicted",
+            "score": {
+              "overall": 0.4405,
+              "structure": 0.414,
+              "color": 0.5672,
+              "colorIntersection": 0.3288,
+              "paletteMatch": 0.6956,
+              "detail": 0.2783,
+              "detailRaw": 0.3512,
+              "detailAdded": 0.1458,
+              "bands": 0.44
+            },
+            "file": ".impeccable/review/diff/desktop/regions/queue-filters.png"
+          }
+        ],
+        "regionVerdicts": {
+          "sidebar": "contradicted",
+          "session-header": "contradicted",
+          "current-player": "contradicted",
+          "quick-actions": "contradicted",
+          "queue-title": "contradicted",
+          "queue-filters": "contradicted",
+          "queue-columns": "contradicted",
+          "queue-rows": "contradicted"
+        },
+        "at": "2026-11-12T18:20:23.103Z"
+      },
+      "forced": null,
+      "history": [
+        {
+          "at": "2026-11-12T18:19:06.473Z",
+          "score": 0.5349,
+          "worstIds": [
+            "queue-title",
+            "quick-actions",
+            "queue-filters"
+          ],
+          "blockingReasons": [
+            "the desktop capture (1440x811; its first viewport, the top 1672x941 rows at the comp's width, is compared) scores 53% against the comp, under 65%: the first viewport does not survive a common desktop width. The hero passed at 1672x941; the layout must hold from ~1280 up, not only at the comp's exact width (grid columns in fr / minmax, not fixed px that overflow and wrap).",
+            "at desktop width, region quick-actions (control) is contradicted (structure 20%)",
+            "at desktop width, region queue-title (text) is contradicted (structure 20%)",
+            "at desktop width, region queue-filters (control) is contradicted (structure 33%)"
+          ]
+        },
+        {
+          "at": "2026-11-12T18:20:13.035Z",
+          "score": 0.5349,
+          "worstIds": [
+            "queue-title",
+            "quick-actions",
+            "queue-filters"
+          ],
+          "blockingReasons": [
+            "the desktop capture (1440x811; its first viewport, the top 1672x941 rows at the comp's width, is compared) scores 53% against the comp, under 65%: the first viewport does not survive a common desktop width. The hero passed at 1672x941; the layout must hold from ~1280 up, not only at the comp's exact width (grid columns in fr / minmax, not fixed px that overflow and wrap).",
+            "at desktop width, region quick-actions (control) is contradicted (structure 20%)",
+            "at desktop width, region queue-title (text) is contradicted (structure 20%)",
+            "at desktop width, region queue-filters (control) is contradicted (structure 33%)"
+          ]
+        }
+      ]
+    },
+    "review": {
+      "status": "pending",
+      "openedAt": null,
+      "closedAt": null,
+      "attempts": 0,
+      "notes": [],
+      "gate": null,
+      "forced": null
+    }
+  },
+  "finish": null,
+  "decisionComp": ".impeccable\\mocks\\decision\\assigned.webp",
+  "sessionId": "01a1d0e1-e693-76f1-93d8-a84f7ef98d2c",
+  "plates": {}
+}

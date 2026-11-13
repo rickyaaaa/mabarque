@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Scaffold reference: assigned.webp</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Agdasima:wght@700&display=swap">
+  <link rel="stylesheet" href="layout.css">
+  <style>html,body{margin:0}body{background:#f8dba3}.region{box-sizing:border-box}.region.text p{white-space:pre-wrap}</style>
+</head>
+<body>
+<!-- Reference only. Every region sits at its measured box inside a comp-aspect frame. Take the boxes (layout.css), keep your own semantic structure. -->
+<main class="comp-frame" style="max-width:1672px">
+  <div class="r-sidebar region chrome" data-region="sidebar"><!-- dark navigation rail with product name, nav links, and stream status --></div>
+  <div class="r-session-header region chrome" data-region="session-header"><!-- session title and live summary metrics --></div>
+  <div class="r-current-player region chrome" data-region="current-player"><!-- current player panel with ready state, player name, provider, and matches --></div>
+  <div class="r-quick-actions region control" data-region="quick-actions"><!-- queue controls and primary add-player action: match the control's lettering and visible shape to the crop (comp-spec.mjs --crop quick-actions); a control need not have button chrome --></div>
+  <div class="r-queue-title region text" data-region="queue-title"><!-- queue heading with player count --><p style="font-size:var(--r-queue-title-font);font-family:var(--r-queue-title-family),sans-serif;font-weight:var(--r-queue-title-weight);line-height:1.05;margin:0">queue-title</p></div>
+  <div class="r-queue-filters region control" data-region="queue-filters"><!-- queue filter buttons: match the control's lettering and visible shape to the crop (comp-spec.mjs --crop queue-filters); a control need not have button chrome --></div>
+  <div class="r-queue-columns region chrome" data-region="queue-columns"><!-- table column headers --></div>
+  <div class="r-queue-rows region chrome" data-region="queue-rows"><!-- ordered player rows with badges and actions --></div>
+</main>
+</body>
+</html>

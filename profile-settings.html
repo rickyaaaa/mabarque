@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="MabarQueue — atur profil channel yang tampil di halaman publik dan overlay." />
+    <title>MabarQueue — Pengaturan Profil</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Agdasima:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" /><link rel="stylesheet" href="account.css" /><link rel="stylesheet" href="profile-settings.css" />
+  </head>
+  <body>
+    <div class="app-shell account-shell">
+      <aside class="sidebar" aria-label="Navigasi utama"><div class="brand-lockup"><div class="brand-mark" aria-hidden="true">MQ</div><div><p class="brand-name">MabarQueue</p><p class="brand-subtitle">Dashboard streamer<br />VIP mabar Mobile Legends</p></div></div><nav class="main-nav"><a class="nav-link" href="live-session.html"><span class="nav-icon" aria-hidden="true">⌂</span><span>Dashboard</span></a><a class="nav-link" href="index.html#queue"><span class="nav-icon" aria-hidden="true">☷</span><span>Antrean</span></a><a class="nav-link" href="index.html#queue"><span class="nav-icon" aria-hidden="true">♟</span><span>Pemain</span></a><a class="nav-link" href="donations.html"><span class="nav-icon" aria-hidden="true">★</span><span>VIP &amp; Donasi</span></a><a class="nav-link" href="match-count.html"><span class="nav-icon" aria-hidden="true">▥</span><span>Statistik</span></a><a class="nav-link is-active" href="account.html" aria-current="page"><span class="nav-icon" aria-hidden="true">◎</span><span>Akun</span></a></nav><div class="sidebar-divider"></div><section class="stream-status" aria-label="Status stream"><div class="status-line"><span class="status-dot is-live"></span><strong>Stream: Online</strong></div><p>Mode: Mabar VIP</p><p>Antrean: <strong>11 pemain</strong></p></section></aside>
+
+      <main class="main-content account-content">
+        <header class="account-header">
+          <div>
+            <p class="eyebrow"><a class="crumb" href="account.html">Akun</a> / Profil</p>
+            <h1>Profil streamer</h1>
+            <p class="session-meta">Identitas ini tampil di halaman antrean publik dan overlay OBS kamu.</p>
+          </div>
+          <a class="button button-outline" href="account.html">← Kembali ke akun</a>
+        </header>
+
+        <div class="profile-layout">
+          <form class="account-panel profile-form" id="profile-form" novalidate>
+            <fieldset>
+              <legend class="panel-heading"><span><span class="eyebrow">Identitas publik</span><span class="legend-title">Channel</span></span></legend>
+
+              <label class="field-label" for="channel-name">Nama channel</label>
+              <input class="field-input" id="channel-name" name="channel_name" maxlength="40" autocomplete="nickname" required aria-describedby="channel-name-help" />
+              <p class="field-help" id="channel-name-help"><span id="channel-name-count">0</span>/40 · tampil sebagai judul halaman publik dan overlay.</p>
+
+              <label class="field-label" for="profile-slug">Alamat publik</label>
+              <div class="slug-input"><span>mabarqueue.id/</span><input id="profile-slug" name="slug" maxlength="24" autocomplete="off" spellcheck="false" required aria-describedby="slug-status" /></div>
+              <p class="field-help slug-status" id="slug-status" role="status" aria-live="polite"></p>
+
+              <label class="field-label" for="profile-tagline">Tagline <span>(opsional)</span></label>
+              <input class="field-input" id="profile-tagline" name="tagline" maxlength="70" placeholder="Contoh: Mabar santai, push mythic bareng viewer" />
+
+              <div class="field-row">
+                <div>
+                  <label class="field-label" for="profile-role">Role utama</label>
+                  <select class="field-input" id="profile-role" name="main_role">
+                    <option value="jungler">Jungler</option><option value="roamer">Roamer</option><option value="mid">Mid Lane</option><option value="gold">Gold Lane</option><option value="exp">EXP Lane</option><option value="flex">Flex</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="field-label" for="profile-schedule">Jadwal live</label>
+                  <input class="field-input" id="profile-schedule" name="live_schedule" maxlength="32" placeholder="Rabu & Sabtu, 19:00 WIB" />
+                </div>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend class="panel-heading"><span><span class="eyebrow">Tampilan</span><span class="legend-title">Avatar &amp; warna</span></span></legend>
+              <div class="avatar-row">
+                <div class="profile-avatar" id="avatar-preview" aria-hidden="true">AR</div>
+                <div>
+                  <label class="field-label" for="profile-initials">Inisial avatar</label>
+                  <input class="field-input initials-input" id="profile-initials" name="avatar_initials" maxlength="2" autocomplete="off" />
+                </div>
+              </div>
+              <p class="field-label" id="accent-label">Warna aksen</p>
+              <div class="accent-options" role="radiogroup" aria-labelledby="accent-label">
+                <label><input type="radio" name="profile_accent" value="#f8a917" checked /><span style="--swatch:#f8a917">Oranye</span></label>
+                <label><input type="radio" name="profile_accent" value="#d82a1c" /><span style="--swatch:#d82a1c">Merah</span></label>
+                <label><input type="radio" name="profile_accent" value="#238b39" /><span style="--swatch:#238b39">Hijau</span></label>
+                <label><input type="radio" name="profile_accent" value="#6b63ff" /><span style="--swatch:#6b63ff">Ungu</span></label>
+                <label><input type="radio" name="profile_accent" value="#1f9bd1" /><span style="--swatch:#1f9bd1">Biru</span></label>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend class="panel-heading"><span><span class="eyebrow">Akun</span><span class="legend-title">Login</span></span></legend>
+              <label class="field-label" for="profile-email">Email login <span>(tidak tampil publik)</span></label>
+              <input class="field-input" id="profile-email" type="email" value="andra@mabarqueue.id" readonly aria-describedby="email-help" />
+              <p class="field-help" id="email-help">Ganti email lewat admin selama private alpha. <a href="forgot-password.html">Reset password →</a></p>
+            </fieldset>
+
+            <p class="form-error" id="profile-error" role="alert" hidden></p>
+            <div class="save-bar" id="save-bar">
+              <span class="save-state" id="save-state" role="status" aria-live="polite">Semua perubahan tersimpan</span>
+              <div>
+                <button class="button button-outline" id="reset-profile" type="button" disabled>Batalkan</button>
+                <button class="button button-primary" id="save-profile" type="submit" disabled>Simpan profil</button>
+              </div>
+            </div>
+          </form>
+
+          <aside class="account-panel preview-panel" aria-labelledby="preview-heading">
+            <div class="panel-heading">
+              <div><p class="eyebrow">Pratinjau tiruan</p><h2 id="preview-heading">Dilihat viewer</h2></div>
+              <div class="preview-tabs" role="tablist" aria-label="Jenis pratinjau">
+                <button role="tab" id="tab-public" aria-selected="true" aria-controls="preview-public" type="button">Halaman publik</button>
+                <button role="tab" id="tab-overlay" aria-selected="false" aria-controls="preview-overlay" type="button" tabindex="-1">Overlay OBS</button>
+              </div>
+            </div>
+
+            <div class="preview-frame" id="preview-public" role="tabpanel" aria-labelledby="tab-public">
+              <div class="mini-browser"><i></i><i></i><i></i><code id="preview-url">mabarqueue.id/andrarizky</code></div>
+              <div class="mini-public">
+                <span class="mini-live"><i></i>Live sekarang</span>
+                <div class="mini-identity">
+                  <div class="mini-avatar" data-preview="initials">AR</div>
+                  <div>
+                    <p class="mini-eyebrow">Antrean VIP publik</p>
+                    <h3>Sesi mabar<br /><span data-preview="channel">Andra Rizky</span></h3>
+                  </div>
+                </div>
+                <p class="mini-tagline" data-preview="tagline"></p>
+                <ul class="mini-meta">
+                  <li><strong>Role</strong><span data-preview="role">Jungler</span></li>
+                  <li><strong>Jadwal</strong><span data-preview="schedule">—</span></li>
+                </ul>
+                <div class="mini-now"><small>Sedang bermain</small><strong>Raka ML</strong><span>match ke-2 dari 5</span></div>
+              </div>
+            </div>
+
+            <div class="preview-frame" id="preview-overlay" role="tabpanel" aria-labelledby="tab-overlay" hidden>
+              <div class="mini-stage">
+                <div class="mini-overlay">
+                  <div class="mini-overlay-brand"><span data-preview="channel">Andra Rizky</span><small>VIP QUEUE</small></div>
+                  <div class="mini-overlay-now"><small>NOW PLAYING</small><strong>Raka ML</strong><span>Saweria · 3 match tersisa</span></div>
+                  <ol class="mini-overlay-queue"><li><span>1. Nadia</span><small>5 match</small></li><li><span>2. Bimo Gaming</span><small>3 match</small></li><li><span>3. Sasa</span><small>1 match</small></li></ol>
+                </div>
+              </div>
+              <p class="field-help">Warna aksen di sini hanya untuk identitas; pengaturan detail overlay ada di <a href="overlay-settings.html">Tampilan OBS</a>.</p>
+            </div>
+          </aside>
+        </div>
+      </main>
+    </div>
+    <div class="toast" id="profile-toast" role="status" aria-live="polite"></div>
+    <script src="profile-settings.js" defer></script>
+  </body>
+</html>
