@@ -40,7 +40,8 @@ class DonationQueueService
                 return $donation->fresh();
             }
 
-            $position = ((int) $session->queueEntries()->max('position')) + 1;
+            // reorder(): relasi queueEntries punya ORDER BY, yang ditolak MySQL (ONLY_FULL_GROUP_BY) di query agregat.
+            $position = ((int) $session->queueEntries()->reorder()->max('position')) + 1;
             $entry = QueueEntry::query()->create([
                 'live_session_id' => $session->id,
                 'vip_package_id' => $package->id,

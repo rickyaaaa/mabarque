@@ -94,12 +94,15 @@ class QueueService
     {
         return DB::transaction(function () use ($session, $entry): ?QueueEntry {
             $this->ensureEntryBelongsToSession($session, $entry);
+            $wasPlaying = $entry->status === 'playing';
 
             $lastPosition = (int) $this->orderedEntries($session)->max('position');
             $entry->update(['status' => 'skipped', 'position' => $lastPosition + 1]);
             $this->normalizePositions($session);
 
-            return $this->promoteNextReady($session);
+            // Giliran hanya dioper bila yang dilewati sedang bermain; melewati pemain yang masih
+            // menunggu tidak boleh menghasilkan dua pemain "playing" sekaligus.
+            return $wasPlaying ? $this->promoteNextReady($session) : $this->current($session);
         });
     }
 

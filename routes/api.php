@@ -51,6 +51,10 @@ Route::middleware(['auth', EnsureActiveBeta::class])->group(function (): void {
     Route::patch('/platform-connections/{platformConnection}/pause', [\App\Http\Controllers\PlatformConnectionController::class, 'pause']);
     Route::get('/donations', [\App\Http\Controllers\DonationDataController::class, 'donations']);
     Route::get('/live-sessions/archives', [\App\Http\Controllers\LiveSessionController::class, 'archives']);
+    Route::post('/live-sessions', [\App\Http\Controllers\LiveSessionController::class, 'store']);
+    Route::post('/live-sessions/{liveSession}/end', [\App\Http\Controllers\LiveSessionController::class, 'end']);
+    Route::post('/live-sessions/{liveSession}/archive', [\App\Http\Controllers\LiveSessionController::class, 'archive']);
+    Route::post('/live-sessions/{liveSession}/reset-queue', [\App\Http\Controllers\LiveSessionController::class, 'resetQueue']);
     Route::get('/live-sessions/{liveSession}', [\App\Http\Controllers\LiveSessionController::class, 'show']);
     Route::get('/live-sessions/{liveSession}/donations', [\App\Http\Controllers\DonationDataController::class, 'sessionDonations']);
     Route::get('/live-sessions/{liveSession}/queue', [\App\Http\Controllers\DonationDataController::class, 'queue']);

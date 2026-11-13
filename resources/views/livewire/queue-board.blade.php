@@ -4,6 +4,8 @@
         <p>{{ $session->status === 'active' ? 'Sesi aktif' : 'Sesi berakhir' }}</p>
     </header>
 
+    @error('queue') <p role="alert">{{ $message }}</p> @enderror
+
     @if ($currentEntry)
         <div role="status">
             <strong>Giliran sekarang</strong>

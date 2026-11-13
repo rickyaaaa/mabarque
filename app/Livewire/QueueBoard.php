@@ -6,7 +6,9 @@ use App\Models\LiveSession;
 use App\Models\QueueEntry;
 use App\Services\QueueService;
 use App\Services\QueueStatusService;
+use InvalidArgumentException;
 use Livewire\Component;
+use RuntimeException;
 
 class QueueBoard extends Component
 {
@@ -35,7 +37,7 @@ class QueueBoard extends Component
 
     public function setFilter(string $filter): void
     {
-        $this->filter = $filter;
+        $this->filter = in_array($filter, ['all', 'ready', 'offline'], true) ? $filter : 'all';
     }
 
     public function addPlayer(QueueService $queueService): void
@@ -45,35 +47,32 @@ class QueueBoard extends Component
             'matchesTotal' => ['required', 'integer', 'min:1', 'max:99'],
         ]);
 
-        $queueService->addManual($this->session, $this->playerName, $this->matchesTotal);
-        $this->reset(['playerName', 'showAddPlayer']);
-        $this->matchesTotal = 1;
-        $this->dispatch('queue-updated');
+        $this->attempt(function () use ($queueService): void {
+            $queueService->addManual($this->session, $this->playerName, $this->matchesTotal);
+            $this->reset(['playerName', 'showAddPlayer']);
+            $this->matchesTotal = 1;
+        });
     }
 
     public function toggleStatus(int $entryId, QueueStatusService $statusService): void
     {
-        $statusService->toggle($this->session, $this->entry($entryId));
-        $this->dispatch('queue-updated');
+        $this->attempt(fn () => $statusService->toggle($this->session, $this->entry($entryId)));
     }
 
     public function move(int $entryId, string $direction, QueueService $queueService): void
     {
         $direction = in_array($direction, ['up', 'down'], true) ? $direction : 'up';
-        $queueService->move($this->session, $this->entry($entryId), $direction);
-        $this->dispatch('queue-updated');
+        $this->attempt(fn () => $queueService->move($this->session, $this->entry($entryId), $direction));
     }
 
     public function skip(int $entryId, QueueService $queueService): void
     {
-        $queueService->skip($this->session, $this->entry($entryId));
-        $this->dispatch('queue-updated');
+        $this->attempt(fn () => $queueService->skip($this->session, $this->entry($entryId)));
     }
 
     public function remove(int $entryId, QueueService $queueService): void
     {
-        $queueService->remove($this->session, $this->entry($entryId));
-        $this->dispatch('queue-updated');
+        $this->attempt(fn () => $queueService->remove($this->session, $this->entry($entryId)));
     }
 
     public function render()
@@ -88,6 +87,22 @@ class QueueBoard extends Component
             'entries' => $query->get(),
             'currentEntry' => app(QueueService::class)->current($this->session),
         ]);
+    }
+
+    /**
+     * Jalankan aksi antrean; pelanggaran aturan (mis. mengubah status pemain yang sedang bermain)
+     * ditampilkan sebagai pesan di papan, bukan halaman error saat streamer sedang live.
+     */
+    private function attempt(callable $action): void
+    {
+        $this->resetErrorBag('queue');
+
+        try {
+            $action();
+            $this->dispatch('queue-updated');
+        } catch (InvalidArgumentException|RuntimeException $exception) {
+            $this->addError('queue', $exception->getMessage());
+        }
     }
 
     private function entry(int $entryId): QueueEntry

@@ -50,6 +50,7 @@ class MatchController extends Controller
                 ]);
 
                 $entry->increment('matches_played');
+                LiveSession::query()->whereKey($entry->live_session_id)->increment('total_matches');
 
                 return [
                     'data' => [
@@ -59,6 +60,11 @@ class MatchController extends Controller
                     ],
                 ];
             });
+        } catch (\InvalidArgumentException $exception) {
+            // Aturan bisnis (mis. jatah match habis) → 422, bukan 500.
+            Cache::forget($cacheKey);
+
+            return response()->json(['message' => $exception->getMessage()], 422);
         } catch (\Throwable $exception) {
             Cache::forget($cacheKey);
             throw $exception;
@@ -83,6 +89,7 @@ class MatchController extends Controller
 
             $record->delete();
             $entry->decrement('matches_played');
+            LiveSession::query()->whereKey($entry->live_session_id)->where('total_matches', '>', 0)->decrement('total_matches');
 
             return [
                 'data' => [

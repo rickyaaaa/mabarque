@@ -53,7 +53,13 @@ class DonationWebhookService
                 'last_error' => null,
             ])->save();
 
-            return $this->queueService->process($donation);
+            $isNew = $donation->wasRecentlyCreated;
+            $processed = $this->queueService->process($donation);
+            // process() mengembalikan instance fresh() yang kehilangan penanda ini; controller memakainya
+            // untuk membedakan donasi baru (201) dari kiriman ulang provider (200, duplicate: true).
+            $processed->wasRecentlyCreated = $isNew;
+
+            return $processed;
         });
     }
 
@@ -66,8 +72,9 @@ class DonationWebhookService
 
     private function verifySignature(PlatformConnection $connection, Request $request): void
     {
-        if ($connection->signing_secret === null) {
-            return;
+        // Tanpa secret, siapa pun yang tahu ID koneksi bisa menyuntik donasi palsu ke antrean.
+        if (blank($connection->signing_secret)) {
+            abort(401, 'Koneksi belum memiliki signing secret; webhook ditolak.');
         }
 
         $signature = (string) $request->header('X-Webhook-Signature');

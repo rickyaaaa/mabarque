@@ -24,7 +24,7 @@ class DonationDataController extends Controller
         }
 
         return response()->json([
-            'data' => $query->latest('received_at')->paginate(min($request->integer('per_page', 20), 100)),
+            'data' => $query->latest('received_at')->paginate(max(1, min($request->integer('per_page', 20), 100))),
         ]);
     }
 
