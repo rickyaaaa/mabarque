@@ -26,11 +26,12 @@ class PlatformConnection extends Model
 
     protected $casts = [
         'signing_secret' => 'encrypted',
+        'last_payload' => 'array',
         'last_received_at' => 'datetime',
         'last_tested_at' => 'datetime',
     ];
 
-    protected $hidden = ['signing_secret'];
+    protected $hidden = ['signing_secret', 'last_payload'];
 
     public function donations(): HasMany
     {

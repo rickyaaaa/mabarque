@@ -68,11 +68,21 @@ Buka aplikasi di **http://127.0.0.1:8000** (sama dengan `APP_URL`), bukan `local
 - ✅ Tersambung ke backend: masuk, daftar, lupa/reset password, keluar, halaman akun, dan pengaturan profil.
 - ✅ Livewire: papan antrean (`/dashboard`), sesi live (`/live-session`), hitungan match (`/match-count`), paket VIP (`/vip-packages`), donasi & koneksi provider (`/donations`), dan pengaturan overlay (`/overlay-settings`) — polling otomatis, tanpa WebSocket.
 - ✅ Halaman tanpa login: antrean publik `/{slug}` dan overlay OBS `/o/{token}` (JS ringan + `/api`, diperbarui tiap 3–5 detik).
-- ⚠️ Belum: format webhook asli Saweria/SociaBuzz/Trakteer (saat ini signature HMAC `X-Webhook-Signature` + field umum), uji di MySQL, dan deploy.
+- ✅ Webhook per provider (`app/Services/Webhooks`): Trakteer & Saweria memakai format aslinya; SociaBuzz masih sementara.
+- ⚠️ Belum: konfirmasi format SociaBuzz dari notifikasi uji asli, uji di MySQL, dan deploy.
 
 ### Menyambungkan provider donasi
 
-1. Buka **VIP & Donasi** → *Hubungkan* provider, isi signing secret (min. 16 karakter).
-2. Salin URL webhook yang muncul ke dashboard provider, dengan secret yang sama.
-3. Donasi dengan nominal **tepat** sama dengan harga paket aktif otomatis masuk antrean; sisanya muncul sebagai "Perlu cek".
-4. *Jeda* menolak webhook sementara (HTTP 409) tanpa menghapus koneksi.
+1. Buka **VIP & Donasi** → *Hubungkan* provider, isi kredensialnya, lalu tempel URL webhook yang muncul di dashboard provider.
+2. Donasi dengan nominal **tepat** sama dengan harga paket aktif otomatis masuk antrean; sisanya muncul sebagai "Perlu cek".
+3. *Jeda* membuat donasi dicatat sebagai "diabaikan" tanpa masuk antrean — tetap dibalas 2xx.
+
+| Provider | Kredensial | Verifikasi | Nominal yang dicocokkan | Sumber format |
+|---|---|---|---|---|
+| Trakteer | Webhook token | header `X-Webhook-Token` = token (dibandingkan langsung) | `price` (total) | [dokumentasi resmi](https://help.trakteer.id/help-center/articles/70/panduan-webhook) |
+| Saweria | Stream key | header `Saweria-Callback-Signature` = HMAC-SHA256(stream key, `version`+`id`+`amount_raw`+`donator_name`+`donator_email`) | `amount_raw` | library komunitas `saweria-webhook-express` |
+| SociaBuzz | Webhook token | token di header kandidat (`sb-webhook-token`, `x-webhook-token`, …) | `amount` (non-IDR → "Perlu cek") | **belum terkonfirmasi** |
+
+**Kebijakan respons:** kasus normal selalu 2xx (donasi baru 201, duplikat 200, uji/diabaikan/dijeda 200–202) karena Trakteer mematikan webhook setelah 3 respons ≥ 300. Hanya kredensial salah (401) dan payload rusak (422) yang dibalas 4xx. Payload uji Trakteer (`transaction_id` berawalan `test-`) hanya menandai koneksi aktif.
+
+**Memastikan format SociaBuzz:** hubungkan SociaBuzz, tekan *Test Notification* di dashboard SociaBuzz, lalu buka *Lihat contoh webhook terakhir* di halaman Donasi (kredensial disamarkan). Sesuaikan `SociaBuzzAdapter` bila nama field/header berbeda.

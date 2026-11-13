@@ -15,11 +15,24 @@ use Livewire\Component;
  */
 class ConnectionManager extends Component
 {
+    /** 'credential' = istilah di dashboard provider; 'steps' = cara menyambungkan; 'verified' = format sudah terkonfirmasi. */
     public const PROVIDERS = [
-        'saweria' => ['label' => 'Saweria', 'short' => 'S'],
-        'sociabuzz' => ['label' => 'SociaBuzz', 'short' => 'SB'],
-        'trakteer' => ['label' => 'Trakteer', 'short' => 'T'],
+        'saweria' => [
+            'label' => 'Saweria', 'short' => 'S', 'credential' => 'Stream key', 'verified' => true,
+            'steps' => 'Di dashboard Saweria buka Integrasi → Webhook, tempel URL webhook di bawah, lalu salin stream key kamu ke kolom ini.',
+        ],
+        'sociabuzz' => [
+            'label' => 'SociaBuzz', 'short' => 'SB', 'credential' => 'Webhook token', 'verified' => false,
+            'steps' => 'Di SociaBuzz buka pengaturan Webhook, tempel URL webhook, salin webhook token ke kolom ini, lalu tekan "Test Notification". Format SociaBuzz belum terkonfirmasi — cek contoh payload setelah tes.',
+        ],
+        'trakteer' => [
+            'label' => 'Trakteer', 'short' => 'T', 'credential' => 'Webhook token', 'verified' => true,
+            'steps' => 'Di Trakteer buka Integrasi → Webhook, tempel URL webhook, salin token dari halaman itu ke kolom ini, tekan "Send Webhook Test", lalu aktifkan webhook.',
+        ],
     ];
+
+    /** Provider yang contoh payload terakhirnya sedang dibuka. */
+    public ?string $inspecting = null;
 
     public ?string $editing = null;
 
@@ -47,8 +60,8 @@ class ConnectionManager extends Component
         $this->validate([
             'editing' => ['required', Rule::in(array_keys(self::PROVIDERS))],
             'label' => ['nullable', 'string', 'max:80'],
-            'signingSecret' => ['nullable', 'string', 'min:16', 'max:512'],
-        ], [], ['signingSecret' => 'signing secret', 'label' => 'label']);
+            'signingSecret' => ['nullable', 'string', 'min:8', 'max:512'],
+        ], [], ['signingSecret' => self::PROVIDERS[$this->editing]['credential'] ?? 'kredensial', 'label' => 'label']);
 
         try {
             $connection = $service->save(auth()->user(), [
@@ -57,7 +70,7 @@ class ConnectionManager extends Component
                 'signing_secret' => $this->signingSecret ?: null,
             ]);
         } catch (ValidationException $exception) {
-            $this->addError('signingSecret', $exception->validator->errors()->first('signing_secret'));
+            $this->addError('signingSecret', self::PROVIDERS[$this->editing]['credential'].' wajib diisi supaya webhook bisa diverifikasi.');
 
             return;
         }
@@ -65,6 +78,11 @@ class ConnectionManager extends Component
         $name = self::PROVIDERS[$connection->provider]['label'];
         $this->close();
         $this->dispatch('notify', message: "{$name} tersimpan. Salin URL webhook ke dashboard {$name}.");
+    }
+
+    public function inspect(string $provider): void
+    {
+        $this->inspecting = $this->inspecting === $provider ? null : $provider;
     }
 
     public function togglePause(string $provider, PlatformConnectionService $service): void

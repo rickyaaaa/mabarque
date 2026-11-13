@@ -19,6 +19,7 @@ return new class extends Migration
             $table->timestamp('last_received_at')->nullable();
             $table->timestamp('last_tested_at')->nullable();
             $table->string('last_error')->nullable();
+            $table->json('last_payload')->nullable(); // contoh webhook terakhir (kredensial disamarkan) untuk mencocokkan format provider
             $table->timestamps();
 
             $table->unique(['user_id', 'provider']);

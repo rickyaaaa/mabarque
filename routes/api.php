@@ -27,7 +27,8 @@ Route::post('/auth/reset-password', [PasswordResetController::class, 'reset'])->
 
 // ── Publik (tanpa akun): webhook provider, overlay OBS, halaman antrean penonton ──
 Route::post('/webhooks/donations/{provider}/{platformConnection}', [\App\Http\Controllers\DonationWebhookController::class, 'store'])
-    ->whereIn('provider', ['saweria', 'sociabuzz', 'trakteer']);
+    ->whereIn('provider', ['saweria', 'sociabuzz', 'trakteer'])
+    ->middleware('throttle:120,1');
 Route::get('/overlay/{token}', [\App\Http\Controllers\OverlayController::class, 'show']);
 Route::get('/channels/{user:slug}', [StreamerProfileController::class, 'publicShow']);
 Route::get('/channels/{user:slug}/vip-packages', [\App\Http\Controllers\PublicVipPackageController::class, 'index']);

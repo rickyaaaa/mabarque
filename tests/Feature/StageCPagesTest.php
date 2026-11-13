@@ -20,6 +20,7 @@ use Tests\TestCase;
 class StageCPagesTest extends TestCase
 {
     use RefreshDatabase;
+    use \Tests\Concerns\SendsProviderWebhooks;
 
     private const SECRET = 'rahasia-webhook-uji-0123456789';
 
@@ -37,9 +38,10 @@ class StageCPagesTest extends TestCase
         return PlatformConnection::create(['user_id' => $this->streamer->id, 'provider' => 'saweria', 'webhook_url' => '', 'signing_secret' => self::SECRET, 'status' => $status]);
     }
 
-    private function sendWebhook(PlatformConnection $connection, array $payload)
+    /** Webhook Saweria dengan format asli (lihat SendsProviderWebhooks). */
+    private function sendWebhook(PlatformConnection $connection, array $donation)
     {
-        return $this->postJson("/api/webhooks/donations/saweria/{$connection->id}", $payload, ['X-Webhook-Signature' => hash_hmac('sha256', json_encode($payload), self::SECRET)]);
+        return $this->sendSaweria($connection, $this->saweriaPayload($donation['id'], $donation['donor_name'], $donation['amount']), self::SECRET);
     }
 
     public function test_package_manager_create_edit_toggle_and_duplicate_price_guard(): void
@@ -146,8 +148,9 @@ class StageCPagesTest extends TestCase
 
         $manager->call('togglePause', 'saweria');
         $this->assertSame('paused', $connection->refresh()->status);
-        $this->sendWebhook($connection, ['id' => 'p1', 'donor_name' => 'Raka', 'amount' => 15000])->assertStatus(409);
-        $this->assertSame(0, Donation::count());
+        // Dijeda: tetap 2xx (Trakteer mematikan webhook setelah 3 respons >= 300), donasi tercatat "diabaikan".
+        $this->sendWebhook($connection, ['id' => 'p1', 'donor_name' => 'Raka', 'amount' => 15000])->assertStatus(202);
+        $this->assertSame('ignored', Donation::sole()->status);
 
         $manager->call('togglePause', 'saweria');
         $this->assertSame('pending', $connection->refresh()->status); // belum pernah menerima webhook
