@@ -333,7 +333,7 @@ textarea.field-input { resize: vertical; }
 
 /* ── Papan antrean Livewire ─────────────────────────────────────────── */
 .queue-error { margin: 16px 0 0; }
-.queue-table th:last-child, .queue-table td:last-child { width: 190px; }
+.queue-table th:last-child, .queue-table td:last-child { width: 240px; }
 .quota-chip { display: inline-flex; align-items: center; min-height: 22px; padding: 2px 7px; border: 2px solid var(--line); background: var(--cream); font-size: 11px; font-weight: 800; white-space: nowrap; }
 .quota-chip.is-low { background: #ffe6a4; }
 .quota-chip.is-empty { color: var(--cream); background: var(--red); }
@@ -345,3 +345,12 @@ textarea.field-input { resize: vertical; }
 .page-notice { margin: 0 0 16px; padding: 10px 12px; color: var(--ink); background: #c8f3c8; border: 2px solid var(--line); font-size: 12px; font-weight: 700; }
 .party-marker { color: var(--green); font-weight: 900; }
 .player-cell .status-pill { margin-left: auto; flex: none; }
+/* Next game: pilihan manual streamer vs saran otomatis */
+.party-next-name { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.party-next-name > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.party-next-name.is-picked { padding: 2px 6px; margin-inline: -6px; background: var(--cream); border: 2px solid var(--line); }
+.party-next-auto { flex: none; color: var(--muted); font-size: 10px; font-weight: 700; text-transform: uppercase; }
+.party-next-remove { flex: none; width: 22px; height: 22px; padding: 0; color: var(--ink); background: transparent; border: 2px solid var(--line); font-weight: 900; line-height: 1; }
+.party-next-remove:hover { color: var(--cream); background: var(--red); }
+.party-next-hint { margin: 8px 0 0; color: var(--muted); font-size: 11px; font-weight: 600; }
+.row-action.is-active { color: var(--cream); background: var(--navy); }

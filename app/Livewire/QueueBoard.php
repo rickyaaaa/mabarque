@@ -247,7 +247,26 @@ class QueueBoard extends Component
         });
     }
 
-    /** Keluarkan pemain dari party (urutannya tetap); slot diisi pemain berikutnya. */
+    /** Pilih pemain untuk Next game secara manual. */
+    public function pickNext(int $entryId, QueueService $queueService): void
+    {
+        $this->attempt(function () use ($entryId, $queueService): string {
+            $entry = $queueService->pickForNext($this->session, $this->entry($entryId));
+
+            return "{$entry->display_name} masuk Next game.";
+        });
+    }
+
+    public function unpickNext(int $entryId, QueueService $queueService): void
+    {
+        $this->attempt(function () use ($entryId, $queueService): string {
+            $entry = $queueService->unpickForNext($this->session, $this->entry($entryId));
+
+            return "{$entry->display_name} dibatalkan dari Next game.";
+        });
+    }
+
+    /** Keluarkan pemain dari party (urutannya tetap); slotnya dibiarkan kosong. */
     public function bench(int $entryId, QueueService $queueService): void
     {
         $this->attempt(function () use ($entryId, $queueService): string {

@@ -68,6 +68,7 @@ class LiveSessionService
                 'live_session_id' => $session->id,
                 // Sesi baru = mulai segar: yang tadinya bermain/dilewati/offline kembali siap.
                 'status' => 'ready',
+                'next_order' => null,
                 'position' => $index + 1,
             ])->save();
         }

@@ -29,6 +29,7 @@ class QueueEntry extends Model
         'status',
         'position',
         'joined_at',
+        'next_order',
     ];
 
     protected $casts = [
@@ -37,9 +38,26 @@ class QueueEntry extends Model
         'matches_played' => 'integer',
         'position' => 'integer',
         'joined_at' => 'datetime',
+        'next_order' => 'integer',
     ];
 
     protected $appends = ['matches_remaining'];
+
+    protected static function booted(): void
+    {
+        // Pilihan "Next game" hanya berlaku selama pemain menunggu dengan status siap; begitu masuk party,
+        // offline, dilewati, atau selesai, pilihannya gugur.
+        static::saving(function (QueueEntry $entry): void {
+            if ($entry->isDirty('status') && $entry->status !== 'ready') {
+                $entry->next_order = null;
+            }
+        });
+    }
+
+    public function isPickedForNext(): bool
+    {
+        return $this->next_order !== null && $this->status === 'ready';
+    }
 
     public function liveSession(): BelongsTo
     {

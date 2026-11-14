@@ -273,6 +273,62 @@ class QueueService
         });
     }
 
+    /**
+     * Pilih pemain untuk "Next game" secara manual (maks sebanyak slot party). Saat party diisi,
+     * pilihan manual diambil duluan sebelum urutan otomatis.
+     */
+    public function pickForNext(LiveSession $session, QueueEntry $entry): QueueEntry
+    {
+        return DB::transaction(function () use ($session, $entry): QueueEntry {
+            $this->ensureEntryBelongsToSession($session, $entry);
+            $entry->refresh();
+
+            if ($entry->service_type === 'joki') {
+                throw new InvalidArgumentException('Pemain "Mainin akun" dicatat terpisah, tidak masuk party mabar.');
+            }
+
+            if ($entry->status === 'playing') {
+                throw new InvalidArgumentException('Pemain ini sedang main di party.');
+            }
+
+            if ($this->remaining($entry) < 1) {
+                throw new InvalidArgumentException('Sisa game pemain ini sudah habis.');
+            }
+
+            if ($entry->isPickedForNext()) {
+                return $entry;
+            }
+
+            $size = $this->partySize($session);
+            if ($this->pickedForNext($session)->count() >= $size) {
+                throw new InvalidArgumentException("Next game sudah penuh ({$size}/{$size}). Batalkan salah satu dulu.");
+            }
+
+            // Pemain offline/dilewati yang dipilih manual dianggap hadir lagi.
+            $entry->forceFill(['status' => 'ready'])->save();
+            $entry->forceFill(['next_order' => ((int) $session->queueEntries()->reorder()->max('next_order')) + 1])->save();
+
+            return $entry->refresh();
+        });
+    }
+
+    public function unpickForNext(LiveSession $session, QueueEntry $entry): QueueEntry
+    {
+        $this->ensureEntryBelongsToSession($session, $entry);
+        $entry->forceFill(['next_order' => null])->save();
+
+        return $entry->refresh();
+    }
+
+    /** @return Collection<int, QueueEntry> pilihan manual Next game (urut waktu dipilih) */
+    public function pickedForNext(LiveSession $session): Collection
+    {
+        return $this->orderedEntries($session)
+            ->filter(fn (QueueEntry $entry): bool => $entry->isPickedForNext())
+            ->sortBy(fn (QueueEntry $entry) => [$entry->next_order, $entry->id])
+            ->values();
+    }
+
     // ── Party & batas game per sesi ─────────────────────────────────────
 
     /** Jumlah viewer per game (streamer + N, 5-stack MLBB → maks 4). */
@@ -325,14 +381,20 @@ class QueueService
     public function nextUp(LiveSession $session, ?int $limit = null, array $exclude = []): Collection
     {
         $played = $this->playedThisSession($session);
-
-        $eligible = $this->orderedEntries($session)
+        $waiting = $this->orderedEntries($session)
             ->filter(fn (QueueEntry $entry): bool => $entry->status === 'ready'
                 && $entry->service_type !== 'joki'
                 && $this->remaining($entry) > 0
-                && ! in_array($entry->id, $exclude, true)
-                && ! $this->isCapped($session, $entry, $played))
-            ->values();
+                && ! in_array($entry->id, $exclude, true));
+
+        // Pilihan manual streamer duluan (urut waktu dipilih; boleh yang sudah kena batas sesi),
+        // lalu sisanya otomatis menurut urutan antrean.
+        $picked = $waiting->filter(fn (QueueEntry $entry): bool => $entry->next_order !== null)
+            ->sortBy(fn (QueueEntry $entry) => [$entry->next_order, $entry->id]);
+        $auto = $waiting->filter(fn (QueueEntry $entry): bool => $entry->next_order === null
+            && ! $this->isCapped($session, $entry, $played));
+
+        $eligible = $picked->concat($auto)->values();
 
         return $limit === null ? $eligible : $eligible->take($limit)->values();
     }

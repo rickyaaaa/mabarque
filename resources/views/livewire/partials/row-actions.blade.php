@@ -8,6 +8,11 @@
         <button class="row-action" type="button" wire:click="bench({{ $entry->id }})" title="Keluarkan dari party" aria-label="Keluarkan {{ $entry->display_name }} dari party">⏏</button>
     @else
         <button class="row-action" type="button" wire:click="markPlaying({{ $entry->id }})" title="Masukkan ke party" aria-label="Masukkan {{ $entry->display_name }} ke party">▶</button>
+        @if ($entry->isPickedForNext())
+            <button class="row-action is-active" type="button" wire:click="unpickNext({{ $entry->id }})" title="Batalkan dari Next game" aria-label="Batalkan {{ $entry->display_name }} dari Next game">⏭</button>
+        @else
+            <button class="row-action" type="button" wire:click="pickNext({{ $entry->id }})" title="Masukkan ke Next game" aria-label="Masukkan {{ $entry->display_name }} ke Next game">⏭</button>
+        @endif
     @endif
     <button class="row-action" type="button" wire:click="openEdit({{ $entry->id }})" title="Edit pemain" aria-label="Edit {{ $entry->display_name }}">✎</button>
     <button class="row-action" type="button" wire:click="move({{ $entry->id }}, 'up')" title="Naikkan" aria-label="Naikkan {{ $entry->display_name }}">↑</button>

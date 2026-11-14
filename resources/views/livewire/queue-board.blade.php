@@ -66,10 +66,18 @@
                 <div class="party-next">
                     <p class="party-next-title">Next game</p>
                     @forelse ($nextUp as $next)
-                        <p class="party-next-name" wire:key="next-{{ $next->id }}">{{ $loop->iteration }}. {{ $next->display_name }} <small>sisa {{ $matches->remaining($next) }}</small></p>
+                        <p @class(['party-next-name', 'is-picked' => $next->isPickedForNext()]) wire:key="next-{{ $next->id }}">
+                            <span>{{ $loop->iteration }}. {{ $next->display_name }} <small>sisa {{ $matches->remaining($next) }}</small></span>
+                            @if ($next->isPickedForNext())
+                                <button class="party-next-remove" type="button" wire:click="unpickNext({{ $next->id }})" title="Batalkan dari Next game" aria-label="Batalkan {{ $next->display_name }} dari Next game">×</button>
+                            @else
+                                <small class="party-next-auto">otomatis</small>
+                            @endif
+                        </p>
                     @empty
                         <p class="party-next-empty">Tidak ada yang menunggu. Tambah pemain atau tunggu donasi VIP.</p>
                     @endforelse
+                    <p class="party-next-hint">Pilih manual dengan tombol ⏭ di daftar.</p>
                 </div>
             </div>
         </article>

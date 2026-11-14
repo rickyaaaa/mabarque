@@ -142,6 +142,59 @@ class PartyQueueTest extends TestCase
         $this->assertSame(['B'], $this->queue->fillParty($this->session)->pluck('player_name')->all());
     }
 
+    public function test_manual_next_game_picks_go_first_then_auto_order(): void
+    {
+        $this->owner->forceFill(['party_size' => 2])->save();
+        $this->cap(1);
+        ['Pokedok' => $pokedok, 'Kyoto' => $kyoto, 'Indira' => $indira, 'Roti' => $roti] =
+            $this->players(['Dey' => 3, 'Ir.fing' => 3, 'Indira' => 3, 'Pokedok' => 3, 'Kyoto' => 3, 'Roti' => [8, 'joki']]);
+
+        // Kyoto dipilih duluan, lalu Pokedok → keduanya di depan urutan otomatis.
+        $this->queue->pickForNext($this->session, $kyoto);
+        $this->queue->pickForNext($this->session, $pokedok);
+        $this->assertSame(['Kyoto', 'Pokedok', 'Dey', 'Ir.fing', 'Indira'], $this->queue->nextUp($this->session)->pluck('player_name')->all());
+
+        // Next game maksimal sebanyak slot party; joki tidak bisa dipilih.
+        foreach ([$indira, $roti] as $entry) {
+            try {
+                $this->queue->pickForNext($this->session, $entry);
+                $this->fail('Seharusnya ditolak.');
+            } catch (InvalidArgumentException) {
+                $this->addToAssertionCount(1);
+            }
+        }
+
+        // Mulai game: pilihan manual yang masuk party, pilihannya gugur setelah masuk.
+        $this->assertSame(['Kyoto', 'Pokedok'], $this->queue->fillParty($this->session)->pluck('player_name')->all());
+        $this->assertNull($kyoto->refresh()->next_order);
+
+        // Pilihan manual boleh pemain yang sudah kena batas sesi; dibatalkan → kembali ke urutan otomatis.
+        $this->queue->finishGame($this->session); // Kyoto & Pokedok kena batas 1 → Dey & Ir.fing main
+        $this->queue->pickForNext($this->session, $kyoto);
+        $this->assertSame(['Kyoto', 'Indira'], $this->queue->nextUp($this->session, 2)->pluck('player_name')->all());
+        $this->queue->unpickForNext($this->session, $kyoto);
+        $this->assertSame(['Indira'], $this->queue->nextUp($this->session, 2)->pluck('player_name')->all());
+
+        // Pilihan gugur bila pemain ditandai offline, dan tidak ikut terbawa ke sesi berikutnya.
+        $this->queue->pickForNext($this->session, $indira);
+        app(\App\Services\QueueStatusService::class)->markOffline($this->session, $indira->refresh());
+        $this->assertNull($indira->refresh()->next_order);
+    }
+
+    public function test_board_next_game_buttons(): void
+    {
+        ['Kyoto' => $kyoto] = $this->players(['Dey' => 2, 'Kyoto' => 2]);
+
+        Livewire::actingAs($this->owner)->test(QueueBoard::class, ['session' => $this->session])
+            ->call('pickNext', $kyoto->id)
+            ->assertDispatched('notify', message: 'Kyoto masuk Next game.')
+            ->assertSee('otomatis')
+            ->call('unpickNext', $kyoto->id)
+            ->assertDispatched('notify', message: 'Kyoto dibatalkan dari Next game.');
+
+        $this->assertNull($kyoto->refresh()->next_order);
+    }
+
     public function test_board_party_controls_and_rules(): void
     {
         $this->players(['Dey' => 2, 'Ir.fing' => 1, 'Indira' => 3]);
