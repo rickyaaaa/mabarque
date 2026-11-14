@@ -74,13 +74,13 @@
                     @if ($showNowPlaying)
                         <div class="preview-now">
                             <span>NOW PLAYING</span>
-                            <strong>{{ $current ? $previewName($current) : 'Belum ada' }}</strong>
-                            <small>{{ $current ? ($providerLabels[$current->provider] ?? $current->provider).' · '.max(0, $current->matches_total - $current->matches_played).' match tersisa' : 'Mulai main dari papan antrean' }}</small>
+                            <strong>{{ $party->isNotEmpty() ? $party->map($previewName)->join(' · ') : 'Belum ada' }}</strong>
+                            <small>{{ $party->isEmpty() ? 'Mulai game dari papan antrean' : ($party->count() === 1 ? ($providerLabels[$party[0]->provider] ?? $party[0]->provider).' · '.max(0, $party[0]->matches_total - $party[0]->matches_played).' game tersisa' : $party->count().' pemain di party') }}</small>
                         </div>
                     @endif
                     <div class="preview-queue">
                         @forelse ($upcoming as $index => $entry)
-                            <div class="preview-entry" wire:key="preview-entry-{{ $entry->id }}"><span>{{ $index + 1 }}. {{ $previewName($entry) }}</span><small>{{ max(0, $entry->matches_total - $entry->matches_played) }} match</small></div>
+                            <div class="preview-entry" wire:key="preview-entry-{{ $entry->id }}"><span>{{ $index + 1 }}. {{ $previewName($entry) }}</span><small>{{ max(0, $entry->matches_total - $entry->matches_played) }} game</small></div>
                         @empty
                             <div class="preview-entry"><span>Antrean kosong</span><small>—</small></div>
                         @endforelse

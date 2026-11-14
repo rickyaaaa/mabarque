@@ -63,13 +63,13 @@ class LiveDashboardTest extends TestCase
 
         $board = Livewire::test(QueueBoard::class, ['session' => $session])
             ->call('finishMatch', $raka->id)
-            ->assertDispatched('notify', message: 'Match dicatat. Raka ML sisa 1 match.');
+            ->assertDispatched('notify', message: 'Game dicatat. Raka ML sisa 1 game.');
 
         $this->assertSame(1, $raka->refresh()->matches_played);
         $this->assertSame('playing', $raka->status);
 
         $board->call('finishMatch', $raka->id)
-            ->assertDispatched('notify', message: 'Jatah Raka ML habis. Giliran berikutnya: Nadia.')
+            ->assertDispatched('notify', message: 'Sisa game Raka ML habis. Masuk party: Nadia.')
             ->assertDontSee('Raka ML') // pemain selesai disembunyikan dari papan
             ->assertSeeHtml('<span>Match selesai</span><strong>2</strong>'); // header langsung ikut bertambah
 

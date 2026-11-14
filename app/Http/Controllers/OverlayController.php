@@ -52,16 +52,18 @@ class OverlayController extends Controller
             'queue' => [
                 'status' => $queue['status'],
                 'current' => $queue['current'] ?? null,
-                // Di layar live hanya yang benar-benar mengantre (siap/bermain) selama sesi aktif.
+                'party' => $queue['party'] ?? [],
+                // Di layar live: party yang sedang main, lalu urutan masuk party berikutnya.
                 'entries' => collect($queue['status'] === 'live' ? $queue['queue'] : [])
-                    ->whereIn('status', ['ready', 'playing'])
+                    ->filter(fn (array $entry) => $entry['status'] === 'playing' || $entry['next_rank'] !== null)
+                    ->sortBy(fn (array $entry) => $entry['status'] === 'playing' ? [0, $entry['position']] : [1, $entry['next_rank']])
                     ->map(fn (array $entry) => [
-                    'position' => $entry['position'],
-                    'player_name' => $entry['player_name'],
-                    'status' => $entry['status'],
-                    'matches_remaining' => $entry['matches_remaining'],
-                    'provider' => $entry['provider'],
-                ])->values()->all(),
+                        'position' => $entry['position'],
+                        'player_name' => $entry['player_name'],
+                        'status' => $entry['status'],
+                        'matches_remaining' => $entry['matches_remaining'],
+                        'provider' => $entry['provider'],
+                    ])->values()->all(),
             ],
         ];
     }

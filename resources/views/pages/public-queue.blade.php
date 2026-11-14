@@ -4,13 +4,16 @@
     $playing = $entries->firstWhere('status', 'playing');
     $waiting = $entries->where('status', '!=', 'playing')->values();
     $providerLabels = ['manual' => 'Manual', 'saweria' => 'Saweria', 'sociabuzz' => 'SociaBuzz', 'trakteer' => 'Trakteer'];
-    $statusLabels = ['ready' => 'Siap', 'offline' => 'Menunggu', 'skipped' => 'Dilewati', 'playing' => 'Bermain'];
+    $statusLabels = ['ready' => 'Siap', 'offline' => 'Menunggu', 'skipped' => 'Dilewati', 'playing' => 'Bermain', 'capped' => 'Maks sesi'];
     $entryMeta = fn (array $entry) => collect([
         ($entry['service_type'] ?? 'vip') === 'joki' ? 'Mainin akun' : 'Mabar VIP',
         ! empty($entry['mlbb_id']) && ! str_starts_with($entry['player_name'], 'ID ') ? 'ID '.$entry['mlbb_id'] : null,
     ])->filter()->join(' · ');
     $rupiah = fn (int $value) => 'Rp '.number_format($value, 0, ',', '.');
     $initials = fn (string $name) => mb_strtoupper(collect(preg_split('/\s+/', trim($name)))->filter()->take(2)->map(fn ($w) => mb_substr($w, 0, 1))->join('')) ?: '?';
+    $partyNames = $queue['party'] ?? [];
+    $nextNames = $queue['next'] ?? [];
+    $sessionCap = (int) ($queue['rules']['session_cap'] ?? 0);
     $startedAt = $isLive && ! empty($queue['session']['started_at']) ? \Illuminate\Support\Carbon::parse($queue['session']['started_at']) : null;
 @endphp
 <!doctype html>
@@ -55,15 +58,21 @@
         </div>
       </section>
 
-      <section class="public-current" aria-labelledby="public-current-title" id="current-section" @if (! $playing) hidden @endif>
-        <div class="public-current-label"><span class="status-dot is-live"></span>Sedang bermain</div>
-        <div class="public-current-body">
+      <section class="public-current" aria-labelledby="public-current-title" id="current-section" @if (! $isLive || ($partyNames === [] && $nextNames === [])) hidden @endif>
+        <div class="public-current-label"><span class="status-dot is-live"></span><span id="public-current-title">Sedang main</span><span class="public-party-size" id="party-size">{{ $isLive ? count($partyNames).'/'.($queue['rules']['party_size'] ?? 4).' pemain + streamer' : '' }}</span></div>
+        <div class="public-party">
           <div>
-            <p class="eyebrow">Giliran sekarang</p>
-            <h2 id="public-current-title">{{ $playing['player_name'] ?? '' }}</h2>
-            <p id="current-meta">{{ $playing ? $entryMeta($playing).' · sisa '.$playing['matches_remaining'].' game' : '' }}</p>
+            <p class="eyebrow">Sedang main</p>
+            <ol class="public-party-list" id="party-list">
+              @forelse ($partyNames as $name)<li>{{ $name }}</li>@empty<li class="is-empty">Belum ada game berjalan</li>@endforelse
+            </ol>
           </div>
-          <div class="public-current-avatar" id="current-avatar">{{ $playing ? $initials($playing['player_name']) : '' }}</div>
+          <div>
+            <p class="eyebrow">Next game</p>
+            <ol class="public-party-list is-next" id="next-list">
+              @forelse ($nextNames as $name)<li>{{ $name }}</li>@empty<li class="is-empty">Belum ada yang menunggu</li>@endforelse
+            </ol>
+          </div>
         </div>
       </section>
 
@@ -103,10 +112,11 @@
             <button class="filter-button" id="refresh-public-queue" type="button">↻ Refresh</button>
           </div>
         </div>
+        <p class="public-rules-note" id="public-rules-note" @if ($sessionCap < 1) hidden @endif>Maks {{ $sessionCap }} game per orang tiap sesi live. Sisa game tetap tersimpan untuk sesi berikutnya.</p>
         <div class="public-position-note" id="public-position-note" role="status" aria-live="polite">Cari nama atau ID kamu untuk melihat posisi dan sisa game.</div>
         <div class="public-queue-list" id="public-queue-list" aria-live="polite">
           @foreach ($waiting as $entry)
-            <article class="public-queue-item"><span class="public-queue-number" aria-hidden="true">{{ $loop->iteration }}</span><div><strong>{{ $entry['player_name'] }}</strong><span>{{ $entryMeta($entry) }}</span></div><span class="public-match-left">{{ $entry['matches_remaining'] }} <small>game</small></span><span @class(['public-ready', 'is-'.$entry['status']])>{{ $statusLabels[$entry['status']] ?? 'Siap' }}</span></article>
+            <article class="public-queue-item"><span class="public-queue-number" aria-hidden="true">{{ $loop->iteration }}</span><div><strong>{{ $entry['player_name'] }}</strong><span>{{ $entryMeta($entry) }}</span></div><span class="public-match-left">{{ $entry['matches_remaining'] }} <small>game</small></span><span @class(['public-ready', 'is-'.(! empty($entry['capped']) ? 'capped' : $entry['status'])])>{{ $statusLabels[! empty($entry['capped']) ? 'capped' : $entry['status']] ?? 'Siap' }}</span></article>
           @endforeach
         </div>
         <div class="public-empty" id="public-empty" role="status" aria-live="polite" @if ($waiting->isNotEmpty()) hidden @endif>

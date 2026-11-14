@@ -24,3 +24,18 @@
 .public-ready.is-skipped { background: #e7c4f0; }
 .public-queue-item strong { overflow-wrap: anywhere; }
 @media (max-width: 640px) { .public-queue-tools { flex-wrap: wrap; } .public-queue-tools .public-sort { flex: 1 1 100%; } }
+
+/* Party yang sedang main + next game (streamer + N viewer) */
+.public-current-label { display: flex; align-items: center; gap: 8px; }
+.public-party-size { margin-left: auto; font-size: 10px; opacity: .85; }
+.public-party { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 16px; }
+.public-party .eyebrow { margin: 0 0 8px; }
+.public-party-list { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; counter-reset: party; }
+.public-party-list li { counter-increment: party; padding: 8px 10px; overflow-wrap: anywhere; background: var(--cream); border: 2px solid var(--line); font-size: 15px; font-weight: 800; }
+.public-party-list li::before { content: counter(party) ". "; color: var(--red); }
+.public-party-list.is-next li { background: rgba(255, 247, 222, .6); font-size: 13px; }
+.public-party-list li.is-empty { color: var(--muted); font-size: 12px; font-weight: 600; border-style: dashed; background: transparent; }
+.public-party-list li.is-empty::before { content: none; }
+.public-ready.is-capped { background: #ffd067; }
+.public-rules-note { margin: 12px 0 0; padding: 7px 10px; color: var(--ink); background: var(--cream); border: 2px dashed var(--line); font-size: 11px; font-weight: 700; }
+@media (max-width: 640px) { .public-party { grid-template-columns: 1fr; padding: 12px 10px; } }

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\LiveSession;
+use App\Models\MatchRecord;
 use App\Models\QueueEntry;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -11,11 +12,13 @@ use RuntimeException;
 
 class QueueService
 {
+    /** Batas party: streamer + 4 viewer (5-stack MLBB). */
+    public const MAX_PARTY_SIZE = 4;
+
+    /** Pemain pertama di party, atau (bila party kosong) pemain pertama yang akan masuk party. */
     public function current(LiveSession $session): ?QueueEntry
     {
-        return $this->orderedEntries($session)
-            ->first(fn (QueueEntry $entry): bool => $entry->status === 'playing')
-            ?? $this->orderedEntries($session)->first(fn (QueueEntry $entry): bool => $entry->status === 'ready');
+        return $this->party($session)->first() ?? $this->nextUp($session, 1)->first();
     }
 
     public const MAX_MATCHES = 999;
@@ -210,20 +213,212 @@ class QueueService
         throw new InvalidArgumentException('jenis "'.$value.'" tidak dikenal (pakai vip atau joki)');
     }
 
+    /**
+     * Masukkan pemain ke party secara manual — boleh juga pemain yang sudah kena batas sesi (keputusan
+     * streamer). Party berisi 1 orang: pemain yang sedang main ditukar. Party lebih besar yang penuh: ditolak.
+     */
     public function markPlaying(LiveSession $session, QueueEntry $entry): QueueEntry
     {
         return DB::transaction(function () use ($session, $entry): QueueEntry {
             $this->ensureEntryBelongsToSession($session, $entry);
+            $entry->refresh(); // status bisa berubah lewat pengisian party otomatis
 
-            QueueEntry::query()
-                ->where('live_session_id', $session->id)
-                ->where('status', 'playing')
-                ->update(['status' => 'ready']);
+            if ($entry->status === 'playing') {
+                return $entry;
+            }
+
+            if ($entry->service_type === 'joki') {
+                throw new InvalidArgumentException('Pemain "Mainin akun" dicatat terpisah, tidak masuk party mabar.');
+            }
+
+            if ($this->remaining($entry) < 1) {
+                throw new InvalidArgumentException('Sisa game pemain ini sudah habis.');
+            }
+
+            $party = $this->party($session);
+            $size = $this->partySize($session);
+
+            if ($party->count() >= $size) {
+                if ($size > 1) {
+                    throw new InvalidArgumentException("Party sudah penuh ({$size}/{$size}). Keluarkan salah satu pemain dulu.");
+                }
+
+                $party->each(fn (QueueEntry $playing) => $playing->update(['status' => 'ready']));
+            }
 
             $entry->update(['status' => 'playing']);
 
             return $entry->refresh();
         });
+    }
+
+    /** Keluarkan pemain dari party tanpa mengubah urutannya; slot kosong diisi pemain berikutnya. */
+    public function bench(LiveSession $session, QueueEntry $entry): ?QueueEntry
+    {
+        return DB::transaction(function () use ($session, $entry): ?QueueEntry {
+            $this->ensureEntryBelongsToSession($session, $entry);
+            $entry->refresh();
+
+            if ($entry->status !== 'playing') {
+                throw new InvalidArgumentException('Pemain ini tidak sedang di party.');
+            }
+
+            $entry->update(['status' => 'ready']);
+
+            return $this->fillParty($session, exclude: [$entry->id])->first();
+        });
+    }
+
+    // ── Party & batas game per sesi ─────────────────────────────────────
+
+    /** Jumlah viewer per game (streamer + N, 5-stack MLBB → maks 4). */
+    public function partySize(LiveSession $session): int
+    {
+        $size = (int) ($session->user?->party_size ?? 4);
+
+        return min(self::MAX_PARTY_SIZE, max(1, $size ?: 4));
+    }
+
+    /** Batas game per pemain dalam satu sesi live; 0 = tanpa batas. */
+    public function sessionCap(LiveSession $session): int
+    {
+        return max(0, (int) ($session->user?->session_match_cap ?? 0));
+    }
+
+    /** @return array<int, int> id pemain => jumlah game yang sudah dimainkan di sesi ini */
+    public function playedThisSession(LiveSession $session): array
+    {
+        return MatchRecord::query()
+            ->where('live_session_id', $session->id)
+            ->selectRaw('queue_entry_id, COUNT(*) as played')
+            ->groupBy('queue_entry_id')
+            ->pluck('played', 'queue_entry_id')
+            ->map(fn ($played) => (int) $played)
+            ->all();
+    }
+
+    /** Pemain mabar VIP yang sudah mencapai batas game sesi ini (joki tidak dibatasi). */
+    public function isCapped(LiveSession $session, QueueEntry $entry, ?array $played = null): bool
+    {
+        $cap = $this->sessionCap($session);
+
+        return $cap > 0
+            && $entry->service_type !== 'joki'
+            && (($played ?? $this->playedThisSession($session))[$entry->id] ?? 0) >= $cap;
+    }
+
+    /** @return Collection<int, QueueEntry> pemain yang sedang main (urut posisi) */
+    public function party(LiveSession $session): Collection
+    {
+        return $this->orderedEntries($session)->where('status', 'playing')->values();
+    }
+
+    /**
+     * Pemain berikutnya yang berhak masuk party: siap, mabar VIP, masih punya sisa, belum kena batas sesi.
+     *
+     * @return Collection<int, QueueEntry>
+     */
+    public function nextUp(LiveSession $session, ?int $limit = null, array $exclude = []): Collection
+    {
+        $played = $this->playedThisSession($session);
+
+        $eligible = $this->orderedEntries($session)
+            ->filter(fn (QueueEntry $entry): bool => $entry->status === 'ready'
+                && $entry->service_type !== 'joki'
+                && $this->remaining($entry) > 0
+                && ! in_array($entry->id, $exclude, true)
+                && ! $this->isCapped($session, $entry, $played))
+            ->values();
+
+        return $limit === null ? $eligible : $eligible->take($limit)->values();
+    }
+
+    /**
+     * Isi slot party yang kosong dengan pemain berikutnya.
+     *
+     * @param  array<int>  $exclude  pemain yang baru dikeluarkan (jangan langsung dimasukkan lagi)
+     * @return Collection<int, QueueEntry> pemain yang baru masuk party
+     */
+    public function fillParty(LiveSession $session, array $exclude = []): Collection
+    {
+        $free = $this->partySize($session) - $this->party($session)->count();
+
+        if ($free < 1) {
+            return collect();
+        }
+
+        return $this->nextUp($session, $free, $exclude)
+            ->each(fn (QueueEntry $entry) => $entry->update(['status' => 'playing']))
+            ->map(fn (QueueEntry $entry) => $entry->refresh());
+    }
+
+    /**
+     * Game party selesai: setiap anggota party berkurang 1 game (dihitung 1 match sesi). Yang sisanya
+     * habis → selesai; yang mencapai batas sesi → keluar party ke belakang antrean. Slot kosong lalu diisi.
+     *
+     * @return array{played: Collection<int, QueueEntry>, finished: Collection<int, QueueEntry>, capped: Collection<int, QueueEntry>, joined: Collection<int, QueueEntry>}
+     */
+    public function finishGame(LiveSession $session): array
+    {
+        return DB::transaction(function () use ($session): array {
+            $party = $this->party($session);
+
+            if ($party->isEmpty()) {
+                throw new InvalidArgumentException('Belum ada pemain di party. Mulai game dulu.');
+            }
+
+            $matches = app(MatchService::class);
+            $party->each(fn (QueueEntry $entry) => $matches->record($entry, countSessionMatch: false));
+            LiveSession::query()->whereKey($session->id)->increment('total_matches');
+
+            $settled = $this->settleAfterMatch($session, $party);
+            // Batas game = saat alami mengisi slot yang belum terisi (mis. donasi baru masuk selama game).
+            $settled['joined'] = $settled['joined']->merge($this->fillParty($session));
+
+            return ['played' => $party] + $settled;
+        });
+    }
+
+    /**
+     * Rapikan pemain setelah match dicatat (dipakai game party maupun catat match satu pemain).
+     *
+     * @param  Collection<int, QueueEntry>  $entries
+     * @return array{finished: Collection<int, QueueEntry>, capped: Collection<int, QueueEntry>, joined: Collection<int, QueueEntry>}
+     */
+    public function settleAfterMatch(LiveSession $session, Collection $entries): array
+    {
+        $played = $this->playedThisSession($session);
+        $finished = collect();
+        $capped = collect();
+        $freedSlot = false;
+        $last = (int) $this->orderedEntries($session)->max('position');
+
+        foreach ($entries as $entry) {
+            $entry->refresh();
+            $wasPlaying = $entry->status === 'playing';
+
+            if ($this->remaining($entry) < 1) {
+                $entry->update(['status' => 'done', 'position' => ++$last]);
+                $finished->push($entry);
+                $freedSlot = $freedSlot || $wasPlaying;
+            } elseif ($wasPlaying && $this->isCapped($session, $entry, $played)) {
+                $entry->update(['status' => 'ready', 'position' => ++$last]);
+                $capped->push($entry);
+                $freedSlot = true;
+            }
+        }
+
+        $this->normalizePositions($session);
+
+        // Slot party hanya diisi ulang bila memang ada anggota party yang keluar.
+        $joined = $freedSlot ? $this->fillParty($session, exclude: $capped->pluck('id')->all()) : collect();
+
+        return ['finished' => $finished, 'capped' => $capped, 'joined' => $joined];
+    }
+
+    private function remaining(QueueEntry $entry): int
+    {
+        return max(0, (int) $entry->matches_total - (int) $entry->matches_played);
     }
 
     public function move(LiveSession $session, QueueEntry $entry, string $direction): void
@@ -299,17 +494,10 @@ class QueueService
         );
     }
 
+    /** Slot party kosong karena anggotanya keluar → isi dengan pemain berikutnya. */
     private function promoteNextReady(LiveSession $session): ?QueueEntry
     {
-        $next = $this->orderedEntries($session)->first(fn (QueueEntry $entry): bool => $entry->status === 'ready');
-
-        if ($next === null) {
-            return null;
-        }
-
-        $next->update(['status' => 'playing']);
-
-        return $next->refresh();
+        return $this->fillParty($session)->first();
     }
 
     private function orderedEntries(LiveSession $session): Collection

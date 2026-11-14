@@ -27,19 +27,23 @@
     document.querySelector("#overlay-channel").textContent = data.channel_name || "";
 
     const entries = queue.entries || [];
-    const playing = entries.find((entry) => entry.status === "playing");
-    const showNow = settings.show_now_playing !== false && playing;
+    const party = entries.filter((entry) => entry.status === "playing");
+    const showNow = settings.show_now_playing !== false && party.length > 0;
 
     nowBox.hidden = !showNow;
     if (showNow) {
-      document.querySelector("#overlay-now-name").textContent = playing.player_name;
-      document.querySelector("#overlay-now-meta").textContent = `${PROVIDERS[playing.provider] || "VIP"} · ${playing.matches_remaining} match tersisa`;
+      // Party bisa berisi beberapa pemain sekaligus (streamer + N).
+      document.querySelector("#overlay-now-name").textContent = party.map((entry) => entry.player_name).join(" · ");
+      document.querySelector("#overlay-now-meta").textContent = party.length === 1
+        ? `${PROVIDERS[party[0].provider] || "VIP"} · ${party[0].matches_remaining} game tersisa`
+        : `${party.length} pemain di party`;
     }
 
-    const upcoming = entries.filter((entry) => entry.status === "ready").slice(0, settings.max_players || 5);
+    // Server sudah mengurutkan: party dulu, lalu urutan masuk party berikutnya.
+    const upcoming = entries.filter((entry) => entry.status !== "playing").slice(0, settings.max_players || 5);
     list.replaceChildren(...upcoming.map((entry, index) => {
       const item = el("li", "overlay-entry");
-      item.append(el("span", "overlay-entry-name", `${index + 1}. ${entry.player_name}`), el("small", "overlay-entry-left", `${entry.matches_remaining} match`));
+      item.append(el("span", "overlay-entry-name", `${index + 1}. ${entry.player_name}`), el("small", "overlay-entry-left", `${entry.matches_remaining} game`));
       return item;
     }));
 

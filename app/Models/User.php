@@ -71,6 +71,9 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            // Aturan party (QueueService); diubah lewat papan antrean dengan forceFill, bukan mass assignment.
+            'party_size' => 'integer',
+            'session_match_cap' => 'integer',
         ];
     }
 

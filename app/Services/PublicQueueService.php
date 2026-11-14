@@ -39,8 +39,14 @@ class PublicQueueService
     public function serialize(?LiveSession $session, bool $censor = false, bool $live = true): array
     {
         if ($session === null || (! $live && $session->queueEntries->isEmpty())) {
-            return ['status' => 'offline', 'session' => null, 'current' => null, 'queue' => []];
+            return ['status' => 'offline', 'session' => null, 'rules' => null, 'current' => null, 'party' => [], 'next' => [], 'queue' => []];
         }
+
+        $queueService = app(QueueService::class);
+        $played = $live ? $queueService->playedThisSession($session) : [];
+        $size = $queueService->partySize($session);
+        // Urutan masuk party berikutnya (siap, mabar VIP, belum kena batas sesi).
+        $nextRank = $live ? $queueService->nextUp($session)->pluck('id')->flip()->all() : [];
 
         $queue = $session->queueEntries->map(fn (QueueEntry $entry) => [
             'position' => $entry->position,
@@ -48,10 +54,15 @@ class PublicQueueService
             'mlbb_id' => $entry->mlbb_id ? ($censor ? self::censor($entry->mlbb_id) : $entry->mlbb_id) : null,
             'status' => $live ? $entry->status : 'offline',
             'matches_remaining' => max(0, $entry->matches_total - $entry->matches_played),
+            'played_this_session' => $played[$entry->id] ?? 0,
+            'capped' => $live && $entry->status !== 'playing' && $queueService->isCapped($session, $entry, $played),
+            'next_rank' => isset($nextRank[$entry->id]) ? $nextRank[$entry->id] + 1 : null,
             'provider' => $entry->provider,
             'service_type' => $entry->service_type ?: 'vip',
             'joined_at' => $entry->joined_at?->toIso8601String(),
         ])->values();
+
+        $party = $queue->where('status', 'playing')->pluck('player_name')->values()->all();
 
         return [
             'status' => $live ? 'live' : 'offline',
@@ -62,7 +73,10 @@ class PublicQueueService
                 'total_players' => $session->total_players,
                 'total_matches' => $session->total_matches,
             ] : null,
-            'current' => $queue->firstWhere('status', 'playing')['player_name'] ?? null,
+            'rules' => ['party_size' => $size, 'session_cap' => $queueService->sessionCap($session)],
+            'current' => $party[0] ?? null,
+            'party' => $party,
+            'next' => $queue->whereNotNull('next_rank')->sortBy('next_rank')->take($size)->pluck('player_name')->values()->all(),
             'queue' => $queue->all(),
         ];
     }

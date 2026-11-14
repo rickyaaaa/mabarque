@@ -29,7 +29,8 @@ class QueueEngineTest extends TestCase
     {
         parent::setUp();
 
-        $this->owner = User::factory()->create();
+        // Mode satu pemain per giliran (party berisi 1); mode party ada di PartyQueueTest.
+        $this->owner = User::factory()->create(['party_size' => 1]);
         $this->session = LiveSession::create(['user_id' => $this->owner->id, 'title' => 'Mabar malam', 'status' => 'active', 'started_at' => now()]);
         $this->queue = app(QueueService::class);
     }

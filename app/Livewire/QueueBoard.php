@@ -21,7 +21,10 @@ class QueueBoard extends Component
     /** Status yang tampil di papan; pemain "done" (jatah habis) disembunyikan. */
     private const VISIBLE = ['playing', 'ready', 'offline', 'skipped'];
 
-    private const FILTERS = ['all', 'ready', 'offline', 'skipped'];
+    private const FILTERS = ['all', 'ready', 'offline', 'skipped', 'joki'];
+
+    /** Batas game per orang per sesi yang bisa dipilih streamer (0 = tanpa batas). */
+    public const MAX_SESSION_CAP = 20;
 
     public LiveSession $session;
 
@@ -53,6 +56,12 @@ class QueueBoard extends Component
     public string $editNote = '';
 
     public bool $showImport = false;
+
+    public bool $showRules = false;
+
+    public int $partySize = 4;
+
+    public int $sessionCap = 0;
 
     public string $importText = '';
 
@@ -180,26 +189,106 @@ class QueueBoard extends Component
         $this->attempt(function () use ($entryId, $queueService): string {
             $entry = $queueService->markPlaying($this->session, $this->entry($entryId));
 
-            return "{$entry->player_name} sekarang bermain.";
+            return "{$entry->display_name} masuk party.";
         });
     }
 
-    /** Catat 1 match selesai; bila jatah habis, pemain otomatis selesai dan giliran dioper. */
+    /**
+     * Catat 1 game untuk SATU pemain (mis. jasa mainin akun, atau koreksi party). Jatah habis → selesai;
+     * kena batas sesi → keluar party. Slot kosong diisi pemain berikutnya.
+     */
     public function finishMatch(int $entryId, MatchService $matches, QueueService $queueService): void
     {
         $this->attempt(function () use ($entryId, $matches, $queueService): string {
             $entry = $this->entry($entryId);
             $matches->record($entry);
+            $result = $queueService->settleAfterMatch($this->session, collect([$entry]));
 
-            if ($matches->remaining($entry) > 0) {
-                return "Match dicatat. {$entry->player_name} sisa {$matches->remaining($entry)} match.";
+            return match (true) {
+                $result['finished']->isNotEmpty() => "Sisa game {$entry->display_name} habis.",
+                $result['capped']->isNotEmpty() => "{$entry->display_name} sudah mencapai batas game sesi ini.",
+                default => "Game dicatat. {$entry->display_name} sisa {$matches->remaining($entry->refresh())} game.",
+            }.$this->joinedMessage($result['joined']);
+        });
+    }
+
+    /** Isi party dengan pemain berikutnya (awal live, atau saat ada slot kosong). */
+    public function startGame(QueueService $queueService): void
+    {
+        $this->attempt(function () use ($queueService): string {
+            $joined = $queueService->fillParty($this->session);
+
+            if ($joined->isEmpty()) {
+                throw new InvalidArgumentException($queueService->party($this->session)->isEmpty()
+                    ? 'Belum ada pemain yang bisa masuk party (cek sisa game, status, atau batas sesi).'
+                    : 'Party sudah penuh.');
             }
 
-            $next = $queueService->complete($this->session, $entry);
-
-            return "Jatah {$entry->player_name} habis."
-                .($next && $next->status === 'playing' ? " Giliran berikutnya: {$next->player_name}." : '');
+            return 'Masuk party: '.$joined->pluck('display_name')->join(', ').'.';
         });
+    }
+
+    /** Game party selesai: semua anggota party berkurang 1 game. */
+    public function finishGame(QueueService $queueService): void
+    {
+        $this->attempt(function () use ($queueService): string {
+            $result = $queueService->finishGame($this->session);
+            $message = 'Game selesai dicatat untuk '.$result['played']->count().' pemain.';
+
+            if ($result['finished']->isNotEmpty()) {
+                $message .= ' Habis: '.$result['finished']->pluck('display_name')->join(', ').'.';
+            }
+
+            if ($result['capped']->isNotEmpty()) {
+                $message .= ' Batas sesi: '.$result['capped']->pluck('display_name')->join(', ').'.';
+            }
+
+            return $message.$this->joinedMessage($result['joined']);
+        });
+    }
+
+    /** Keluarkan pemain dari party (urutannya tetap); slot diisi pemain berikutnya. */
+    public function bench(int $entryId, QueueService $queueService): void
+    {
+        $this->attempt(function () use ($entryId, $queueService): string {
+            $entry = $this->entry($entryId);
+            $next = $queueService->bench($this->session, $entry);
+
+            return "{$entry->display_name} keluar dari party.".($next ? " Penggantinya: {$next->display_name}." : '');
+        });
+    }
+
+    public function openRules(): void
+    {
+        $user = auth()->user();
+        $this->resetValidation();
+        $this->partySize = (int) ($user->party_size ?: 4);
+        $this->sessionCap = (int) $user->session_match_cap;
+        $this->showRules = true;
+    }
+
+    public function closeRules(): void
+    {
+        $this->showRules = false;
+    }
+
+    public function saveRules(): void
+    {
+        $this->validate([
+            'partySize' => ['required', 'integer', 'min:1', 'max:'.QueueService::MAX_PARTY_SIZE],
+            'sessionCap' => ['required', 'integer', 'min:0', 'max:'.self::MAX_SESSION_CAP],
+        ], [], ['partySize' => 'jumlah pemain per game', 'sessionCap' => 'batas game per sesi']);
+
+        auth()->user()->forceFill(['party_size' => $this->partySize, 'session_match_cap' => $this->sessionCap])->save();
+        $this->session->unsetRelation('user');
+        $this->showRules = false;
+        $this->dispatch('notify', message: 'Aturan party disimpan: '.$this->partySize.' pemain per game, '
+            .($this->sessionCap > 0 ? "maks {$this->sessionCap} game per orang tiap sesi." : 'tanpa batas game per sesi.'));
+    }
+
+    private function joinedMessage($joined): string
+    {
+        return $joined->isNotEmpty() ? ' Masuk party: '.$joined->pluck('display_name')->join(', ').'.' : '';
     }
 
     public function toggleStatus(int $entryId, QueueStatusService $statusService): void
@@ -207,7 +296,7 @@ class QueueBoard extends Component
         $this->attempt(function () use ($entryId, $statusService): string {
             $entry = $statusService->toggle($this->session, $this->entry($entryId));
 
-            return $entry->status === 'offline' ? "{$entry->player_name} ditandai offline." : "{$entry->player_name} siap bermain.";
+            return $entry->status === 'offline' ? "{$entry->display_name} ditandai offline." : "{$entry->display_name} siap bermain.";
         });
     }
 
@@ -227,8 +316,8 @@ class QueueBoard extends Component
             $entry = $this->entry($entryId);
             $next = $queueService->skip($this->session, $entry);
 
-            return "{$entry->player_name} dilewati."
-                .($next && $next->status === 'playing' && $next->isNot($entry) ? " Giliran: {$next->player_name}." : '');
+            return "{$entry->display_name} dilewati."
+                .($next && $next->status === 'playing' && $next->isNot($entry) ? " Masuk party: {$next->display_name}." : '');
         });
     }
 
@@ -238,7 +327,7 @@ class QueueBoard extends Component
             $entry = $this->entry($entryId);
             $queueService->remove($this->session, $entry);
 
-            return "{$entry->player_name} dihapus dari antrean.";
+            return "{$entry->display_name} dihapus dari antrean.";
         });
     }
 
@@ -251,18 +340,30 @@ class QueueBoard extends Component
 
     public function render()
     {
+        $this->session->loadMissing('user');
         $all = $this->session->queueEntries()->whereIn('status', self::VISIBLE)->get();
         $queue = app(QueueService::class);
+        $party = $all->where('status', 'playing')->values();
+        $size = $queue->partySize($this->session);
 
         return view('livewire.queue-board', [
-            'entries' => $this->filter === 'all' ? $all : $all->where('status', $this->filter)->values(),
+            'entries' => match ($this->filter) {
+                'all' => $all,
+                'joki' => $all->where('service_type', 'joki')->values(),
+                default => $all->where('status', $this->filter)->values(),
+            },
             'counts' => [
                 'all' => $all->count(),
                 'ready' => $all->where('status', 'ready')->count(),
                 'offline' => $all->where('status', 'offline')->count(),
                 'skipped' => $all->where('status', 'skipped')->count(),
+                'joki' => $all->where('service_type', 'joki')->count(),
             ],
-            'currentEntry' => $queue->current($this->session),
+            'party' => $party,
+            'partySizeLimit' => $size,
+            'nextUp' => $queue->nextUp($this->session, $size),
+            'played' => $queue->playedThisSession($this->session),
+            'cap' => $queue->sessionCap($this->session),
             'matches' => app(MatchService::class),
         ]);
     }

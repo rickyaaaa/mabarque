@@ -2,7 +2,7 @@
 // Nama pemain berasal dari donatur — selalu dimasukkan lewat textContent, tidak pernah innerHTML.
 (function () {
   const POLL_MS = 5000;
-  const STATUS = { ready: "Siap", offline: "Menunggu", skipped: "Dilewati", playing: "Bermain" };
+  const STATUS = { ready: "Siap", offline: "Menunggu", skipped: "Dilewati", playing: "Bermain", capped: "Maks sesi" };
   const SORTS = {
     queue: (a, b) => a.number - b.number,
     most: (a, b) => b.matches_remaining - a.matches_remaining || a.number - b.number,
@@ -32,8 +32,8 @@
     return node;
   }
 
-  function initials(name) {
-    return name.trim().split(/\s+/).slice(0, 2).map((part) => part[0] || "").join("").toUpperCase() || "?";
+  function fillNames(list, names, emptyText) {
+    list.replaceChildren(...(names.length ? names.map((name) => el("li", null, name)) : [el("li", "is-empty", emptyText)]));
   }
 
   function meta(entry) {
@@ -69,7 +69,8 @@
       who.append(el("strong", null, entry.player_name), el("span", null, meta(entry)));
       const left = el("span", "public-match-left", `${entry.matches_remaining} `);
       left.append(el("small", null, "game"));
-      item.append(number, who, left, el("span", `public-ready is-${entry.status}`, STATUS[entry.status] || "Siap"));
+      const status = entry.capped ? "capped" : entry.status;
+      item.append(number, who, left, el("span", `public-ready is-${status}`, STATUS[status] || "Siap"));
       return item;
     }));
 
@@ -84,7 +85,6 @@
   function render(data) {
     const live = data.status === "live";
     const entries = data.queue || [];
-    const playing = entries.find((entry) => entry.status === "playing");
     waiting = entries.filter((entry) => entry.status !== "playing");
 
     $("#live-badge").classList.toggle("is-offline", !live);
@@ -93,12 +93,16 @@
     $("#queue-total").textContent = String(waiting.length);
     $("#matches-done").textContent = String(data.session?.total_matches ?? 0);
 
-    $("#current-section").hidden = !playing;
-    if (playing) {
-      $("#public-current-title").textContent = playing.player_name;
-      $("#current-meta").textContent = `${meta(playing)} · sisa ${playing.matches_remaining} game`;
-      $("#current-avatar").textContent = initials(playing.player_name);
-    }
+    const party = data.party || [];
+    const next = data.next || [];
+    $("#current-section").hidden = !live || (party.length === 0 && next.length === 0);
+    fillNames($("#party-list"), party, "Belum ada game berjalan");
+    fillNames($("#next-list"), next, "Belum ada yang menunggu");
+    $("#party-size").textContent = live ? `${party.length}/${data.rules?.party_size ?? 4} pemain + streamer` : "";
+
+    const cap = data.rules?.session_cap || 0;
+    $("#public-rules-note").hidden = cap < 1;
+    if (cap > 0) $("#public-rules-note").textContent = `Maks ${cap} game per orang tiap sesi live. Sisa game tetap tersimpan untuk sesi berikutnya.`;
 
     renderList();
   }

@@ -49,9 +49,9 @@ class MatchService
      *
      * @throws InvalidArgumentException jatah habis
      */
-    public function record(QueueEntry $entry, ?string $note = null): MatchRecord
+    public function record(QueueEntry $entry, ?string $note = null, bool $countSessionMatch = true): MatchRecord
     {
-        return DB::transaction(function () use ($entry, $note): MatchRecord {
+        return DB::transaction(function () use ($entry, $note, $countSessionMatch): MatchRecord {
             $locked = QueueEntry::query()->whereKey($entry->id)->lockForUpdate()->firstOrFail();
             $this->assertCanRecord($locked);
 
@@ -64,7 +64,10 @@ class MatchService
             ]);
 
             $locked->increment('matches_played');
-            LiveSession::query()->whereKey($locked->live_session_id)->increment('total_matches');
+            // Satu game party = satu match sesi walau dicatat untuk beberapa pemain (QueueService::finishGame).
+            if ($countSessionMatch) {
+                LiveSession::query()->whereKey($locked->live_session_id)->increment('total_matches');
+            }
             $entry->refresh();
 
             return $match;

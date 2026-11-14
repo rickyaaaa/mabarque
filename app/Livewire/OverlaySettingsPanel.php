@@ -75,14 +75,11 @@ class OverlaySettingsPanel extends Component
         $session = $user->liveSessions()->active()->latest('started_at')->first();
         $saved = $user->overlaySetting()->first(); // query baru: relasi yang ter-cache bisa basi setelah save()
 
-        $entries = $session?->queueEntries()->whereIn('status', ['playing', 'ready'])->get() ?? collect();
-        $current = $session ? $queue->current($session) : null;
-
         return view('livewire.overlay-settings-panel', [
             'overlayUrl' => $tokens->url($tokens->current($user)),
             'session' => $session,
-            'current' => $current?->status === 'playing' ? $current : null,
-            'upcoming' => $entries->where('status', 'ready')->take($this->maxPlayers)->values(),
+            'party' => $session ? $queue->party($session) : collect(),
+            'upcoming' => $session ? $queue->nextUp($session, $this->maxPlayers) : collect(),
             'dirty' => $saved === null || $this->snapshot() !== $this->snapshot($saved),
             'channelName' => $user->channel_name,
         ]);

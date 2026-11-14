@@ -228,6 +228,27 @@ textarea.field-input { resize: vertical; }
 .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .button-import { width: 100%; margin-top: 9px; }
 
+/* Party (streamer + N viewer) dan "Next game" di papan antrean */
+.current-player-label { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.party-count { font: 700 12px/1.2 "Bricolage Grotesque", sans-serif; text-transform: none; opacity: .85; }
+.party-body { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 14px; padding: 14px 16px 16px; }
+.party-list { display: grid; gap: 7px; margin: 0; padding: 0; list-style: none; }
+.party-slot { display: flex; align-items: center; gap: 9px; min-height: 46px; padding: 6px 9px; border: 3px solid var(--line); }
+.party-slot.is-filled { background: var(--cream); }
+.party-slot.is-empty { color: var(--muted); background: transparent; border-style: dashed; }
+.party-slot .avatar { flex: none; width: 31px; height: 31px; border-width: 2px; font-size: 10px; }
+.party-slot-text { display: flex; flex-direction: column; min-width: 0; }
+.party-slot-text strong { overflow: hidden; font-size: 15px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+.party-slot-text small { font-size: 11px; font-weight: 700; color: var(--muted); }
+.party-next { padding: 9px 11px; background: rgba(255, 247, 222, .55); border: 3px solid var(--line); }
+.party-next-title { margin: 0 0 6px; font: 700 22px/.9 "Agdasima", sans-serif; text-transform: uppercase; }
+.party-next-name { margin: 0 0 4px; overflow: hidden; font-size: 13px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+.party-next-name small { color: var(--muted); font-weight: 600; }
+.party-next-empty { margin: 0; color: var(--muted); font-size: 12px; font-weight: 600; }
+.party-rules-note { margin: 10px 0 0; color: var(--muted); font-size: 12px; font-weight: 700; }
+.status-pill.capped { background: #ffd067; }
+@media (max-width: 780px) { .party-body { grid-template-columns: 1fr; } }
+
 /* Identitas pemain: nama, ID MLBB, catatan pribadi streamer */
 .player-identity { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .player-mlbb-id { color: var(--muted); font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; }

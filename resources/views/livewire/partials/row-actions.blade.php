@@ -1,9 +1,13 @@
 {{-- Aksi per pemain di papan antrean (dipakai tabel desktop & kartu mobile). --}}
 <div class="row-actions">
-    @if ($entry->status !== 'playing')
-        <button class="row-action" type="button" wire:click="markPlaying({{ $entry->id }})" title="Mulai main" aria-label="Mulai main: {{ $entry->display_name }}">▶</button>
+    @if ($entry->service_type === 'joki')
+        {{-- Mainin akun: tidak ikut party, game dicatat satu per satu. --}}
+        <button class="row-action" type="button" wire:click="finishMatch({{ $entry->id }})" title="Catat 1 game selesai" aria-label="Catat 1 game: {{ $entry->display_name }}">✓</button>
+    @elseif ($entry->status === 'playing')
+        <button class="row-action" type="button" wire:click="finishMatch({{ $entry->id }})" title="Catat 1 game hanya untuk pemain ini" aria-label="Catat 1 game: {{ $entry->display_name }}">✓</button>
+        <button class="row-action" type="button" wire:click="bench({{ $entry->id }})" title="Keluarkan dari party" aria-label="Keluarkan {{ $entry->display_name }} dari party">⏏</button>
     @else
-        <button class="row-action" type="button" wire:click="finishMatch({{ $entry->id }})" title="Selesai match" aria-label="Selesai match: {{ $entry->display_name }}">✓</button>
+        <button class="row-action" type="button" wire:click="markPlaying({{ $entry->id }})" title="Masukkan ke party" aria-label="Masukkan {{ $entry->display_name }} ke party">▶</button>
     @endif
     <button class="row-action" type="button" wire:click="openEdit({{ $entry->id }})" title="Edit pemain" aria-label="Edit {{ $entry->display_name }}">✎</button>
     <button class="row-action" type="button" wire:click="move({{ $entry->id }}, 'up')" title="Naikkan" aria-label="Naikkan {{ $entry->display_name }}">↑</button>
