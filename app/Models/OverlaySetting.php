@@ -24,6 +24,7 @@ class OverlaySetting extends Model
         'layout',
         'card_width',
         'card_height',
+        'fit_source',
     ];
 
     protected $casts = [
@@ -36,5 +37,6 @@ class OverlaySetting extends Model
         'show_packages' => 'boolean',
         'card_width' => 'integer',
         'card_height' => 'integer',
+        'fit_source' => 'boolean',
     ];
 }

@@ -29,15 +29,23 @@
             @error('accentColor') <p class="form-error" role="alert">{{ $message }}</p> @enderror
 
             <label class="control-label">Bentuk &amp; ukuran</label>
+            <div class="layout-toggle size-mode" role="radiogroup" aria-label="Cara mengatur ukuran">
+                <label @class(['layout-option', 'is-active' => $fitSource])><input type="radio" value="1" wire:model.live="fitSource" /> Ikuti ukuran Browser Source <small>(disarankan)</small></label>
+                <label @class(['layout-option', 'is-active' => ! $fitSource])><input type="radio" value="0" wire:model.live="fitSource" /> Atur ukuran sendiri</label>
+            </div>
+            @if ($fitSource)
+                <p class="size-help">Overlay otomatis mengisi penuh Browser Source. Atur ukurannya di OBS lewat <strong>Properties → Width / Height</strong> (bukan ditarik sudutnya) — hasilnya tetap tajam.</p>
+            @endif
+            <div class="layout-toggle" role="radiogroup" aria-label="Bentuk overlay">
+                <label @class(['layout-option', 'is-active' => $layout === 'vertical'])><input type="radio" value="vertical" wire:model.live="layout" /> ▯ Vertikal (kartu)</label>
+                <label @class(['layout-option', 'is-active' => $layout === 'horizontal'])><input type="radio" value="horizontal" wire:model.live="layout" /> ▭ Horizontal (bar)</label>
+            </div>
+            @if (! $fitSource)
             <div class="layout-presets" role="group" aria-label="Ukuran siap pakai">
                 <button type="button" class="filter-button" wire:click="applyPreset('card')">Kartu 440</button>
                 <button type="button" class="filter-button" wire:click="applyPreset('card-big')">Kartu besar 600</button>
                 <button type="button" class="filter-button" wire:click="applyPreset('bar-bottom')">Bar bawah 1280×140</button>
                 <button type="button" class="filter-button" wire:click="applyPreset('bar-wide')">Bar penuh 1920×160</button>
-            </div>
-            <div class="layout-toggle" role="radiogroup" aria-label="Bentuk overlay">
-                <label @class(['layout-option', 'is-active' => $layout === 'vertical'])><input type="radio" value="vertical" wire:model.live="layout" /> ▯ Vertikal (kartu)</label>
-                <label @class(['layout-option', 'is-active' => $layout === 'horizontal'])><input type="radio" value="horizontal" wire:model.live="layout" /> ▭ Horizontal (bar)</label>
             </div>
             <div class="size-grid">
                 <div>
@@ -52,6 +60,7 @@
             </div>
             @error('cardWidth') <p class="form-error" role="alert">{{ $message }}</p> @enderror
             @error('cardHeight') <p class="form-error" role="alert">{{ $message }}</p> @enderror
+            @endif
 
             <label class="control-label" for="font-scale">Ukuran huruf <output>{{ $fontScale }}%</output></label>
             <input id="font-scale" type="range" min="60" max="200" step="5" wire:model.live="fontScale" />
@@ -123,9 +132,14 @@
                 </div>
             </div>
             <p class="obs-size">
-                Ukuran <strong>Browser Source</strong> di OBS:
-                <strong>{{ $preview['obs_width'] }} × {{ $preview['obs_height'] ?? 'tinggi bebas (mis. 600)' }}</strong>.
-                Samakan persis supaya tajam — jangan diperbesar/diperkecil di OBS, ubah ukurannya di sini.
+                @if ($preview['fit_source'])
+                    Pratinjau memakai contoh Browser Source <strong>{{ $preview['obs_width'] }} × {{ $preview['obs_height'] }}</strong>.
+                    Di OBS, overlay mengisi penuh ukuran Browser Source yang kamu set — atur di <strong>Properties → Width / Height</strong>, jangan ditarik sudutnya.
+                @else
+                    Ukuran <strong>Browser Source</strong> di OBS:
+                    <strong>{{ $preview['obs_width'] }} × {{ $preview['obs_height'] ?? 'tinggi bebas (mis. 600)' }}</strong>.
+                    Samakan persis supaya tajam — jangan diperbesar/diperkecil di OBS, ubah ukurannya di sini.
+                @endif
                 @if ($dirty) <em>Pratinjau sudah memakai perubahan yang belum disimpan.</em> @endif
             </p>
             <div class="overlay-url">

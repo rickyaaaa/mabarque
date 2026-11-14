@@ -39,6 +39,9 @@ class OverlaySettingsPanel extends Component
     /** Bentuk & ukuran kartu overlay (piksel). Tinggi otomatis = mengikuti isi. */
     public string $layout = 'vertical';
 
+    /** true = overlay mengisi penuh Browser Source OBS (ukuran diatur di OBS); false = ukuran diatur di sini. */
+    public bool $fitSource = true;
+
     public int $cardWidth = 440;
 
     public bool $autoHeight = true;
@@ -64,6 +67,7 @@ class OverlaySettingsPanel extends Component
             'showScore' => ['boolean'],
             'showPackages' => ['boolean'],
             'layout' => ['required', 'in:vertical,horizontal'],
+            'fitSource' => ['boolean'],
             'cardWidth' => ['required', 'integer', 'between:240,1920'],
             'autoHeight' => ['boolean'],
             'cardHeight' => ['required', 'integer', 'between:80,1080'],
@@ -79,6 +83,7 @@ class OverlaySettingsPanel extends Component
             'show_score' => $validated['showScore'],
             'show_packages' => $validated['showPackages'],
             'layout' => $validated['layout'],
+            'fit_source' => $validated['fitSource'],
             'card_width' => $validated['cardWidth'],
             'card_height' => $validated['autoHeight'] ? null : $validated['cardHeight'],
         ]);
@@ -149,6 +154,7 @@ class OverlaySettingsPanel extends Component
         $this->showScore = $saved->show_score === null ? true : (bool) $saved->show_score;
         $this->showPackages = $saved->show_packages === null ? true : (bool) $saved->show_packages;
         $this->layout = $saved->layout === 'horizontal' ? 'horizontal' : 'vertical';
+        $this->fitSource = $saved->fit_source === null ? true : (bool) $saved->fit_source;
         $this->cardWidth = (int) ($saved->card_width ?: 440);
         $this->autoHeight = ! $saved->card_height;
         $this->cardHeight = (int) ($saved->card_height ?: ($this->layout === 'horizontal' ? 140 : 520));
@@ -165,6 +171,7 @@ class OverlaySettingsPanel extends Component
         };
 
         $this->layout = $layout;
+        $this->fitSource = false;
         $this->cardWidth = $width;
         $this->autoHeight = $height === null;
         $this->cardHeight = $height ?? $this->cardHeight;
@@ -180,6 +187,11 @@ class OverlaySettingsPanel extends Component
         $height = $this->autoHeight ? null : max(80, min(1080, $this->cardHeight));
         $frameWidth = $width + self::FRAME_PADDING;
         $frameHeight = $height !== null ? $height + self::FRAME_PADDING : ($this->layout === 'horizontal' ? 220 : 640);
+
+        // Mode ikuti Browser Source: pratinjau memakai contoh ukuran Browser Source untuk bentuk yang dipilih.
+        if ($this->fitSource) {
+            [$frameWidth, $frameHeight] = $this->layout === 'horizontal' ? [1280, 160] : [480, 600];
+        }
         $fit = min(1, 400 / $frameWidth, 420 / $frameHeight);
 
         $query = http_build_query([
@@ -194,6 +206,7 @@ class OverlaySettingsPanel extends Component
             'score' => (int) $this->showScore,
             'packages' => (int) $this->showPackages,
             'transparent' => (int) $this->transparentMode,
+            'fit' => (int) $this->fitSource,
         ]);
 
         return [
@@ -202,14 +215,15 @@ class OverlaySettingsPanel extends Component
             'frame_height' => $frameHeight,
             'fit' => round($fit, 4),
             'obs_width' => $frameWidth,
-            'obs_height' => $height !== null ? $frameHeight : null,
+            'obs_height' => $this->fitSource || $height !== null ? $frameHeight : null,
+            'fit_source' => $this->fitSource,
         ];
     }
 
     private function snapshot(?OverlaySetting $saved = null): array
     {
         return $saved
-            ? [strtoupper($saved->accent_color), (int) $saved->font_scale, (int) $saved->max_players, (bool) $saved->show_now_playing, (bool) $saved->transparent_mode, (bool) $saved->censor_names, $saved->show_score === null ? true : (bool) $saved->show_score, $saved->show_packages === null ? true : (bool) $saved->show_packages, $saved->layout === 'horizontal' ? 'horizontal' : 'vertical', (int) ($saved->card_width ?: 440), $saved->card_height ? (int) $saved->card_height : null]
-            : [strtoupper($this->accentColor), $this->fontScale, $this->maxPlayers, $this->showNowPlaying, $this->transparentMode, $this->censorNames, $this->showScore, $this->showPackages, $this->layout, $this->cardWidth, $this->autoHeight ? null : $this->cardHeight];
+            ? [strtoupper($saved->accent_color), (int) $saved->font_scale, (int) $saved->max_players, (bool) $saved->show_now_playing, (bool) $saved->transparent_mode, (bool) $saved->censor_names, $saved->show_score === null ? true : (bool) $saved->show_score, $saved->show_packages === null ? true : (bool) $saved->show_packages, $saved->layout === 'horizontal' ? 'horizontal' : 'vertical', (int) ($saved->card_width ?: 440), $saved->card_height ? (int) $saved->card_height : null, $saved->fit_source === null ? true : (bool) $saved->fit_source]
+            : [strtoupper($this->accentColor), $this->fontScale, $this->maxPlayers, $this->showNowPlaying, $this->transparentMode, $this->censorNames, $this->showScore, $this->showPackages, $this->layout, $this->cardWidth, $this->autoHeight ? null : $this->cardHeight, $this->fitSource];
     }
 }

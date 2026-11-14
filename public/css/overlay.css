@@ -41,3 +41,7 @@ body.overlay-body.is-transparent { background: transparent; }
 .overlay-card.is-horizontal .overlay-entry { flex: 0 1 auto; min-width: 0; }
 .overlay-card.is-horizontal .overlay-empty { align-self: center; margin: 0; }
 .overlay-card.is-horizontal .overlay-packages { flex: none; flex-direction: column; flex-wrap: nowrap; justify-content: center; margin: 0; padding: 0 0 0 .7em; border-top: 0; border-left: 2px dashed rgba(248, 219, 163, .55); }
+
+/* Mode "Ikuti ukuran Browser Source": kartu mengisi penuh viewport browser source OBS (sisa ruang untuk bayangan). */
+body.overlay-body.is-fit { min-height: 0; height: 100vh; padding: 6px 13px 13px 6px; overflow: hidden; }
+body.overlay-body.is-fit .overlay-card { width: 100%; max-width: none; height: 100%; }

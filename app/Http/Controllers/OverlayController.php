@@ -67,6 +67,8 @@ class OverlayController extends Controller
                 'layout' => ($settings->layout ?? 'vertical') === 'horizontal' ? 'horizontal' : 'vertical',
                 'card_width' => (int) ($settings->card_width ?? 440),
                 'card_height' => $settings?->card_height ? (int) $settings->card_height : null,
+                // Mengisi penuh Browser Source OBS (default) — ukuran cukup diatur di OBS.
+                'fit_source' => (bool) ($settings->fit_source ?? true),
             ],
             // Skor Win/Lose sesi live yang sedang berjalan (null saat belum live).
             'score' => $live ? ['wins' => (int) $live->wins, 'losses' => (int) $live->losses] : null,

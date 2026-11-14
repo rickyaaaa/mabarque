@@ -84,3 +84,7 @@
 .obs-size strong { color: var(--cream); }
 .obs-size em { display: block; color: var(--orange); font-style: normal; font-weight: 700; }
 .control-hint { color: var(--muted); font-size: 11px; font-weight: 600; text-transform: none; }
+
+.size-mode { margin-bottom: 8px; }
+.size-mode small { font-weight: 600; opacity: .8; }
+.size-help { margin: 0 0 10px; padding: 8px 10px; background: var(--cream); border: 2px dashed var(--line); font-size: 12px; line-height: 1.45; }

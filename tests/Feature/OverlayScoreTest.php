@@ -137,6 +137,23 @@ class OverlayScoreTest extends TestCase
         $panel->set('maxPlayers', 31)->call('save')->assertHasErrors(['maxPlayers']);
     }
 
+    public function test_overlay_follows_browser_source_size_by_default(): void
+    {
+        $token = app(OverlayTokenService::class)->current($this->owner);
+        $this->getJson("/api/overlay/{$token}")->assertJsonPath('data.overlay_settings.fit_source', true);
+
+        $panel = Livewire::test(OverlaySettingsPanel::class)
+            ->assertSet('fitSource', true)
+            ->assertSee('Ikuti ukuran Browser Source')
+            ->assertSee('fit=1', false)
+            ->assertDontSee('id="card-width"', false)      // lebar/tinggi disembunyikan di mode ini
+            ->set('layout', 'horizontal')
+            ->assertSee('1280 × 160');                   // contoh Browser Source untuk bar
+
+        $panel->set('fitSource', false)->assertSee('id="card-width"', false)->call('save')->assertHasNoErrors();
+        $this->getJson("/api/overlay/{$token}")->assertJsonPath('data.overlay_settings.fit_source', false);
+    }
+
     public function test_statistik_menu_is_gone(): void
     {
         $this->get('/dashboard')->assertOk()->assertDontSee('Statistik')->assertDontSee('href="/match-count"', false);

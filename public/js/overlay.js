@@ -32,6 +32,7 @@
     show_score: params.has("score") ? params.get("score") === "1" : undefined,
     show_packages: params.has("packages") ? params.get("packages") === "1" : undefined,
     transparent_mode: params.has("transparent") ? params.get("transparent") === "1" : undefined,
+    fit_source: params.has("fit") ? params.get("fit") === "1" : undefined,
   } : {};
   Object.keys(previewOverrides).forEach((key) => previewOverrides[key] === undefined && delete previewOverrides[key]);
 
@@ -46,8 +47,11 @@
 
     // Bentuk & ukuran kartu diatur streamer → browser source OBS cukup diset seukuran ini (tidak di-scale).
     card.classList.toggle("is-horizontal", settings.layout === "horizontal");
-    card.style.width = `${Math.max(240, Math.min(1920, settings.card_width || 440))}px`;
-    card.style.height = settings.card_height ? `${settings.card_height}px` : "";
+    const fit = settings.fit_source !== false;
+    document.body.classList.toggle("is-fit", fit);
+    // Mode "ikuti Browser Source": kartu mengisi penuh ukuran yang diset di OBS (lewat CSS).
+    card.style.width = fit ? "" : `${Math.max(240, Math.min(1920, settings.card_width || 440))}px`;
+    card.style.height = fit ? "" : (settings.card_height ? `${settings.card_height}px` : "");
     document.querySelector("#overlay-channel").textContent = data.channel_name || "";
 
     const entries = queue.entries || [];
