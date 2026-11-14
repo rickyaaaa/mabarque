@@ -56,7 +56,7 @@
                 @foreach ($donations as $donation)
                     <tr wire:key="donation-{{ $donation->id }}">
                         <td>{{ $donation->received_at?->format('H:i') }} WIB<br /><small>{{ $donation->received_at?->translatedFormat('j M') }}</small></td>
-                        <td><div class="donor-cell"><span class="avatar" style="background: {{ $avatarColors[$donation->id % 6] }}">{{ $initials($donation->donor_name) }}</span><div><strong>{{ $donation->donor_name }}</strong><small>{{ $donation->queueEntry ? 'Posisi #'.$donation->queueEntry->position : '—' }}</small></div></div></td>
+                        <td><div class="donor-cell"><span class="avatar" style="background: {{ $avatarColors[$donation->id % 6] }}">{{ $initials($donation->donor_name) }}</span><div><strong>{{ $donation->donor_name }}</strong><small>{{ $donation->queueEntry ? 'Posisi #'.$donation->queueEntry->position : ($donation->message ? '“'.\Illuminate\Support\Str::limit($donation->message, 40).'”' : '—') }}</small></div></div></td>
                         <td><span class="provider-pill {{ $donation->provider }}">{{ $providerLabels[$donation->provider] ?? $donation->provider }}</span></td>
                         <td class="donation-amount">{{ $rupiah($donation->amount) }}</td>
                         <td>{{ $donation->vipPackage?->name ?? '—' }}</td>
@@ -122,19 +122,26 @@
                     <div><p class="eyebrow">Masukkan manual</p><h2 id="queue-donation-title">{{ $queueing->donor_name }}</h2></div>
                     <button class="icon-button" type="button" wire:click="cancelQueue" aria-label="Tutup">×</button>
                 </div>
-                <p class="session-meta">Donasi {{ $rupiah($queueing->amount) }} lewat {{ $providerLabels[$queueing->provider] ?? $queueing->provider }}. Pilih paket yang dipakai untuk menentukan jatah match.</p>
-                <label class="field-label" for="queue-package">Paket VIP</label>
-                <select class="field-input @error('packageId') is-invalid @enderror" id="queue-package" wire:model="packageId">
-                    <option value="">Pilih paket</option>
-                    @foreach ($packages as $package)
-                        <option value="{{ $package->id }}">{{ $package->name }} — {{ $rupiah($package->price) }} · {{ $package->match_count }} match</option>
-                    @endforeach
-                </select>
-                @error('packageId') <p class="form-error" role="alert">{{ $message }}</p> @enderror
-                @if ($packages->isEmpty()) <p class="form-error">Belum ada paket aktif. <a href="/vip-packages">Buat paket VIP</a> dulu.</p> @endif
+                <p class="session-meta">Donasi {{ $rupiah($queueing->amount) }} lewat {{ $providerLabels[$queueing->provider] ?? $queueing->provider }}.</p>
+                @if ($queueing->message)
+                    <blockquote class="donation-message">“{{ $queueing->message }}”</blockquote>
+                @endif
+                <p class="modal-help">Hitungan paket: <strong>{{ $queuePlan }}</strong>. Ubah jumlah game bila perlu.</p>
+                <div class="field-row">
+                    <div>
+                        <label class="field-label" for="queue-matches">Jumlah game</label>
+                        <input class="field-input @error('queueMatches') is-invalid @enderror" id="queue-matches" type="number" min="1" max="{{ \App\Services\QueueService::MAX_MATCHES }}" wire:model="queueMatches" />
+                    </div>
+                    <div>
+                        <label class="field-label" for="queue-mlbb">ID MLBB <span>(boleh kosong)</span></label>
+                        <input class="field-input" id="queue-mlbb" wire:model="queueMlbbId" placeholder="1185010926 (2345)" inputmode="numeric" maxlength="40" autocomplete="off" />
+                    </div>
+                </div>
+                @error('queueMatches') <p class="form-error" role="alert">{{ $message }}</p> @enderror
+                @if (! $session) <p class="modal-help">Belum live — pemain masuk daftar sisa game dan ikut ke sesi live berikutnya.</p> @endif
                 <div class="modal-actions">
                     <button class="button button-outline" type="button" wire:click="cancelQueue">Batal</button>
-                    <button class="button button-primary" type="submit" @disabled($packages->isEmpty())>Masukkan ke antrean</button>
+                    <button class="button button-primary" type="submit">Masukkan ke antrean</button>
                 </div>
             </form>
         </dialog>

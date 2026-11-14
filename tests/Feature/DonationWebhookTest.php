@@ -34,7 +34,8 @@ class DonationWebhookTest extends TestCase
     {
         parent::setUp();
 
-        $this->streamer = User::factory()->create();
+        // Test adapter & kelipatan paket memakai mode "otomatis semua"; mode semi-otomatis diuji terpisah.
+        $this->streamer = User::factory()->create(['donation_queue_mode' => 'auto']);
         $this->saweria = $this->connect('saweria', self::KEY);
         $this->streamer->vipPackages()->createMany([
             ['name' => 'VIP 1 Match', 'price' => 15000, 'match_count' => 1, 'sort_order' => 1],
@@ -119,19 +120,58 @@ class DonationWebhookTest extends TestCase
 
     public function test_amount_is_converted_to_games_by_package_multiples_and_small_donations_are_ignored(): void
     {
+        // Belum live: donasi tetap masuk daftar sisa game (sesi penampung) dan ikut ke live berikutnya.
         $this->sendSaweria($this->saweria, $this->saweriaPayload('sw-0', 'Sebelum live', 15000), self::KEY)
-            ->assertCreated()->assertJsonPath('data.status', 'received');
-        $this->assertNull(Donation::firstWhere('external_id', 'sw-0')->live_session_id);
+            ->assertCreated()->assertJsonPath('data.status', 'queued');
+        $standby = Donation::firstWhere('external_id', 'sw-0')->liveSession;
+        $this->assertSame(['ended', 'Antrean sebelum live'], [$standby->status, $standby->title]);
 
         // Paket aktif: 15rb = 1 game, 35rb = 3 game (paket 50rb nonaktif tidak dipakai).
-        $session = $this->openLiveSession();
+        $session = app(\App\Services\LiveSessionService::class)->start($this->streamer, 'Mabar');
+        $this->assertSame(['Sebelum live'], $session->queueEntries()->pluck('player_name')->all());
         $this->sendSaweria($this->saweria, $this->saweriaPayload('sw-1', 'Nadia', 20000), self::KEY)->assertJsonPath('data.status', 'queued'); // 15rb, sisa 5rb hangus
         $this->sendSaweria($this->saweria, $this->saweriaPayload('sw-2', 'Bimo', 50000), self::KEY)->assertJsonPath('data.status', 'queued'); // 35rb + 15rb
         $this->sendSaweria($this->saweria, $this->saweriaPayload('sw-3', 'Citra', 70000), self::KEY)->assertJsonPath('data.status', 'queued'); // 35rb × 2
         $this->sendSaweria($this->saweria, $this->saweriaPayload('sw-4', 'Dodi', 10000), self::KEY)->assertJsonPath('data.status', 'ignored'); // < 15rb
 
-        $this->assertSame(['Nadia' => 1, 'Bimo' => 4, 'Citra' => 6], $session->queueEntries()->pluck('matches_total', 'player_name')->all());
+        $this->assertSame(['Sebelum live' => 1, 'Nadia' => 1, 'Bimo' => 4, 'Citra' => 6], $session->queueEntries()->pluck('matches_total', 'player_name')->all());
         $this->assertNotNull(Donation::firstWhere('external_id', 'sw-4')->processed_at);
+    }
+
+    public function test_smart_mode_queues_only_donations_whose_message_mentions_an_id_or_mabar(): void
+    {
+        $this->streamer->forceFill(['donation_queue_mode' => 'smart'])->save();
+        $session = $this->openLiveSession();
+
+        $send = fn (string $id, string $message, int $amount = 35000) => $this->sendSaweria($this->saweria, $this->saweriaPayload($id, 'Donatur '.$id, $amount, ['message' => $message]), self::KEY);
+
+        $send('s1', 'mabar bang, id 1185010926 (2345)')->assertJsonPath('data.status', 'queued');
+        $send('s2', 'Mabar dong')->assertJsonPath('data.status', 'queued');
+        $send('s3', 'ID: 138765201')->assertJsonPath('data.status', 'queued');
+        $send('s4', 'Semangat bang! sehat selalu')->assertJsonPath('data.status', 'review'); // donasi biasa
+        $send('s5', 'mabar', 10000)->assertJsonPath('data.status', 'ignored'); // di bawah paket termurah
+
+        $entries = $session->queueEntries()->get()->keyBy('player_name');
+        $this->assertSame('1185010926 (2345)', $entries['Donatur s1']->mlbb_id);
+        $this->assertNull($entries['Donatur s2']->mlbb_id);
+        $this->assertSame('138765201', $entries['Donatur s3']->mlbb_id);
+        $this->assertSame('Semangat bang! sehat selalu', Donation::firstWhere('external_id', 's4')->message);
+
+        $this->streamer->forceFill(['donation_queue_mode' => 'manual'])->save();
+        $send('s6', 'mabar id 1185010926')->assertJsonPath('data.status', 'review');
+    }
+
+    public function test_message_parsing_helpers(): void
+    {
+        $id = fn (?string $m) => \App\Services\DonationQueueService::mlbbIdFrom($m);
+
+        $this->assertSame('1185010926', $id('id 1185010926'));
+        $this->assertSame('1185010926 (2345)', $id('1185010926(2345) mabar'));
+        $this->assertSame('1185010926 (2345)', $id('ID: 1185010926 [2345]'));
+        $this->assertNull($id('donasi 50000 semangat')); // 5 digit: bukan ID
+        $this->assertNull($id(null));
+        $this->assertTrue(\App\Services\DonationQueueService::wantsMabar('VIP bang'));
+        $this->assertFalse(\App\Services\DonationQueueService::wantsMabar('semangat bang'));
     }
 
     public function test_package_multiples_match_streamer_pricing(): void

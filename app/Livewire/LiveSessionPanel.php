@@ -70,7 +70,8 @@ class LiveSessionPanel extends Component
         $queue = $session?->queueEntries()->whereIn('status', ['playing', 'ready', 'offline', 'skipped'])->get() ?? collect();
         $donations = $session?->donations() ?? null;
 
-        $archives = $user->liveSessions()->where('status', 'ended')->latest('ended_at');
+        // Sesi penampung "Antrean sebelum live" bukan live sungguhan → tidak ditampilkan di arsip.
+        $archives = $user->liveSessions()->where('status', 'ended')->where('title', '!=', LiveSessionService::STANDBY_TITLE)->latest('ended_at');
 
         return view('livewire.live-session-panel', [
             'session' => $session,

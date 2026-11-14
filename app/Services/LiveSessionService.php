@@ -14,6 +14,31 @@ class LiveSessionService
     /** Status pemain yang jatahnya belum habis (ikut pindah ke sesi berikutnya). */
     public const UNFINISHED = ['ready', 'offline', 'playing', 'skipped'];
 
+    /** Judul sesi penampung untuk streamer yang mengisi antrean sebelum pernah live. */
+    public const STANDBY_TITLE = 'Antrean sebelum live';
+
+    /**
+     * Sesi tempat daftar sisa game disimpan: sesi live aktif, atau (saat belum live) sesi terakhir.
+     * Streamer yang belum pernah live dibuatkan satu sesi penampung yang langsung berstatus selesai,
+     * supaya antrean bisa diisi dan donasi tercatat tanpa harus memulai live. Saat live dimulai,
+     * pemainnya ikut pindah ke sesi baru (carryOverUnfinished).
+     */
+    public function queueSession(User $user): LiveSession
+    {
+        return $user->liveSessions()->active()->latest('started_at')->first()
+            ?? $user->liveSessions()->latest('started_at')->latest('id')->first()
+            ?? LiveSession::query()->create([
+                'user_id' => $user->id,
+                'title' => self::STANDBY_TITLE,
+                'status' => 'ended',
+                'started_at' => now(),
+                'ended_at' => now(),
+                'total_players' => 0,
+                'total_matches' => 0,
+                'total_donation' => 0,
+            ]);
+    }
+
     public function start(User $user, string $title): LiveSession
     {
         $title = trim($title);
@@ -117,6 +142,7 @@ class LiveSessionService
         return LiveSession::query()
             ->where('user_id', $user->id)
             ->where('status', 'ended')
+            ->where('title', '!=', self::STANDBY_TITLE)
             ->latest('ended_at')
             ->get();
     }

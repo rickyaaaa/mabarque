@@ -5,32 +5,44 @@
     $avatarColors = ['#3b1945', '#d82a1c', '#1f6faf', '#684780', '#238b39', '#a91b16'];
     $serviceTypes = \App\Models\QueueEntry::SERVICE_TYPES;
     $maxMatches = \App\Services\QueueService::MAX_MATCHES;
+    $donationModes = \App\Services\DonationQueueService::MODES;
 @endphp
 
 {{-- Refresh otomatis dijeda selama ada popup terbuka supaya isian form tidak tertimpa. --}}
 <div @if (! $showAddPlayer && ! $editingId && ! $showImport && ! $showRules) wire:poll.5s="refreshQueue" @endif>
     {{-- ── Header sesi ─────────────────────────────────────────────── --}}
     <header class="session-header region-session-header">
-        <div>
-            <h1>{{ $session->title }}</h1>
-            <p class="session-meta"
-               x-data="{ start: {{ $session->started_at?->getTimestamp() ?? 'null' }}, now: Date.now() / 1000 }"
-               x-init="setInterval(() => now = Date.now() / 1000, 1000)">
-                {{ $session->started_at?->translatedFormat('l, j M Y') }}
-                <span class="meta-separator">•</span>
-                Live <span x-text="start ? new Date(Math.max(0, now - start) * 1000).toISOString().substring(11, 19) : '—'"></span>
-            </p>
-        </div>
-        <div class="session-stats" aria-label="Ringkasan sesi">
-            <div class="session-stat"><span>Di antrean</span><strong>{{ $counts['all'] }}</strong></div>
-            <div class="session-stat"><span>Match selesai</span><strong>{{ $session->total_matches }}</strong></div>
-            <div class="session-stat"><span>Donasi masuk</span><strong>Rp {{ number_format($session->total_donation, 0, ',', '.') }}</strong></div>
-        </div>
-        <button class="button button-outline" type="button"
-                wire:click="endSession"
-                wire:confirm="Akhiri sesi &quot;{{ $session->title }}&quot;? Pemain yang sisa game-nya belum habis otomatis ikut ke sesi berikutnya.">
-            Akhiri sesi
-        </button>
+        @if ($isLive)
+            <div>
+                <h1>{{ $session->title }}</h1>
+                <p class="session-meta"
+                   x-data="{ start: {{ $session->started_at?->getTimestamp() ?? 'null' }}, now: Date.now() / 1000 }"
+                   x-init="setInterval(() => now = Date.now() / 1000, 1000)">
+                    {{ $session->started_at?->translatedFormat('l, j M Y') }}
+                    <span class="meta-separator">•</span>
+                    Live <span x-text="start ? new Date(Math.max(0, now - start) * 1000).toISOString().substring(11, 19) : '—'"></span>
+                </p>
+            </div>
+            <div class="session-stats" aria-label="Ringkasan sesi">
+                <div class="session-stat"><span>Di antrean</span><strong>{{ $counts['all'] }}</strong></div>
+                <div class="session-stat"><span>Match selesai</span><strong>{{ $session->total_matches }}</strong></div>
+                <div class="session-stat"><span>Donasi masuk</span><strong>Rp {{ number_format($session->total_donation, 0, ',', '.') }}</strong></div>
+            </div>
+            <button class="button button-outline" type="button"
+                    wire:click="endSession"
+                    wire:confirm="Akhiri sesi &quot;{{ $session->title }}&quot;? Pemain yang sisa game-nya belum habis otomatis ikut ke sesi berikutnya.">
+                Akhiri sesi
+            </button>
+        @else
+            <div>
+                <h1>Antrean</h1>
+                <p class="session-meta">Belum live <span class="meta-separator">•</span> Sisa game tersimpan dan tampil di halaman viewer. Tambah atau edit pemain kapan saja.</p>
+            </div>
+            <div class="session-stats" aria-label="Ringkasan antrean">
+                <div class="session-stat"><span>Di antrean</span><strong>{{ $counts['all'] }}</strong></div>
+            </div>
+            <a class="button button-primary" href="/live-session">Mulai sesi live</a>
+        @endif
     </header>
 
     @error('queue')
@@ -41,7 +53,7 @@
     <section class="top-grid" aria-label="Kontrol sesi">
         <article class="current-player region-current-player" aria-labelledby="current-player-title">
             <div class="current-player-label" id="current-player-title">
-                {{ $party->isNotEmpty() ? 'Sedang main' : 'Belum ada game berjalan' }}
+                {{ ! $isLive ? 'Belum live' : ($party->isNotEmpty() ? 'Sedang main' : 'Belum ada game berjalan') }}
                 <span class="party-count">{{ $party->count() }}/{{ $partySizeLimit }} pemain + streamer</span>
             </div>
             <div class="party-body">
@@ -60,7 +72,7 @@
                         </li>
                     @endforeach
                     @for ($slot = $party->count(); $slot < $partySizeLimit; $slot++)
-                        <li class="party-slot is-empty"><span class="party-slot-text"><strong>Slot kosong</strong></span></li>
+                        <li class="party-slot is-empty"><span class="party-slot-text"><strong>{{ $isLive ? 'Slot kosong' : 'Party diisi saat live' }}</strong></span></li>
                     @endfor
                 </ol>
                 <div class="party-next">
@@ -68,7 +80,7 @@
                     @forelse ($nextUp as $next)
                         <p @class(['party-next-name', 'is-picked' => $next->isPickedForNext()]) wire:key="next-{{ $next->id }}">
                             <span>{{ $loop->iteration }}. {{ $next->display_name }} <small>sisa {{ $matches->remaining($next) }}</small></span>
-                            @if ($next->isPickedForNext())
+                            @if ($isLive && $next->isPickedForNext())
                                 <button class="party-next-remove" type="button" wire:click="unpickNext({{ $next->id }})" title="Batalkan dari Next game" aria-label="Batalkan {{ $next->display_name }} dari Next game">×</button>
                             @else
                                 <small class="party-next-auto">otomatis</small>
@@ -77,7 +89,7 @@
                     @empty
                         <p class="party-next-empty">Tidak ada yang menunggu. Tambah pemain atau tunggu donasi VIP.</p>
                     @endforelse
-                    <p class="party-next-hint">Pilih manual dengan tombol ⏭ di daftar.</p>
+                    <p class="party-next-hint">{{ $isLive ? 'Pilih manual dengan tombol ⏭ di daftar.' : 'Perkiraan dari urutan antrean.' }}</p>
                 </div>
             </div>
         </article>
@@ -85,7 +97,9 @@
         <article class="quick-actions region-quick-actions" aria-labelledby="quick-actions-title">
             <h2 id="quick-actions-title">Kontrol game</h2>
             <div class="quick-action-row">
-                @if ($party->isEmpty())
+                @if (! $isLive)
+                    <a class="button button-small button-light" href="/live-session"><span aria-hidden="true">▶</span> Mulai sesi live</a>
+                @elseif ($party->isEmpty())
                     <button class="button button-small button-light" type="button" wire:click="startGame" @disabled($nextUp->isEmpty())><span aria-hidden="true">▶</span> Mulai game</button>
                 @else
                     <button class="button button-small button-light" type="button" wire:click="finishGame"
@@ -99,6 +113,7 @@
             <p class="party-rules-note">
                 {{ $partySizeLimit }} pemain per game ·
                 {{ $cap > 0 ? "maks {$cap} game per orang tiap sesi" : 'tanpa batas game per sesi' }}
+                <br />Donasi: {{ ['smart' => 'otomatis bila pesan berisi ID/“mabar”', 'manual' => 'selalu konfirmasi manual', 'auto' => 'otomatis semua donasi'][$donationMode] ?? '' }}
             </p>
             <button class="button button-primary button-add" type="button" wire:click="openAddPlayer"><span class="add-icon" aria-hidden="true">+</span> Tambah pemain</button>
             <button class="button button-outline button-small button-import" type="button" wire:click="openImport">⇣ Tempel banyak pemain</button>
@@ -305,6 +320,14 @@
                     @endfor
                 </select>
                 @error('sessionCap') <p class="form-error" role="alert">{{ $message }}</p> @enderror
+                <label class="field-label" for="rules-donation-mode">Donasi masuk antrean</label>
+                <select class="field-input" id="rules-donation-mode" wire:model="donationModeInput">
+                    @foreach ($donationModes as $value => $label)
+                        <option value="{{ $value }}">{{ $label }}{{ $value === 'smart' ? ' (disarankan)' : '' }}</option>
+                    @endforeach
+                </select>
+                @error('donationModeInput') <p class="form-error" role="alert">{{ $message }}</p> @enderror
+                <p class="modal-help">Jumlah game dihitung dari kelipatan paket (75rb = 50rb + 25rb). Donasi yang tidak otomatis masuk tetap muncul di halaman Donasi sebagai "Perlu cek".</p>
                 <p class="modal-help">Pemain yang sudah mencapai batas tetap ada di daftar dengan sisa game-nya, tapi dilewati saat mengisi party sampai sesi live berikutnya. Kamu tetap bisa memasukkannya manual dengan tombol ▶. Pemain "Mainin akun" tidak masuk party dan tidak dibatasi.</p>
                 <div class="modal-actions">
                     <button class="button button-outline" type="button" wire:click="closeRules">Batal</button>

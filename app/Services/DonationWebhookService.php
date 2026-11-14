@@ -75,11 +75,8 @@ class DonationWebhookService
         }
 
         return DB::transaction(function () use ($connection, $incoming, $payload): WebhookResult {
-            $session = LiveSession::query()
-                ->where('user_id', $connection->user_id)
-                ->where('status', 'active')
-                ->latest('started_at')
-                ->first();
+            // Sesi live aktif, atau daftar sisa game saat streamer belum live (donasi tetap bisa masuk antrean).
+            $session = app(LiveSessionService::class)->queueSession($connection->user);
 
             // Nominal non-IDR tidak bisa dicocokkan ke harga paket → selalu perlu dicek streamer.
             $donation = $this->record($connection, $incoming, $payload, $session, $incoming->currency === 'IDR' ? 'received' : 'review');
@@ -111,6 +108,7 @@ class DonationWebhookService
                 'donor_name' => Str::limit($incoming->donorName, 120, ''),
                 'donor_email' => $incoming->donorEmail,
                 'amount' => $incoming->amount,
+                'message' => $incoming->message !== null ? Str::limit(trim($incoming->message), 500, '') : null,
                 'status' => $status,
                 'payload' => $payload,
                 'received_at' => now(),

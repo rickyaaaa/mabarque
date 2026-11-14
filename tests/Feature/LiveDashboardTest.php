@@ -38,9 +38,33 @@ class LiveDashboardTest extends TestCase
         ]);
     }
 
+    public function test_board_without_live_manages_players_but_not_the_party(): void
+    {
+        $this->get('/dashboard')->assertOk()->assertSee('Belum live');
+        $standby = app(\App\Services\LiveSessionService::class)->queueSession($this->streamer);
+        $this->assertSame('ended', $standby->status);
+
+        $board = Livewire::test(QueueBoard::class, ['session' => $standby])
+            ->set('playerName', 'Kiki ML')
+            ->set('matchesTotal', 3)
+            ->call('addPlayer')
+            ->assertHasNoErrors()
+            ->assertSee('Kiki ML')
+            ->assertSee('Party diisi saat live')
+            ->call('startGame')
+            ->assertHasErrors(['queue'])
+            ->assertSee('Mulai sesi live dulu untuk mengatur party');
+
+        // Live dimulai (mis. dari tab lain): pemain ikut pindah, papan lama memuat ulang ke sesi baru.
+        $live = app(\App\Services\LiveSessionService::class)->start($this->streamer, 'Live Senin');
+        $this->assertSame(['Kiki ML'], $live->queueEntries()->pluck('player_name')->all());
+        $board->call('refreshQueue')->assertRedirect('/dashboard');
+    }
+
     public function test_pages_without_active_session_invite_to_start_one(): void
     {
-        $this->get('/dashboard')->assertOk()->assertSee('Mulai sesi live dulu');
+        // Papan antrean tetap bisa dibuka tanpa live untuk mengelola daftar sisa game.
+        $this->get('/dashboard')->assertOk()->assertSee('Belum live')->assertSee('Tempel banyak pemain')->assertSee('Mulai sesi live');
         $this->get('/match-count')->assertOk()->assertSee('Mulai sesi live dulu');
         $this->get('/live-session')->assertOk()->assertSee('Mulai sesi sekarang');
     }

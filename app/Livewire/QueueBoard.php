@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\LiveSession;
 use App\Models\QueueEntry;
+use App\Services\DonationQueueService;
 use App\Services\LiveSessionService;
 use App\Services\MatchService;
 use App\Services\QueueService;
@@ -63,6 +64,8 @@ class QueueBoard extends Component
 
     public int $sessionCap = 0;
 
+    public string $donationModeInput = 'smart';
+
     public string $importText = '';
 
     public function mount(LiveSession $session): void
@@ -75,6 +78,10 @@ class QueueBoard extends Component
 
     public function refreshQueue(): void
     {
+        if ($this->redirectIfStale()) {
+            return;
+        }
+
         $this->session->refresh();
     }
 
@@ -186,7 +193,7 @@ class QueueBoard extends Component
 
     public function markPlaying(int $entryId, QueueService $queueService): void
     {
-        $this->attempt(function () use ($entryId, $queueService): string {
+        $this->attemptLive(function () use ($entryId, $queueService): string {
             $entry = $queueService->markPlaying($this->session, $this->entry($entryId));
 
             return "{$entry->display_name} masuk party.";
@@ -199,7 +206,7 @@ class QueueBoard extends Component
      */
     public function finishMatch(int $entryId, MatchService $matches, QueueService $queueService): void
     {
-        $this->attempt(function () use ($entryId, $matches, $queueService): string {
+        $this->attemptLive(function () use ($entryId, $matches, $queueService): string {
             $entry = $this->entry($entryId);
             $matches->record($entry);
             $result = $queueService->settleAfterMatch($this->session, collect([$entry]));
@@ -215,7 +222,7 @@ class QueueBoard extends Component
     /** Isi party dengan pemain berikutnya (awal live, atau saat ada slot kosong). */
     public function startGame(QueueService $queueService): void
     {
-        $this->attempt(function () use ($queueService): string {
+        $this->attemptLive(function () use ($queueService): string {
             $joined = $queueService->fillParty($this->session);
 
             if ($joined->isEmpty()) {
@@ -231,7 +238,7 @@ class QueueBoard extends Component
     /** Game party selesai: semua anggota party berkurang 1 game. */
     public function finishGame(QueueService $queueService): void
     {
-        $this->attempt(function () use ($queueService): string {
+        $this->attemptLive(function () use ($queueService): string {
             $result = $queueService->finishGame($this->session);
             $message = 'Game selesai dicatat untuk '.$result['played']->count().' pemain.';
 
@@ -250,7 +257,7 @@ class QueueBoard extends Component
     /** Pilih pemain untuk Next game secara manual. */
     public function pickNext(int $entryId, QueueService $queueService): void
     {
-        $this->attempt(function () use ($entryId, $queueService): string {
+        $this->attemptLive(function () use ($entryId, $queueService): string {
             $entry = $queueService->pickForNext($this->session, $this->entry($entryId));
 
             return "{$entry->display_name} masuk Next game.";
@@ -259,7 +266,7 @@ class QueueBoard extends Component
 
     public function unpickNext(int $entryId, QueueService $queueService): void
     {
-        $this->attempt(function () use ($entryId, $queueService): string {
+        $this->attemptLive(function () use ($entryId, $queueService): string {
             $entry = $queueService->unpickForNext($this->session, $this->entry($entryId));
 
             return "{$entry->display_name} dibatalkan dari Next game.";
@@ -269,7 +276,7 @@ class QueueBoard extends Component
     /** Keluarkan pemain dari party (urutannya tetap); slotnya dibiarkan kosong. */
     public function bench(int $entryId, QueueService $queueService): void
     {
-        $this->attempt(function () use ($entryId, $queueService): string {
+        $this->attemptLive(function () use ($entryId, $queueService): string {
             $entry = $queueService->bench($this->session, $this->entry($entryId));
 
             return "{$entry->display_name} keluar dari party. Slotnya kosong — klik \"Isi slot kosong\" kalau mau diisi.";
@@ -282,6 +289,7 @@ class QueueBoard extends Component
         $this->resetValidation();
         $this->partySize = (int) ($user->party_size ?: 4);
         $this->sessionCap = (int) $user->session_match_cap;
+        $this->donationModeInput = array_key_exists((string) $user->donation_queue_mode, DonationQueueService::MODES) ? $user->donation_queue_mode : 'smart';
         $this->showRules = true;
     }
 
@@ -295,9 +303,14 @@ class QueueBoard extends Component
         $this->validate([
             'partySize' => ['required', 'integer', 'min:1', 'max:'.QueueService::MAX_PARTY_SIZE],
             'sessionCap' => ['required', 'integer', 'min:0', 'max:'.self::MAX_SESSION_CAP],
-        ], [], ['partySize' => 'jumlah pemain per game', 'sessionCap' => 'batas game per sesi']);
+            'donationModeInput' => ['required', 'in:'.implode(',', array_keys(DonationQueueService::MODES))],
+        ], [], ['partySize' => 'jumlah pemain per game', 'sessionCap' => 'batas game per sesi', 'donationModeInput' => 'mode donasi']);
 
-        auth()->user()->forceFill(['party_size' => $this->partySize, 'session_match_cap' => $this->sessionCap])->save();
+        auth()->user()->forceFill([
+            'party_size' => $this->partySize,
+            'session_match_cap' => $this->sessionCap,
+            'donation_queue_mode' => $this->donationModeInput,
+        ])->save();
         $this->session->unsetRelation('user');
         $this->showRules = false;
         $this->dispatch('notify', message: 'Aturan party disimpan: '.$this->partySize.' pemain per game, '
@@ -330,7 +343,7 @@ class QueueBoard extends Component
 
     public function skip(int $entryId, QueueService $queueService): void
     {
-        $this->attempt(function () use ($entryId, $queueService): string {
+        $this->attemptLive(function () use ($entryId, $queueService): string {
             $entry = $this->entry($entryId);
             $next = $queueService->skip($this->session, $entry);
 
@@ -385,6 +398,8 @@ class QueueBoard extends Component
             'nextUp' => $queue->nextUp($this->session, $size),
             'played' => $queue->playedThisSession($this->session),
             'cap' => $queue->sessionCap($this->session),
+            'isLive' => $this->session->status === 'active',
+            'donationMode' => $this->session->user?->donation_queue_mode ?: 'smart',
             'matches' => app(MatchService::class),
         ]);
     }
@@ -397,9 +412,7 @@ class QueueBoard extends Component
     {
         $this->resetErrorBag('queue');
 
-        if ($this->session->refresh()->status !== 'active') {
-            $this->addError('queue', 'Sesi ini sudah diakhiri. Mulai sesi baru dari halaman Sesi Live.');
-
+        if ($this->redirectIfStale()) {
             return;
         }
 
@@ -414,6 +427,38 @@ class QueueBoard extends Component
         } catch (InvalidArgumentException|RuntimeException $exception) {
             $this->addError('queue', $exception->getMessage());
         }
+    }
+
+    /** Aksi party/catat game: hanya saat sesi live aktif. */
+    private function attemptLive(callable $action): void
+    {
+        if ($this->session->refresh()->status !== 'active') {
+            $this->resetErrorBag('queue');
+            $this->addError('queue', 'Mulai sesi live dulu untuk mengatur party dan mencatat game.');
+
+            return;
+        }
+
+        $this->attempt($action);
+    }
+
+    /**
+     * Papan ini memegang sesi tertentu. Bila sesi itu sudah bukan sesi antrean terkini (live baru dimulai
+     * di tab lain, atau sesi live diakhiri), muat ulang supaya tidak mengubah data di sesi yang salah.
+     */
+    private function redirectIfStale(): bool
+    {
+        $current = app(LiveSessionService::class)->queueSession(auth()->user());
+
+        if ($current->is($this->session)) {
+            $this->session->refresh();
+
+            return false;
+        }
+
+        $this->redirect('/dashboard', navigate: false);
+
+        return true;
     }
 
     /** Seperti attempt(), tetapi pesan kesalahan tampil di dalam modal yang sedang terbuka. */

@@ -20,6 +20,7 @@ class PublicChannelPageController extends Controller
             'channel' => $profiles->publicProfile($user),
             'queue' => $queues->forUser($user),
             'packages' => $packages->listForUser($user, true),
+            'donationMode' => $user->donation_queue_mode ?: 'smart',
         ]);
     }
 }

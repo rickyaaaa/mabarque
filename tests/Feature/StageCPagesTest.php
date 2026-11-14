@@ -41,7 +41,7 @@ class StageCPagesTest extends TestCase
     /** Webhook Saweria dengan format asli (lihat SendsProviderWebhooks). */
     private function sendWebhook(PlatformConnection $connection, array $donation)
     {
-        return $this->sendSaweria($connection, $this->saweriaPayload($donation['id'], $donation['donor_name'], $donation['amount']), self::SECRET);
+        return $this->sendSaweria($connection, $this->saweriaPayload($donation['id'], $donation['donor_name'], $donation['amount'], ['message' => $donation['message'] ?? 'Semangat bang!']), self::SECRET);
     }
 
     public function test_package_manager_create_edit_toggle_and_duplicate_price_guard(): void
@@ -85,18 +85,21 @@ class StageCPagesTest extends TestCase
         LiveSession::create(['user_id' => $this->streamer->id, 'title' => 'Mabar', 'status' => 'active', 'started_at' => now()]);
         $this->streamer->vipPackages()->create(['name' => 'VIP 1', 'price' => 15000, 'match_count' => 1]);
 
-        $this->sendWebhook($connection, ['id' => 'a', 'donor_name' => 'Raka ML', 'amount' => 15000])->assertCreated();
+        $this->sendWebhook($connection, ['id' => 'a', 'donor_name' => 'Raka ML', 'amount' => 15000, 'message' => 'mabar id 1185010926'])->assertCreated();
         $this->sendWebhook($connection, ['id' => 'b', 'donor_name' => 'Nadia', 'amount' => 12345])->assertCreated();
         $this->sendWebhook($connection, ['id' => 'b', 'donor_name' => 'Nadia', 'amount' => 12345])->assertOk(); // duplikat: tanpa notifikasi baru
+        $this->sendWebhook($connection, ['id' => 'c', 'donor_name' => 'Citra', 'amount' => 20000])->assertCreated();
 
-        // 12.345 di bawah paket termurah → diabaikan otomatis, tetap tercatat dan muncul di notifikasi.
-        $this->assertSame(['queued', 'received'], $this->streamer->donationNotifications()->oldest('id')->pluck('type')->all());
+        // Mode semi-otomatis (default): pesan berisi ID → antrean; 12.345 di bawah paket termurah → diabaikan;
+        // donasi biasa tanpa ID/"mabar" → perlu dicek streamer.
+        $this->assertSame(['queued', 'received', 'review'], $this->streamer->donationNotifications()->oldest('id')->pluck('type')->all());
         $this->assertSame('ignored', Donation::firstWhere('external_id', 'b')->status);
 
         Livewire::test(DonationInbox::class)
             ->assertSee('Raka ML masuk antrean otomatis')
             ->assertSee('Nadia mengirim donasi')
-            ->assertSee('2 notifikasi baru')
+            ->assertSee('Citra perlu dicek')
+            ->assertSee('3 notifikasi baru')
             ->call('markAllRead')
             ->assertSee('0 notifikasi baru');
     }
@@ -109,19 +112,25 @@ class StageCPagesTest extends TestCase
         $review = Donation::create(['platform_connection_id' => $connection->id, 'external_id' => 'x1', 'provider' => 'saweria', 'donor_name' => 'Nadia', 'amount' => 40000, 'status' => 'review']);
         $other = Donation::create(['platform_connection_id' => $connection->id, 'external_id' => 'x2', 'provider' => 'saweria', 'donor_name' => 'Bimo', 'amount' => 5000, 'status' => 'received']);
 
-        $inbox = Livewire::test(DonationInbox::class)
-            ->call('startQueue', $review->id)
-            ->assertSet('packageId', $big->id) // paket termahal yang ≤ nominal donasi
-            ->call('confirmQueue')
-            ->assertHasErrors(['packageId']); // belum ada sesi live
-
+        $review->forceFill(['message' => 'mabar bang 1185010926 (2345)'])->save();
         $session = LiveSession::create(['user_id' => $this->streamer->id, 'title' => 'Mabar', 'status' => 'active', 'started_at' => now()]);
 
-        $inbox->call('confirmQueue')->assertHasNoErrors()->assertSet('queueingId', null)
-            ->assertDispatched('notify', message: 'Nadia masuk antrean dengan paket VIP 3.');
+        // 40rb = 35rb (3 game), sisa 5rb tidak cukup paket 15rb → usulan 3 game; ID diambil dari pesan.
+        $inbox = Livewire::test(DonationInbox::class)
+            ->call('startQueue', $review->id)
+            ->assertSet('queueMatches', 3)
+            ->assertSet('queueMlbbId', '1185010926 (2345)')
+            ->assertSee('Rp 35.000 = 3 game')
+            ->set('queueMatches', 0)
+            ->call('confirmQueue')
+            ->assertHasErrors(['queueMatches'])
+            ->set('queueMatches', 4)
+            ->call('confirmQueue')
+            ->assertHasNoErrors()->assertSet('queueingId', null)
+            ->assertDispatched('notify', message: 'Nadia masuk antrean dengan 4 game.');
 
         $entry = QueueEntry::sole();
-        $this->assertSame(3, $entry->matches_total);
+        $this->assertSame([4, '1185010926 (2345)', $big->id], [$entry->matches_total, $entry->mlbb_id, $entry->vip_package_id]);
         $this->assertSame('queued', $review->refresh()->status);
         $this->assertSame($session->id, $review->live_session_id);
         $this->assertSame(40000, $session->refresh()->total_donation);

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\LiveSessionService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 
@@ -11,9 +12,10 @@ use Illuminate\Http\Request;
  */
 class DashboardPageController extends Controller
 {
-    public function queue(Request $request): View
+    /** Papan antrean selalu bisa dibuka: saat belum live, menampilkan daftar sisa game untuk dikelola. */
+    public function queue(Request $request, LiveSessionService $sessions): View
     {
-        return view('pages.dashboard', ['session' => $this->activeSession($request)]);
+        return view('pages.dashboard', ['session' => $sessions->queueSession($request->user())]);
     }
 
     public function matches(Request $request): View

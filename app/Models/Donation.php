@@ -22,6 +22,7 @@ class Donation extends Model
         'donor_name',
         'donor_email',
         'amount',
+        'message',
         'status',
         'payload',
         'received_at',

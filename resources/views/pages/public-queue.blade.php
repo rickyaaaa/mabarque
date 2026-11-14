@@ -84,7 +84,14 @@
       <section class="public-packages" aria-labelledby="public-packages-title">
         <div class="public-section-heading">
           <div><p class="eyebrow">Pilihan VIP</p><h2 id="public-packages-title">Paket aktif</h2></div>
-          <span class="public-package-note">Donasi kelipatan harga paket otomatis masuk antrean · di bawah harga termurah tidak dihitung</span>
+          <span class="public-package-note">
+            @if ($donationMode === 'smart')
+              <strong>Tulis ID MLBB kamu di pesan donasi</strong> supaya langsung masuk antrean ·
+            @elseif ($donationMode === 'manual')
+              Donasi dicek streamer dulu sebelum masuk antrean · tulis ID MLBB di pesan donasi ·
+            @endif
+            Kelipatan harga paket dihitung otomatis (mis. 2× paket = 2× game) · di bawah harga termurah tidak dihitung
+          </span>
         </div>
         <div class="public-package-list">
           @forelse ($packages as $package)

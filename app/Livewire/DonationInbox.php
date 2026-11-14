@@ -3,8 +3,9 @@
 namespace App\Livewire;
 
 use App\Models\Donation;
-use App\Models\VipPackage;
 use App\Services\DonationQueueService;
+use App\Services\LiveSessionService;
+use App\Services\QueueService;
 use InvalidArgumentException;
 use Livewire\Component;
 
@@ -24,7 +25,12 @@ class DonationInbox extends Component
 
     public ?int $queueingId = null;
 
-    public ?int $packageId = null;
+    /** Jumlah game untuk donasi yang dimasukkan manual (terisi otomatis dari kelipatan paket). */
+    public int $queueMatches = 1;
+
+    public string $queueMlbbId = '';
+
+    public string $queuePlan = '';
 
     public function setStatus(string $status): void
     {
@@ -36,15 +42,16 @@ class DonationInbox extends Component
         $this->provider = in_array($value, self::PROVIDERS, true) ? $value : 'all';
     }
 
-    /** Buka modal pilih paket; paket yang disarankan = harga tertinggi yang ≤ nominal donasi. */
-    public function startQueue(int $donationId): void
+    /** Buka modal masukkan manual; jumlah game & ID MLBB diusulkan dari nominal dan pesan donasi. */
+    public function startQueue(int $donationId, DonationQueueService $service): void
     {
         $donation = $this->donation($donationId);
-        $packages = $this->activePackages();
+        $suggestion = $service->suggestion($donation, auth()->user());
 
         $this->queueingId = $donation->id;
-        $this->packageId = $packages->where('price', '<=', $donation->amount)->sortByDesc('price')->first()?->id
-            ?? $packages->first()?->id;
+        $this->queueMatches = $suggestion['matches'];
+        $this->queueMlbbId = (string) $suggestion['mlbb_id'];
+        $this->queuePlan = $suggestion['description'];
         $this->resetValidation();
     }
 
@@ -53,30 +60,21 @@ class DonationInbox extends Component
         $this->queueingId = null;
     }
 
-    public function confirmQueue(DonationQueueService $service): void
+    public function confirmQueue(DonationQueueService $service, LiveSessionService $sessions): void
     {
-        $this->resetErrorBag(); // jangan tampilkan error percobaan sebelumnya (mis. sesi baru saja dimulai)
-        $session = auth()->user()->liveSessions()->active()->latest('started_at')->first();
-        $package = $this->packageId ? auth()->user()->vipPackages()->whereKey($this->packageId)->first() : null;
-
-        if ($session === null) {
-            $this->addError('packageId', 'Mulai sesi live dulu sebelum memasukkan pemain ke antrean.');
-
-            return;
-        }
-
-        if ($package === null) {
-            $this->addError('packageId', 'Pilih paket VIP.');
-
-            return;
-        }
+        $this->resetErrorBag();
+        $this->validate([
+            'queueMatches' => ['required', 'integer', 'min:1', 'max:'.QueueService::MAX_MATCHES],
+            'queueMlbbId' => ['nullable', 'string', 'max:40'],
+        ], [], ['queueMatches' => 'jumlah game', 'queueMlbbId' => 'ID MLBB']);
 
         try {
-            $donation = $service->queueWithPackage($this->donation($this->queueingId), $package, $session);
+            // Tanpa sesi live pun boleh: pemain masuk daftar sisa game dan ikut ke sesi berikutnya.
+            $donation = $service->queueManually($this->donation($this->queueingId), $sessions->queueSession(auth()->user()), $this->queueMatches, $this->queueMlbbId);
             $this->queueingId = null;
-            $this->dispatch('notify', message: "{$donation->donor_name} masuk antrean dengan paket {$package->name}.");
+            $this->dispatch('notify', message: "{$donation->donor_name} masuk antrean dengan {$this->queueMatches} game.");
         } catch (InvalidArgumentException $exception) {
-            $this->addError('packageId', $exception->getMessage());
+            $this->addError('queueMatches', $exception->getMessage());
         }
     }
 

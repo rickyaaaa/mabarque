@@ -1,6 +1,8 @@
 {{-- Aksi per pemain di papan antrean (dipakai tabel desktop & kartu mobile). --}}
 <div class="row-actions">
-    @if ($entry->service_type === 'joki')
+    @if (! $isLive)
+        {{-- Belum live: hanya kelola data pemain; party & catat game tersedia saat live. --}}
+    @elseif ($entry->service_type === 'joki')
         {{-- Mainin akun: tidak ikut party, game dicatat satu per satu. --}}
         <button class="row-action" type="button" wire:click="finishMatch({{ $entry->id }})" title="Catat 1 game selesai" aria-label="Catat 1 game: {{ $entry->display_name }}">✓</button>
     @elseif ($entry->status === 'playing')
