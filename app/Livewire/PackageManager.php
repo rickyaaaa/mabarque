@@ -3,7 +3,9 @@
 namespace App\Livewire;
 
 use App\Models\VipPackage;
+use App\Services\DonationLinkService;
 use App\Services\VipPackageService;
+use InvalidArgumentException;
 use Livewire\Component;
 
 /** Paket VIP (/vip-packages): buat, ubah, aktif/nonaktifkan paket, dan pratinjau untuk penonton. */
@@ -18,6 +20,37 @@ class PackageManager extends Component
     public int|string $price = 25000;
 
     public int|string $matchCount = 1;
+
+    /** Link halaman donasi per platform (kosong = tidak dipakai) dan platform tombol utama. */
+    public array $links = ['sociabuzz' => '', 'saweria' => '', 'trakteer' => ''];
+
+    public string $primaryLink = 'sociabuzz';
+
+    public function mount(DonationLinkService $service): void
+    {
+        $settings = $service->settings(auth()->user());
+        $this->links = array_merge($this->links, $settings['urls']);
+        $this->primaryLink = $settings['primary'] ?? 'sociabuzz';
+    }
+
+    public function saveLinks(DonationLinkService $service): void
+    {
+        $this->resetErrorBag('links');
+
+        try {
+            $saved = $service->save(auth()->user(), $this->links, $this->primaryLink);
+        } catch (InvalidArgumentException $exception) {
+            $this->addError('links', $exception->getMessage());
+
+            return;
+        }
+
+        $this->links = array_merge(['sociabuzz' => '', 'saweria' => '', 'trakteer' => ''], $saved['urls']);
+        $this->primaryLink = $saved['primary'] ?? 'sociabuzz';
+        $this->dispatch('notify', message: $saved['urls'] === []
+            ? 'Link donasi dikosongkan. Kartu paket di halaman viewer tidak mengarah ke mana pun.'
+            : 'Link donasi disimpan. Viewer diarahkan ke '.DonationLinkService::PLATFORMS[$this->primaryLink]['label'].' saat memilih paket.');
+    }
 
     public function create(): void
     {

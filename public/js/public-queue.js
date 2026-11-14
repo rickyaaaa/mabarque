@@ -150,6 +150,35 @@
 
   $("#refresh-public-queue").addEventListener("click", () => load(true));
 
+  // Kartu paket VIP → panel cara donasi + tombol ke platform donasi pilihan streamer.
+  const packageDialog = $("#package-dialog");
+  let selectedPrice = "";
+  document.querySelectorAll(".public-package-card").forEach((card) => {
+    card.addEventListener("click", () => {
+      const { packageName, packagePrice, packagePriceLabel, packageGames } = card.dataset;
+      selectedPrice = packagePrice || "";
+      $("#package-dialog-title").textContent = packageName || "Paket VIP";
+      $("#package-dialog-price").textContent = packagePriceLabel || "";
+      $("#package-dialog-games").textContent = `${packageGames} game`;
+      packageDialog.querySelectorAll("[data-price-inline]").forEach((node) => { node.textContent = packagePriceLabel || ""; });
+      document.querySelectorAll(".public-package-card").forEach((other) => other.classList.toggle("is-selected", other === card));
+      if (typeof packageDialog.showModal === "function") packageDialog.showModal();
+    });
+  });
+  packageDialog.addEventListener("click", (event) => {
+    // Klik di luar kartu (latar gelap) atau tombol tutup → tutup panel.
+    if (event.target === packageDialog || event.target.closest("[data-close-dialog]")) packageDialog.close();
+  });
+  packageDialog.addEventListener("close", () => document.querySelectorAll(".public-package-card").forEach((card) => card.classList.remove("is-selected")));
+  $("#package-dialog-copy").addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(selectedPrice);
+      showToast(`Nominal ${selectedPrice} disalin.`);
+    } catch (error) {
+      showToast(`Nominal: ${selectedPrice}`);
+    }
+  });
+
   $("#share-queue").addEventListener("click", async () => {
     const link = window.location.href.split("?")[0];
     try {

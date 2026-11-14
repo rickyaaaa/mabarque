@@ -74,6 +74,7 @@ class User extends Authenticatable
             // Aturan party (QueueService); diubah lewat papan antrean dengan forceFill, bukan mass assignment.
             'party_size' => 'integer',
             'session_match_cap' => 'integer',
+            'donation_links' => 'array',
         ];
     }
 

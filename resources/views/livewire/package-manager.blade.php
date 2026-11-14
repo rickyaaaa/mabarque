@@ -46,6 +46,25 @@
         </section>
     @endif
 
+    <section class="donation-links-panel" aria-labelledby="donation-links-title">
+        <div>
+            <p class="eyebrow">Arah tombol paket</p>
+            <h2 id="donation-links-title">Link donasi untuk viewer</h2>
+            <p>Saat viewer mengklik paket di halaman antrean, mereka diarahkan ke halaman donasi ini. Isi yang kamu pakai saja.</p>
+        </div>
+        <form class="donation-links-form" wire:submit="saveLinks">
+            @foreach (\App\Services\DonationLinkService::PLATFORMS as $platform => $info)
+                <div class="donation-link-row">
+                    <label class="field-label" for="link-{{ $platform }}">{{ $info['label'] }}</label>
+                    <input class="field-input" id="link-{{ $platform }}" type="url" inputmode="url" wire:model="links.{{ $platform }}" placeholder="{{ $info['example'] }}" autocomplete="off" />
+                    <label class="donation-link-primary"><input type="radio" name="primary-link" value="{{ $platform }}" wire:model="primaryLink" /> Tombol utama</label>
+                </div>
+            @endforeach
+            @error('links') <p class="form-error" role="alert">{{ $message }}</p> @enderror
+            <div class="modal-actions"><button class="button button-primary" type="submit" wire:loading.attr="disabled">Simpan link donasi</button></div>
+        </form>
+    </section>
+
     <section class="package-preview">
         <div>
             <p class="eyebrow">Tampilan penonton</p>

@@ -95,7 +95,12 @@
         </div>
         <div class="public-package-list">
           @forelse ($packages as $package)
-            <article @class(['is-featured' => $loop->index === 1])><strong>{{ $package->name }}</strong><span>{{ $rupiah($package->price) }}</span><small>{{ $package->match_count }} game</small></article>
+            <button type="button" @class(['public-package-card', 'is-featured' => $loop->index === 1])
+                    data-package-name="{{ $package->name }}" data-package-price="{{ $package->price }}" data-package-price-label="{{ $rupiah($package->price) }}" data-package-games="{{ $package->match_count }}"
+                    aria-haspopup="dialog">
+              <strong>{{ $package->name }}</strong><span>{{ $rupiah($package->price) }}</span><small>{{ $package->match_count }} game</small>
+              <em class="public-package-cta">{{ $donationLinks ? 'Donasi sekarang →' : 'Lihat cara donasi →' }}</em>
+            </button>
           @empty
             <article><strong>Belum ada paket</strong><span>—</span><small>Streamer belum membuka paket VIP</small></article>
           @endforelse
@@ -130,6 +135,37 @@
           <p>Donasi sesuai paket VIP untuk masuk antrean.</p>
         </div>
       </section>
+
+      <dialog class="package-dialog" id="package-dialog" aria-labelledby="package-dialog-title">
+        <div class="package-dialog-card">
+          <button class="package-dialog-close" type="button" data-close-dialog aria-label="Tutup">×</button>
+          <p class="eyebrow">Paket VIP</p>
+          <h2 id="package-dialog-title"></h2>
+          <div class="package-dialog-price">
+            <div><span>Donasi tepat</span><strong id="package-dialog-price"></strong></div>
+            <div><span>Dapat</span><strong id="package-dialog-games"></strong></div>
+            <button class="button button-small button-light" type="button" id="package-dialog-copy">Salin nominal</button>
+          </div>
+          <ol class="package-dialog-steps">
+            <li>Klik tombol donasi di bawah, isi nominal <strong data-price-inline></strong> (atau kelipatannya).</li>
+            @if ($donationMode !== 'auto')
+              <li><strong>Tulis ID MLBB kamu di pesan donasi</strong>, mis. <code>mabar 12345678 (1234)</code>.</li>
+            @else
+              <li>Tulis nama atau ID MLBB kamu di pesan donasi supaya streamer gampang invite.</li>
+            @endif
+            <li>Kembali ke halaman ini — nama kamu muncul di daftar antrean{{ $donationMode === 'manual' ? ' setelah dicek streamer' : '' }}.</li>
+          </ol>
+          @if ($donationLinks)
+            <div class="package-dialog-links">
+              @foreach ($donationLinks as $link)
+                <a @class(['button', 'button-primary' => $loop->first, 'button-outline' => ! $loop->first]) href="{{ $link['url'] }}" target="_blank" rel="noopener noreferrer">Donasi di {{ $link['label'] }} ↗</a>
+              @endforeach
+            </div>
+          @else
+            <p class="package-dialog-empty">Streamer belum memasang link donasi. Cari link donasi di deskripsi live atau tanya di chat.</p>
+          @endif
+        </div>
+      </dialog>
 
       <footer class="public-footer">
         <span>Data antrean diperbarui otomatis setiap 5 detik</span>

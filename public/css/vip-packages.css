@@ -32,3 +32,17 @@
 .public-package-card span { margin-top:6px; font-size:11px; font-weight:800; }
 @media (max-width:950px){.package-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
 @media (max-width:780px){.packages-header{display:block;width:100%;max-width:calc(100vw - 28px)}.packages-header .button{width:100%;margin-top:17px}.package-summary{gap:10px}.summary-note{margin-left:0}.package-grid{grid-template-columns:1fr}.package-preview{display:block}.package-preview .button{display:flex;width:100%;margin-top:18px;justify-content:center}.public-package-preview{grid-template-columns:1fr;margin-top:18px}}
+
+/* Link donasi untuk viewer (arah tombol paket di halaman antrean) */
+.donation-links-panel { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 22px; margin-top: 30px; padding: 22px; background: var(--paper-light); border: 4px solid var(--line); box-shadow: var(--shadow); }
+.donation-links-panel h2 { margin: 0; font-size: 45px; line-height: .8; }
+.donation-links-panel p:not(.eyebrow) { margin: 9px 0 0; color: var(--muted); font-size: 13px; }
+.donation-link-row { display: grid; grid-template-columns: 92px minmax(0, 1fr) auto; gap: 10px; align-items: center; margin-bottom: 9px; }
+.donation-link-row .field-label { margin: 0; }
+.donation-link-primary { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 800; white-space: nowrap; }
+.donation-link-primary input { accent-color: var(--red); }
+@media (max-width: 860px) {
+  .donation-links-panel { grid-template-columns: 1fr; }
+  .donation-link-row { grid-template-columns: 1fr auto; }
+  .donation-link-row .field-label { grid-column: 1 / -1; }
+}

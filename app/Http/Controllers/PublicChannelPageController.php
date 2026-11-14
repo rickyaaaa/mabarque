@@ -21,6 +21,7 @@ class PublicChannelPageController extends Controller
             'queue' => $queues->forUser($user),
             'packages' => $packages->listForUser($user, true),
             'donationMode' => $user->donation_queue_mode ?: 'smart',
+            'donationLinks' => app(\App\Services\DonationLinkService::class)->forViewer($user),
         ]);
     }
 }

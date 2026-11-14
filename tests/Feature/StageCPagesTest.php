@@ -44,6 +44,40 @@ class StageCPagesTest extends TestCase
         return $this->sendSaweria($connection, $this->saweriaPayload($donation['id'], $donation['donor_name'], $donation['amount'], ['message' => $donation['message'] ?? 'Semangat bang!']), self::SECRET);
     }
 
+    public function test_donation_links_are_validated_and_shown_on_package_cards(): void
+    {
+        $this->streamer->vipPackages()->create(['name' => 'Mabar 2 game', 'price' => 25000, 'match_count' => 2]);
+
+        $manager = Livewire::test(PackageManager::class)
+            ->set('links.sociabuzz', 'https://evil.example.com/ganindraw')
+            ->call('saveLinks')
+            ->assertHasErrors(['links'])
+            ->set('links.sociabuzz', 'sociabuzz.com/ganindraw/tribe')
+            ->set('links.saweria', 'https://saweria.co/ganindraw')
+            ->set('primaryLink', 'saweria')
+            ->call('saveLinks')
+            ->assertHasNoErrors()
+            ->assertSet('links.sociabuzz', 'https://sociabuzz.com/ganindraw/tribe');
+
+        $this->assertSame(['primary' => 'saweria', 'urls' => ['sociabuzz' => 'https://sociabuzz.com/ganindraw/tribe', 'saweria' => 'https://saweria.co/ganindraw']], $this->streamer->refresh()->donation_links);
+
+        auth()->logout();
+        $page = $this->get('/andra')->assertOk()
+            ->assertSee('data-package-price="25000"', false)
+            ->assertSee('Donasi sekarang')
+            ->assertSee('href="https://saweria.co/ganindraw"', false)
+            ->assertSee('Donasi di Saweria')
+            ->assertSee('Donasi di SociaBuzz');
+        // Tombol utama (Saweria) tampil paling depan.
+        $this->assertLessThan(strpos($page->getContent(), 'Donasi di SociaBuzz'), strpos($page->getContent(), 'Donasi di Saweria'));
+
+        // Dikosongkan → panel menjelaskan bahwa link belum dipasang.
+        $this->actingAs($this->streamer);
+        $manager->set('links', ['sociabuzz' => '', 'saweria' => '', 'trakteer' => ''])->call('saveLinks')->assertHasNoErrors();
+        auth()->logout();
+        $this->get('/andra')->assertSee('Streamer belum memasang link donasi')->assertSee('Lihat cara donasi');
+    }
+
     public function test_package_manager_create_edit_toggle_and_duplicate_price_guard(): void
     {
         $manager = Livewire::test(PackageManager::class)
