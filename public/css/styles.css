@@ -354,3 +354,15 @@ textarea.field-input { resize: vertical; }
 .party-next-remove:hover { color: var(--cream); background: var(--red); }
 .party-next-hint { margin: 8px 0 0; color: var(--muted); font-size: 11px; font-weight: 600; }
 .row-action.is-active { color: var(--cream); background: var(--navy); }
+
+/* Aksi massal di daftar antrean */
+.queue-table th.select-col, .queue-table td.select-col { width: 34px; padding-inline: 6px; text-align: center; }
+.row-check { width: 18px; height: 18px; margin: 0; accent-color: var(--red); cursor: pointer; vertical-align: middle; }
+.queue-table tbody tr.is-selected { background: rgba(216, 42, 28, .12); }
+.bulk-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 12px 0 0; padding: 10px 12px; color: var(--cream); background: var(--navy); border: 3px solid var(--line); box-shadow: 5px 5px 0 var(--red); }
+.bulk-bar strong { margin-right: auto; font-size: 13px; }
+.bulk-bar .button-outline { color: var(--cream); border-color: var(--cream); }
+.button-danger { color: var(--cream); background: var(--red); border: 3px solid var(--line); }
+.button-danger:hover { background: var(--red-dark); }
+.bulk-select-all { display: flex; align-items: center; gap: 8px; margin: 4px 0 10px; font-size: 12px; font-weight: 800; }
+.player-card-name .row-check { flex: none; margin-right: 6px; }

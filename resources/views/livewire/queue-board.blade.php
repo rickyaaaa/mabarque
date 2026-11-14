@@ -140,11 +140,28 @@
             </div>
         @endif
 
+        @php
+            $visibleIds = $entries->pluck('id')->map(fn ($id) => (string) $id)->all();
+            $selectedVisible = array_values(array_intersect($selected, $visibleIds));
+            $allSelected = $visibleIds !== [] && count($selectedVisible) === count($visibleIds);
+        @endphp
+        @if ($selectedVisible !== [])
+            <div class="bulk-bar" role="region" aria-label="Aksi untuk pemain yang dicentang">
+                <strong>{{ count($selectedVisible) }} dipilih</strong>
+                <button class="button button-small button-light" type="button" wire:click="bulkStatus('ready')">Tandai siap</button>
+                <button class="button button-small button-light" type="button" wire:click="bulkStatus('offline')">Tandai offline</button>
+                <button class="button button-small button-danger" type="button" wire:click="bulkRemove"
+                        wire:confirm="Hapus {{ count($selectedVisible) }} pemain dari antrean? Sisa game mereka ikut hilang.">Hapus</button>
+                <button class="button button-small button-outline" type="button" wire:click="clearSelection">Batal</button>
+            </div>
+        @endif
+
         <div class="queue-table-wrap">
             <table class="queue-table">
                 <caption class="sr-only">Daftar pemain dalam antrean mabar VIP</caption>
                 <thead class="region-queue-columns">
                     <tr>
+                        <th scope="col" class="select-col"><input type="checkbox" class="row-check" wire:click="toggleSelectAll" @checked($allSelected) @disabled($visibleIds === []) aria-label="Centang semua pemain" /></th>
                         <th scope="col">#</th>
                         <th scope="col">Nama pemain</th>
                         <th scope="col">Jenis &amp; sumber</th>
@@ -155,7 +172,8 @@
                 </thead>
                 <tbody class="region-queue-rows">
                     @foreach ($entries as $entry)
-                        <tr wire:key="row-{{ $entry->id }}" @class(['is-playing' => $entry->status === 'playing', 'is-offline' => $entry->status === 'offline'])>
+                        <tr wire:key="row-{{ $entry->id }}" @class(['is-playing' => $entry->status === 'playing', 'is-offline' => $entry->status === 'offline', 'is-selected' => in_array((string) $entry->id, $selected, true)])>
+                            <td class="select-col"><input type="checkbox" class="row-check" wire:model.live="selected" value="{{ $entry->id }}" aria-label="Centang {{ $entry->display_name }}" /></td>
                             <td>@if ($entry->status === 'playing')<span class="party-marker" title="Sedang main (posisi antrean #{{ $entry->position }})">▶</span>@else{{ $entry->position }}@endif</td>
                             <td><div class="player-cell"><span class="avatar" style="background: {{ $avatarColors[$entry->id % 6] }}">{{ $initials($entry->display_name) }}</span>@include('livewire.partials.player-identity', ['entry' => $entry])@include('livewire.partials.entry-status', ['entry' => $entry])</div></td>
                             <td><div class="pill-stack">@if ($entry->service_type === 'joki')<span class="service-pill joki">Mainin akun</span>@endif<span class="provider-pill {{ $entry->provider }}">{{ $providerLabels[$entry->provider] ?? $entry->provider }}</span></div></td>
@@ -176,10 +194,13 @@
         </div>
 
         <div class="player-card-list" aria-label="Daftar kartu pemain">
+            @if ($entries->isNotEmpty())
+                <label class="bulk-select-all"><input type="checkbox" class="row-check" wire:click="toggleSelectAll" @checked($allSelected) /> Centang semua</label>
+            @endif
             @foreach ($entries as $entry)
                 <article wire:key="card-{{ $entry->id }}" @class(['player-card', 'is-playing' => $entry->status === 'playing', 'is-offline' => $entry->status === 'offline'])>
                     <div class="player-card-head">
-                        <div class="player-card-name"><span class="player-card-position">#{{ $entry->position }}</span>@include('livewire.partials.player-identity', ['entry' => $entry])</div>
+                        <div class="player-card-name"><input type="checkbox" class="row-check" wire:model.live="selected" value="{{ $entry->id }}" aria-label="Centang {{ $entry->display_name }}" /><span class="player-card-position">#{{ $entry->position }}</span>@include('livewire.partials.player-identity', ['entry' => $entry])</div>
                         @include('livewire.partials.entry-status', ['entry' => $entry])
                     </div>
                     <div class="player-card-meta">

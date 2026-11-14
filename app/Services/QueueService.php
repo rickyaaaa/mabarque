@@ -528,11 +528,64 @@ class QueueService
         return DB::transaction(function () use ($session, $entry): ?QueueEntry {
             $this->ensureEntryBelongsToSession($session, $entry);
             $wasPlaying = $entry->status === 'playing';
-            $entry->delete();
+            $this->discard($entry);
             $this->normalizePositions($session);
 
             return $wasPlaying ? $this->promoteNextReady($session) : $this->current($session);
         });
+    }
+
+    /**
+     * Hapus banyak pemain sekaligus. Slot party yang ditinggalkan dibiarkan kosong (diisi streamer
+     * lewat "Isi slot kosong"), sama seperti mengeluarkan pemain dari party.
+     *
+     * @param  array<int>  $ids
+     * @return int jumlah pemain yang dihapus
+     */
+    public function removeMany(LiveSession $session, array $ids): int
+    {
+        return DB::transaction(function () use ($session, $ids): int {
+            $entries = $session->queueEntries()->whereKey($ids)->whereIn('status', LiveSessionService::UNFINISHED)->get();
+            $entries->each(fn (QueueEntry $entry) => $this->discard($entry));
+            $this->normalizePositions($session);
+
+            return $entries->count();
+        });
+    }
+
+    /**
+     * Tandai banyak pemain offline/siap sekaligus. Pemain yang sedang main di party dilewati.
+     *
+     * @param  array<int>  $ids
+     * @return int jumlah pemain yang diubah
+     */
+    public function setStatusMany(LiveSession $session, array $ids, string $status): int
+    {
+        if (! in_array($status, ['ready', 'offline'], true)) {
+            throw new InvalidArgumentException('Status harus siap atau offline.');
+        }
+
+        return DB::transaction(fn (): int => $session->queueEntries()
+            ->whereKey($ids)
+            ->whereIn('status', ['ready', 'offline', 'skipped'])
+            ->get()
+            ->each(fn (QueueEntry $entry) => $entry->update(['status' => $status]))
+            ->count());
+    }
+
+    /**
+     * Pemain yang sudah punya riwayat game tidak benar-benar dihapus — cukup ditandai selesai supaya
+     * rekap arsip sesi lama tetap utuh. Pemain tanpa riwayat dihapus.
+     */
+    private function discard(QueueEntry $entry): void
+    {
+        if ($entry->matches()->exists()) {
+            $entry->update(['status' => 'done']);
+
+            return;
+        }
+
+        $entry->delete();
     }
 
     /**

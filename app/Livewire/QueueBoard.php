@@ -66,6 +66,9 @@ class QueueBoard extends Component
 
     public string $donationModeInput = 'smart';
 
+    /** Pemain yang dicentang untuk aksi massal (hapus / offline / siap). */
+    public array $selected = [];
+
     public string $importText = '';
 
     public function mount(LiveSession $session): void
@@ -88,6 +91,68 @@ class QueueBoard extends Component
     public function setFilter(string $filter): void
     {
         $this->filter = in_array($filter, self::FILTERS, true) ? $filter : 'all';
+        $this->selected = [];
+    }
+
+    /** Centang semua pemain yang terlihat di filter sekarang, atau kosongkan bila semuanya sudah dicentang. */
+    public function toggleSelectAll(): void
+    {
+        $visible = $this->visibleEntries()->pluck('id')->map(fn ($id) => (string) $id)->all();
+        $this->selected = array_diff($visible, $this->selected) === [] ? [] : $visible;
+    }
+
+    public function clearSelection(): void
+    {
+        $this->selected = [];
+    }
+
+    public function bulkRemove(QueueService $queueService): void
+    {
+        $this->attempt(function () use ($queueService): string {
+            $count = $queueService->removeMany($this->session, $this->selectedIds());
+            $this->selected = [];
+
+            return "{$count} pemain dihapus dari antrean.";
+        });
+    }
+
+    public function bulkStatus(string $status, QueueService $queueService): void
+    {
+        $this->attempt(function () use ($status, $queueService): string {
+            $count = $queueService->setStatusMany($this->session, $this->selectedIds(), $status === 'offline' ? 'offline' : 'ready');
+            $this->selected = [];
+
+            return "{$count} pemain ditandai ".($status === 'offline' ? 'offline' : 'siap').'.';
+        });
+    }
+
+    /** @return array<int> */
+    private function selectedIds(): array
+    {
+        // Hanya yang terlihat di filter sekarang — pemain yang tersembunyi tidak ikut terhapus diam-diam.
+        $ids = array_values(array_intersect(
+            array_unique(array_map('intval', $this->selected)),
+            $this->visibleEntries()->pluck('id')->all(),
+        ));
+
+        if ($ids === []) {
+            throw new InvalidArgumentException('Belum ada pemain yang dicentang.');
+        }
+
+        return $ids;
+    }
+
+    private function visibleEntries()
+    {
+        $all = $this->session->queueEntries()->whereIn('status', self::VISIBLE)->get()
+            ->sortBy(fn (QueueEntry $entry) => [$entry->status === 'playing' ? 0 : 1, $entry->position])
+            ->values();
+
+        return match ($this->filter) {
+            'all' => $all,
+            'joki' => $all->where('service_type', 'joki')->values(),
+            default => $all->where('status', $this->filter)->values(),
+        };
     }
 
     public function openAddPlayer(): void
