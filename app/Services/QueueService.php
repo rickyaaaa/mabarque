@@ -253,10 +253,13 @@ class QueueService
         });
     }
 
-    /** Keluarkan pemain dari party tanpa mengubah urutannya; slot kosong diisi pemain berikutnya. */
-    public function bench(LiveSession $session, QueueEntry $entry): ?QueueEntry
+    /**
+     * Keluarkan pemain dari party tanpa mengubah urutannya. Slotnya sengaja DIBIARKAN KOSONG (mis. pemain
+     * sedang gangguan jaringan dan mau ditunggu); streamer mengisinya sendiri lewat "Isi slot kosong".
+     */
+    public function bench(LiveSession $session, QueueEntry $entry): QueueEntry
     {
-        return DB::transaction(function () use ($session, $entry): ?QueueEntry {
+        return DB::transaction(function () use ($session, $entry): QueueEntry {
             $this->ensureEntryBelongsToSession($session, $entry);
             $entry->refresh();
 
@@ -266,7 +269,7 @@ class QueueService
 
             $entry->update(['status' => 'ready']);
 
-            return $this->fillParty($session, exclude: [$entry->id])->first();
+            return $entry->refresh();
         });
     }
 

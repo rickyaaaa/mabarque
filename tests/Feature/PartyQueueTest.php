@@ -128,16 +128,18 @@ class PartyQueueTest extends TestCase
         $this->assertSame('ready', $kyoto->refresh()->status);
     }
 
-    public function test_bench_keeps_order_and_brings_in_the_next_player(): void
+    public function test_bench_keeps_order_and_leaves_the_slot_empty(): void
     {
         ['B' => $b] = $this->players(['A' => 3, 'B' => 3, 'C' => 3, 'D' => 3, 'E' => 3]);
         $this->queue->fillParty($this->session);
 
-        $replacement = $this->queue->bench($this->session, $b);
+        $this->queue->bench($this->session, $b);
 
-        $this->assertSame('E', $replacement->player_name);
-        $this->assertSame(['A', 'C', 'D', 'E'], $this->partyNames());
+        // Slot dibiarkan kosong sampai streamer mengisinya sendiri.
+        $this->assertSame(['A', 'C', 'D'], $this->partyNames());
         $this->assertSame(['ready', 2], [$b->refresh()->status, $b->position]);
+
+        $this->assertSame(['B'], $this->queue->fillParty($this->session)->pluck('player_name')->all());
     }
 
     public function test_board_party_controls_and_rules(): void

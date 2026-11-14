@@ -125,7 +125,6 @@
                         <th scope="col">#</th>
                         <th scope="col">Nama pemain</th>
                         <th scope="col">Jenis &amp; sumber</th>
-                        <th scope="col">Status</th>
                         <th scope="col">Sesi ini</th>
                         <th scope="col">Sisa</th>
                         <th scope="col">Aksi</th>
@@ -134,10 +133,9 @@
                 <tbody class="region-queue-rows">
                     @foreach ($entries as $entry)
                         <tr wire:key="row-{{ $entry->id }}" @class(['is-playing' => $entry->status === 'playing', 'is-offline' => $entry->status === 'offline'])>
-                            <td>{{ $entry->position }}</td>
-                            <td><div class="player-cell"><span class="avatar" style="background: {{ $avatarColors[$entry->id % 6] }}">{{ $initials($entry->display_name) }}</span>@include('livewire.partials.player-identity', ['entry' => $entry])</div></td>
+                            <td>@if ($entry->status === 'playing')<span class="party-marker" title="Sedang main (posisi antrean #{{ $entry->position }})">▶</span>@else{{ $entry->position }}@endif</td>
+                            <td><div class="player-cell"><span class="avatar" style="background: {{ $avatarColors[$entry->id % 6] }}">{{ $initials($entry->display_name) }}</span>@include('livewire.partials.player-identity', ['entry' => $entry])@include('livewire.partials.entry-status', ['entry' => $entry])</div></td>
                             <td><div class="pill-stack">@if ($entry->service_type === 'joki')<span class="service-pill joki">Mainin akun</span>@endif<span class="provider-pill {{ $entry->provider }}">{{ $providerLabels[$entry->provider] ?? $entry->provider }}</span></div></td>
-                            <td>@include('livewire.partials.entry-status', ['entry' => $entry])</td>
                             <td>{{ $played[$entry->id] ?? 0 }}{{ $cap > 0 && $entry->service_type !== 'joki' ? '/'.$cap : '' }}</td>
                             <td>@include('livewire.partials.quota', ['remaining' => $matches->remaining($entry)])</td>
                             <td>@include('livewire.partials.row-actions', ['entry' => $entry])</td>

@@ -343,3 +343,5 @@ textarea.field-input { resize: vertical; }
 .no-session-card p { margin: 0 0 8px; color: var(--muted); font-size: 13px; }
 .no-session-card .button { text-decoration: none; }
 .page-notice { margin: 0 0 16px; padding: 10px 12px; color: var(--ink); background: #c8f3c8; border: 2px solid var(--line); font-size: 12px; font-weight: 700; }
+.party-marker { color: var(--green); font-weight: 900; }
+.player-cell .status-pill { margin-left: auto; flex: none; }

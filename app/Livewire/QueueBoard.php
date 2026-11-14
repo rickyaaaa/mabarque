@@ -251,10 +251,9 @@ class QueueBoard extends Component
     public function bench(int $entryId, QueueService $queueService): void
     {
         $this->attempt(function () use ($entryId, $queueService): string {
-            $entry = $this->entry($entryId);
-            $next = $queueService->bench($this->session, $entry);
+            $entry = $queueService->bench($this->session, $this->entry($entryId));
 
-            return "{$entry->display_name} keluar dari party.".($next ? " Penggantinya: {$next->display_name}." : '');
+            return "{$entry->display_name} keluar dari party. Slotnya kosong — klik \"Isi slot kosong\" kalau mau diisi.";
         });
     }
 
@@ -341,7 +340,10 @@ class QueueBoard extends Component
     public function render()
     {
         $this->session->loadMissing('user');
-        $all = $this->session->queueEntries()->whereIn('status', self::VISIBLE)->get();
+        // Anggota party dipin di paling atas, sisanya mengikuti urutan antrean.
+        $all = $this->session->queueEntries()->whereIn('status', self::VISIBLE)->get()
+            ->sortBy(fn (QueueEntry $entry) => [$entry->status === 'playing' ? 0 : 1, $entry->position])
+            ->values();
         $queue = app(QueueService::class);
         $party = $all->where('status', 'playing')->values();
         $size = $queue->partySize($this->session);

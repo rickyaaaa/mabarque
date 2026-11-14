@@ -1,10 +1,8 @@
-{{-- Status pemain di papan antrean; pemain yang mencapai batas game sesi ditandai "Maks sesi". --}}
+{{-- Label status hanya untuk keadaan yang tidak biasa; pemain "Siap" tidak diberi label. --}}
 @php
-    $labels = ['ready' => 'Siap', 'offline' => 'Offline', 'playing' => 'Main', 'skipped' => 'Dilewati', 'done' => 'Selesai'];
     $isCapped = $entry->status !== 'playing' && $cap > 0 && $entry->service_type !== 'joki' && ($played[$entry->id] ?? 0) >= $cap;
+    $label = $isCapped ? 'Maks sesi' : ['offline' => 'Offline', 'playing' => 'Main', 'skipped' => 'Dilewati', 'done' => 'Selesai'][$entry->status] ?? null;
 @endphp
-@if ($isCapped)
-    <span class="status-pill capped" title="Sudah {{ $played[$entry->id] ?? 0 }} game di sesi ini — dilewati saat mengisi party"><span class="status-dot"></span>Maks sesi</span>
-@else
-    <span class="status-pill {{ $entry->status }}"><span class="status-dot"></span>{{ $labels[$entry->status] ?? $entry->status }}</span>
+@if ($label)
+    <span class="status-pill {{ $isCapped ? 'capped' : $entry->status }}" @if ($isCapped) title="Sudah {{ $played[$entry->id] ?? 0 }} game di sesi ini — dilewati saat mengisi party" @endif><span class="status-dot"></span>{{ $label }}</span>
 @endif
