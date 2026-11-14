@@ -15,8 +15,6 @@
         @endif
     @endif
     <button class="row-action" type="button" wire:click="openEdit({{ $entry->id }})" title="Edit pemain" aria-label="Edit {{ $entry->display_name }}">✎</button>
-    <button class="row-action" type="button" wire:click="move({{ $entry->id }}, 'up')" title="Naikkan" aria-label="Naikkan {{ $entry->display_name }}">↑</button>
-    <button class="row-action" type="button" wire:click="move({{ $entry->id }}, 'down')" title="Turunkan" aria-label="Turunkan {{ $entry->display_name }}">↓</button>
     @if (in_array($entry->status, ['ready', 'offline'], true))
         <button class="row-action" type="button" wire:click="toggleStatus({{ $entry->id }})" title="{{ $entry->status === 'offline' ? 'Tandai siap' : 'Tandai offline' }}" aria-label="Ubah status {{ $entry->display_name }}">↺</button>
     @endif

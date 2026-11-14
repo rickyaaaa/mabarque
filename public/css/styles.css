@@ -333,7 +333,7 @@ textarea.field-input { resize: vertical; }
 
 /* ── Papan antrean Livewire ─────────────────────────────────────────── */
 .queue-error { margin: 16px 0 0; }
-.queue-table th:last-child, .queue-table td:last-child { width: 240px; }
+.queue-table th:last-child, .queue-table td:last-child { width: 190px; }
 .quota-chip { display: inline-flex; align-items: center; min-height: 22px; padding: 2px 7px; border: 2px solid var(--line); background: var(--cream); font-size: 11px; font-weight: 800; white-space: nowrap; }
 .quota-chip.is-low { background: #ffe6a4; }
 .quota-chip.is-empty { color: var(--cream); background: var(--red); }
