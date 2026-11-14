@@ -1,9 +1,6 @@
 @php
     $accent = preg_match('/^#[0-9A-Fa-f]{6}$/', $accentColor) ? $accentColor : '#D82A1C';
     $providerLabels = ['manual' => 'Manual', 'saweria' => 'Saweria', 'sociabuzz' => 'SociaBuzz', 'trakteer' => 'Trakteer'];
-    $previewName = fn ($entry) => $censorNames
-        ? (trim((string) $entry->player_name) !== '' ? \App\Services\PublicQueueService::censor(trim($entry->player_name)) : ($entry->mlbb_id ? 'ID '.\App\Services\PublicQueueService::censor($entry->mlbb_id) : 'Tanpa nama'))
-        : $entry->display_name;
 @endphp
 
 <div>
@@ -11,7 +8,7 @@
         <div>
             <p class="eyebrow">Siap ditempel ke OBS</p>
             <h1>Tampilan overlay</h1>
-            <p class="session-meta">Tambahkan <strong>Browser Source</strong> di OBS, tempel link di bawah, lalu atur ukuran 480 × 600.</p>
+            <p class="session-meta">Tambahkan <strong>Browser Source</strong> di OBS, tempel link di bawah, lalu isi lebar &amp; tinggi sesuai ukuran yang tertulis di bawah pratinjau.</p>
         </div>
         <button class="button button-primary" type="button" x-data
                 x-on:click="navigator.clipboard.writeText(@js($overlayUrl)).then(() => $dispatch('notify', { message: 'Link overlay disalin. Tempel sebagai Browser Source di OBS.' }))">Salin link overlay</button>
@@ -31,8 +28,33 @@
             </div>
             @error('accentColor') <p class="form-error" role="alert">{{ $message }}</p> @enderror
 
+            <label class="control-label">Bentuk &amp; ukuran</label>
+            <div class="layout-presets" role="group" aria-label="Ukuran siap pakai">
+                <button type="button" class="filter-button" wire:click="applyPreset('card')">Kartu 440</button>
+                <button type="button" class="filter-button" wire:click="applyPreset('card-big')">Kartu besar 600</button>
+                <button type="button" class="filter-button" wire:click="applyPreset('bar-bottom')">Bar bawah 1280×140</button>
+                <button type="button" class="filter-button" wire:click="applyPreset('bar-wide')">Bar penuh 1920×160</button>
+            </div>
+            <div class="layout-toggle" role="radiogroup" aria-label="Bentuk overlay">
+                <label @class(['layout-option', 'is-active' => $layout === 'vertical'])><input type="radio" value="vertical" wire:model.live="layout" /> ▯ Vertikal (kartu)</label>
+                <label @class(['layout-option', 'is-active' => $layout === 'horizontal'])><input type="radio" value="horizontal" wire:model.live="layout" /> ▭ Horizontal (bar)</label>
+            </div>
+            <div class="size-grid">
+                <div>
+                    <label class="control-label" for="card-width">Lebar <output>{{ $cardWidth }} px</output></label>
+                    <input id="card-width" class="field-input @error('cardWidth') is-invalid @enderror" type="number" min="240" max="1920" step="10" wire:model.live.debounce.500ms="cardWidth" />
+                </div>
+                <div>
+                    <label class="control-label" for="card-height">Tinggi <output>{{ $autoHeight ? 'otomatis' : $cardHeight.' px' }}</output></label>
+                    <input id="card-height" class="field-input @error('cardHeight') is-invalid @enderror" type="number" min="80" max="1080" step="10" wire:model.live.debounce.500ms="cardHeight" @disabled($autoHeight) />
+                    <label class="auto-height"><input type="checkbox" wire:model.live="autoHeight" /> Otomatis mengikuti isi</label>
+                </div>
+            </div>
+            @error('cardWidth') <p class="form-error" role="alert">{{ $message }}</p> @enderror
+            @error('cardHeight') <p class="form-error" role="alert">{{ $message }}</p> @enderror
+
             <label class="control-label" for="font-scale">Ukuran huruf <output>{{ $fontScale }}%</output></label>
-            <input id="font-scale" type="range" min="80" max="130" step="5" wire:model.live="fontScale" />
+            <input id="font-scale" type="range" min="60" max="200" step="5" wire:model.live="fontScale" />
 
             <label class="control-label" for="max-players">Jumlah pemain ditampilkan</label>
             <select id="max-players" class="field-input" wire:model.live="maxPlayers">
@@ -97,36 +119,18 @@
                 <span class="preview-live"><span @class(['status-dot', 'is-live' => $session])></span>{{ $session ? 'LIVE' : 'BELUM LIVE' }}</span>
             </div>
             <div @class(['overlay-stage', 'is-solid' => ! $transparentMode])>
-                <div class="overlay-preview" style="--preview-accent: {{ $accent }}; --preview-scale: {{ $fontScale / 100 }}">
-                    <div class="preview-head">
-                        <div class="preview-brand">{{ \Illuminate\Support\Str::upper($channelName) }} <span>VIP</span></div>
-                        @if ($showScore)
-                            <div class="preview-score"><span class="win">W {{ $session?->wins ?? 0 }}</span><span class="loss">L {{ $session?->losses ?? 0 }}</span></div>
-                        @endif
-                    </div>
-                    @if ($showNowPlaying)
-                        <div class="preview-now">
-                            <span>NOW PLAYING</span>
-                            <strong>{{ $party->isNotEmpty() ? $party->map($previewName)->join(' · ') : 'Belum ada' }}</strong>
-                            <small>{{ $party->isEmpty() ? 'Mulai game dari papan antrean' : ($party->count() === 1 ? ($providerLabels[$party[0]->provider] ?? $party[0]->provider).' · '.max(0, $party[0]->matches_total - $party[0]->matches_played).' game tersisa' : $party->count().' pemain di party') }}</small>
-                        </div>
-                    @endif
-                    <div class="preview-queue">
-                        @forelse ($upcoming as $index => $entry)
-                            <div class="preview-entry" wire:key="preview-entry-{{ $entry->id }}"><span>{{ $index + 1 }}. {{ $previewName($entry) }}</span><small>{{ max(0, $entry->matches_total - $entry->matches_played) }} game</small></div>
-                        @empty
-                            <div class="preview-entry"><span>Antrean kosong</span><small>—</small></div>
-                        @endforelse
-                    </div>
-                    @if ($showPackages && $packages->isNotEmpty())
-                        <div class="preview-packages">
-                            @foreach ($packages as $package)
-                                <span><strong>{{ \App\Http\Controllers\OverlayController::compactPrice((int) $package->price) }}</strong> {{ $package->match_count }} game</span>
-                            @endforeach
-                        </div>
-                    @endif
+                <div class="overlay-frame-wrap" style="width: {{ (int) round($preview['frame_width'] * $preview['fit']) }}px; height: {{ (int) round($preview['frame_height'] * $preview['fit']) }}px">
+                    <iframe wire:key="overlay-frame-{{ md5($preview['src']) }}" src="{{ $preview['src'] }}" title="Pratinjau overlay"
+                            width="{{ $preview['frame_width'] }}" height="{{ $preview['frame_height'] }}" loading="lazy"
+                            style="transform: scale({{ $preview['fit'] }})"></iframe>
                 </div>
             </div>
+            <p class="obs-size">
+                Ukuran <strong>Browser Source</strong> di OBS:
+                <strong>{{ $preview['obs_width'] }} × {{ $preview['obs_height'] ?? 'tinggi bebas (mis. 600)' }}</strong>.
+                Samakan persis supaya tajam — jangan diperbesar/diperkecil di OBS, ubah ukurannya di sini.
+                @if ($dirty) <em>Pratinjau sudah memakai perubahan yang belum disimpan.</em> @endif
+            </p>
             <div class="overlay-url">
                 <span>Link browser source</span>
                 <code>{{ $overlayUrl }}</code>

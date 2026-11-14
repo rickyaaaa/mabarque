@@ -21,6 +21,9 @@ class OverlaySetting extends Model
         'censor_names',
         'show_score',
         'show_packages',
+        'layout',
+        'card_width',
+        'card_height',
     ];
 
     protected $casts = [
@@ -31,5 +34,7 @@ class OverlaySetting extends Model
         'censor_names' => 'boolean',
         'show_score' => 'boolean',
         'show_packages' => 'boolean',
+        'card_width' => 'integer',
+        'card_height' => 'integer',
     ];
 }

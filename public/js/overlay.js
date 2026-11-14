@@ -18,14 +18,36 @@
     return node;
   }
 
+  // Pratinjau di halaman pengaturan: /o/{token}?preview=1&... menimpa pengaturan tersimpan dengan yang
+  // sedang diatur (belum disimpan). Di OBS tidak ada parameter ini.
+  const params = new URLSearchParams(window.location.search);
+  const previewOverrides = params.get("preview") === "1" ? {
+    layout: params.get("layout"),
+    card_width: Number(params.get("w")) || undefined,
+    card_height: params.get("h") === "auto" ? null : (Number(params.get("h")) || undefined),
+    accent_color: params.get("accent") ? `#${params.get("accent")}` : undefined,
+    font_scale: Number(params.get("scale")) || undefined,
+    max_players: Number(params.get("players")) || undefined,
+    show_now_playing: params.has("now") ? params.get("now") === "1" : undefined,
+    show_score: params.has("score") ? params.get("score") === "1" : undefined,
+    show_packages: params.has("packages") ? params.get("packages") === "1" : undefined,
+    transparent_mode: params.has("transparent") ? params.get("transparent") === "1" : undefined,
+  } : {};
+  Object.keys(previewOverrides).forEach((key) => previewOverrides[key] === undefined && delete previewOverrides[key]);
+
   function render(data) {
-    const settings = data.overlay_settings || {};
+    const settings = { ...(data.overlay_settings || {}), ...previewOverrides };
     const queue = data.queue || { status: "offline", entries: [] };
     const accent = /^#[0-9a-f]{6}$/i.test(settings.accent_color || "") ? settings.accent_color : "#D82A1C";
 
     document.documentElement.style.setProperty("--accent", accent);
     document.documentElement.style.setProperty("--scale", String((settings.font_scale || 100) / 100));
     document.body.classList.toggle("is-transparent", settings.transparent_mode !== false);
+
+    // Bentuk & ukuran kartu diatur streamer → browser source OBS cukup diset seukuran ini (tidak di-scale).
+    card.classList.toggle("is-horizontal", settings.layout === "horizontal");
+    card.style.width = `${Math.max(240, Math.min(1920, settings.card_width || 440))}px`;
+    card.style.height = settings.card_height ? `${settings.card_height}px` : "";
     document.querySelector("#overlay-channel").textContent = data.channel_name || "";
 
     const entries = queue.entries || [];

@@ -5,7 +5,7 @@ html, body { margin: 0; }
 body.overlay-body { min-height: 100vh; padding: 16px; color: var(--cream); background: #241429; font-family: "Bricolage Grotesque", system-ui, sans-serif; font-size: calc(16px * var(--scale)); }
 body.overlay-body.is-transparent { background: transparent; }
 
-.overlay-card { width: min(100%, 440px); padding: 1.1em; background: rgba(16, 10, 22, .93); border: 3px solid var(--accent); box-shadow: 7px 7px 0 var(--accent); }
+.overlay-card { width: 440px; max-width: 100%; overflow: hidden; padding: 1.1em; background: rgba(16, 10, 22, .93); border: 3px solid var(--accent); box-shadow: 7px 7px 0 var(--accent); }
 .overlay-card.is-offline { opacity: .85; }
 .overlay-brand { margin-bottom: .8em; font: 700 1.8em/.85 "Agdasima", sans-serif; letter-spacing: .05em; text-transform: uppercase; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .overlay-brand em { color: var(--accent); font-style: normal; }
@@ -32,3 +32,12 @@ body.overlay-body.is-transparent { background: transparent; }
 .overlay-packages { display: flex; flex-wrap: wrap; gap: .35em; margin: .8em 0 0; padding: .6em 0 0; list-style: none; border-top: 2px dashed rgba(248, 219, 163, .55); }
 .overlay-package { display: flex; align-items: baseline; gap: .3em; padding: .25em .5em; color: var(--ink); background: var(--paper); font-size: .78em; font-weight: 700; }
 .overlay-package strong { font: 700 1.25em/1 "Agdasima", sans-serif; }
+
+/* Bentuk horizontal: bar memanjang (cocok di bawah/atas layar) */
+.overlay-card.is-horizontal { display: flex; align-items: stretch; gap: .9em; }
+.overlay-card.is-horizontal .overlay-head { flex: none; flex-direction: column; justify-content: center; margin: 0; }
+.overlay-card.is-horizontal .overlay-now { flex: 0 1 auto; min-width: 9em; max-width: 40%; display: flex; flex-direction: column; justify-content: center; }
+.overlay-card.is-horizontal .overlay-queue { display: flex; flex: 1; flex-wrap: wrap; align-content: center; gap: .4em; min-width: 0; margin: 0; overflow: hidden; }
+.overlay-card.is-horizontal .overlay-entry { flex: 0 1 auto; min-width: 0; }
+.overlay-card.is-horizontal .overlay-empty { align-self: center; margin: 0; }
+.overlay-card.is-horizontal .overlay-packages { flex: none; flex-direction: column; flex-wrap: nowrap; justify-content: center; margin: 0; padding: 0 0 0 .7em; border-top: 0; border-left: 2px dashed rgba(248, 219, 163, .55); }

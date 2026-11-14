@@ -97,6 +97,40 @@ class OverlayScoreTest extends TestCase
         Livewire::test(OverlaySettingsPanel::class)->assertSet('censorNames', true); // satu pengaturan yang sama
     }
 
+    public function test_overlay_shape_and_size_are_configurable_with_accurate_preview(): void
+    {
+        $token = app(OverlayTokenService::class)->current($this->owner);
+        $this->getJson("/api/overlay/{$token}")
+            ->assertJsonPath('data.overlay_settings.layout', 'vertical')
+            ->assertJsonPath('data.overlay_settings.card_width', 440)
+            ->assertJsonPath('data.overlay_settings.card_height', null);
+
+        $panel = Livewire::test(OverlaySettingsPanel::class)
+            ->call('applyPreset', 'bar-bottom')
+            ->assertSet('layout', 'horizontal')
+            ->assertSet('cardWidth', 1280)
+            ->assertSet('autoHeight', false)
+            ->assertSet('cardHeight', 140)
+            ->assertSee('1320 × 180')                       // ukuran browser source OBS (kartu + 40)
+            ->assertSee('preview=1&amp;layout=horizontal&amp;w=1280&amp;h=140', false)
+            ->assertSee('belum disimpan')
+            ->set('fontScale', 180)
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->getJson("/api/overlay/{$token}")
+            ->assertJsonPath('data.overlay_settings.layout', 'horizontal')
+            ->assertJsonPath('data.overlay_settings.card_width', 1280)
+            ->assertJsonPath('data.overlay_settings.card_height', 140)
+            ->assertJsonPath('data.overlay_settings.font_scale', 180);
+
+        // Tinggi otomatis disimpan sebagai null; batas ukuran divalidasi.
+        $panel->set('autoHeight', true)->call('save');
+        $this->getJson("/api/overlay/{$token}")->assertJsonPath('data.overlay_settings.card_height', null);
+        $panel->set('cardWidth', 5000)->call('save')->assertHasErrors(['cardWidth']);
+        $panel->set('cardWidth', 600)->set('fontScale', 300)->call('save')->assertHasErrors(['fontScale']);
+    }
+
     public function test_statistik_menu_is_gone(): void
     {
         $this->get('/dashboard')->assertOk()->assertDontSee('Statistik')->assertDontSee('href="/match-count"', false);

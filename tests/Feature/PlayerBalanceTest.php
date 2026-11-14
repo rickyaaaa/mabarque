@@ -185,7 +185,7 @@ class PlayerBalanceTest extends TestCase
         Livewire::actingAs($this->owner)->test(OverlaySettingsPanel::class)
             ->set('censorNames', true)
             ->call('save')
-            ->assertSee('WangSu*******');
+            ->assertHasNoErrors();
 
         $response = $this->getJson("/api/channels/{$this->owner->slug}/queue")->assertOk()
             ->assertJsonPath('data.queue.0.player_name', 'WangSu*******')

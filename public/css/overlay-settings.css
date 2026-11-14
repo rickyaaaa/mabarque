@@ -67,3 +67,19 @@
 .preview-packages { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; padding-top: 8px; border-top: 2px dashed rgba(248, 219, 163, .55); }
 .preview-packages span { padding: 3px 7px; color: #100a16; background: var(--paper); font-size: calc(11px * var(--preview-scale, 1)); font-weight: 700; }
 .preview-packages strong { font: 700 1.2em/1 "Agdasima", sans-serif; }
+
+/* Bentuk & ukuran overlay */
+.layout-presets { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.layout-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.layout-option { display: flex; align-items: center; gap: 6px; padding: 9px 10px; background: var(--cream); border: 3px solid var(--line); font-size: 12px; font-weight: 800; cursor: pointer; }
+.layout-option input { accent-color: var(--red); }
+.layout-option.is-active { color: var(--cream); background: var(--navy); }
+.size-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.size-grid .control-label { margin-top: 12px; }
+.auto-height { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 11px; font-weight: 700; }
+.auto-height input { accent-color: var(--red); }
+.overlay-frame-wrap { position: relative; overflow: hidden; }
+.overlay-frame-wrap iframe { position: absolute; top: 0; left: 0; border: 0; background: transparent; transform-origin: top left; }
+.obs-size { margin: 12px 0 0; color: #f8dba3; font-size: 12px; line-height: 1.5; }
+.obs-size strong { color: var(--cream); }
+.obs-size em { display: block; color: var(--orange); font-style: normal; font-weight: 700; }

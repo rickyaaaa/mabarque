@@ -64,6 +64,9 @@ class OverlayController extends Controller
                 'transparent_mode' => (bool) ($settings->transparent_mode ?? true),
                 'show_score' => (bool) ($settings->show_score ?? true),
                 'show_packages' => (bool) ($settings->show_packages ?? true),
+                'layout' => ($settings->layout ?? 'vertical') === 'horizontal' ? 'horizontal' : 'vertical',
+                'card_width' => (int) ($settings->card_width ?? 440),
+                'card_height' => $settings?->card_height ? (int) $settings->card_height : null,
             ],
             // Skor Win/Lose sesi live yang sedang berjalan (null saat belum live).
             'score' => $live ? ['wins' => (int) $live->wins, 'losses' => (int) $live->losses] : null,

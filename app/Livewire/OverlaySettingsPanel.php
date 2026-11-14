@@ -4,7 +4,6 @@ namespace App\Livewire;
 
 use App\Models\OverlaySetting;
 use App\Services\OverlayTokenService;
-use App\Services\QueueService;
 use Livewire\Component;
 
 /**
@@ -14,6 +13,9 @@ use Livewire\Component;
 class OverlaySettingsPanel extends Component
 {
     public const PLAYER_OPTIONS = [3, 5, 8, 10];
+
+    /** Ruang di sekitar kartu (padding halaman 16px × 2 + bayangan 7px), dibulatkan. */
+    public const FRAME_PADDING = 40;
 
     public string $accentColor = '#D82A1C';
 
@@ -31,6 +33,15 @@ class OverlaySettingsPanel extends Component
 
     public bool $showPackages = true;
 
+    /** Bentuk & ukuran kartu overlay (piksel). Tinggi otomatis = mengikuti isi. */
+    public string $layout = 'vertical';
+
+    public int $cardWidth = 440;
+
+    public bool $autoHeight = true;
+
+    public int $cardHeight = 160;
+
     public function mount(): void
     {
         $this->loadSaved();
@@ -42,14 +53,18 @@ class OverlaySettingsPanel extends Component
 
         $validated = $this->validate([
             'accentColor' => ['required', 'regex:/^#[0-9A-F]{6}$/'],
-            'fontScale' => ['required', 'integer', 'between:80,130'],
+            'fontScale' => ['required', 'integer', 'between:60,200'],
             'maxPlayers' => ['required', 'integer', 'in:'.implode(',', self::PLAYER_OPTIONS)],
             'showNowPlaying' => ['boolean'],
             'transparentMode' => ['boolean'],
             'censorNames' => ['boolean'],
             'showScore' => ['boolean'],
             'showPackages' => ['boolean'],
-        ], ['accentColor.regex' => 'Warna harus kode hex 6 digit, contoh #D82A1C.']);
+            'layout' => ['required', 'in:vertical,horizontal'],
+            'cardWidth' => ['required', 'integer', 'between:240,1920'],
+            'autoHeight' => ['boolean'],
+            'cardHeight' => ['required', 'integer', 'between:80,1080'],
+        ], ['accentColor.regex' => 'Warna harus kode hex 6 digit, contoh #D82A1C.'], ['cardWidth' => 'lebar', 'cardHeight' => 'tinggi']);
 
         auth()->user()->overlaySetting()->updateOrCreate(['user_id' => auth()->id()], [
             'accent_color' => $validated['accentColor'],
@@ -60,6 +75,9 @@ class OverlaySettingsPanel extends Component
             'censor_names' => $validated['censorNames'],
             'show_score' => $validated['showScore'],
             'show_packages' => $validated['showPackages'],
+            'layout' => $validated['layout'],
+            'card_width' => $validated['cardWidth'],
+            'card_height' => $validated['autoHeight'] ? null : $validated['cardHeight'],
         ]);
 
         $this->dispatch('notify', message: 'Pengaturan overlay disimpan. OBS memperbarui tampilan dalam beberapa detik.');
@@ -98,7 +116,7 @@ class OverlaySettingsPanel extends Component
         $this->dispatch('notify', message: 'Link overlay baru dibuat. Ganti URL browser source di OBS — link lama sudah tidak berlaku.');
     }
 
-    public function render(OverlayTokenService $tokens, QueueService $queue)
+    public function render(OverlayTokenService $tokens)
     {
         $user = auth()->user();
         $session = $user->liveSessions()->active()->latest('started_at')->first();
@@ -107,10 +125,8 @@ class OverlaySettingsPanel extends Component
         return view('livewire.overlay-settings-panel', [
             'overlayUrl' => $tokens->url($tokens->current($user)),
             'session' => $session,
-            'packages' => $user->vipPackages()->where('is_active', true)->orderBy('sort_order')->orderBy('id')->get(),
-            'party' => $session ? $queue->party($session) : collect(),
-            'upcoming' => $session ? $queue->nextUp($session, $this->maxPlayers) : collect(),
             'dirty' => $saved === null || $this->snapshot() !== $this->snapshot($saved),
+            'preview' => $this->previewFrame($tokens->url($tokens->current($user))),
             'channelName' => $user->channel_name,
         ]);
     }
@@ -129,12 +145,68 @@ class OverlaySettingsPanel extends Component
         $this->censorNames = (bool) $saved->censor_names;
         $this->showScore = $saved->show_score === null ? true : (bool) $saved->show_score;
         $this->showPackages = $saved->show_packages === null ? true : (bool) $saved->show_packages;
+        $this->layout = $saved->layout === 'horizontal' ? 'horizontal' : 'vertical';
+        $this->cardWidth = (int) ($saved->card_width ?: 440);
+        $this->autoHeight = ! $saved->card_height;
+        $this->cardHeight = (int) ($saved->card_height ?: ($this->layout === 'horizontal' ? 140 : 520));
+    }
+
+    /** Ukuran layout siap pakai (lebar × tinggi kartu). */
+    public function applyPreset(string $preset): void
+    {
+        [$layout, $width, $height] = match ($preset) {
+            'bar-bottom' => ['horizontal', 1280, 140],
+            'bar-wide' => ['horizontal', 1920, 160],
+            'card-big' => ['vertical', 600, null],
+            default => ['vertical', 440, null],
+        };
+
+        $this->layout = $layout;
+        $this->cardWidth = $width;
+        $this->autoHeight = $height === null;
+        $this->cardHeight = $height ?? $this->cardHeight;
+    }
+
+    /**
+     * Pratinjau = overlay asli dalam iframe dengan pengaturan yang sedang diatur (belum disimpan),
+     * diperkecil agar muat. Ukuran browser source OBS yang disarankan = kartu + ruang bayangan.
+     */
+    private function previewFrame(string $overlayUrl): array
+    {
+        $width = max(240, min(1920, $this->cardWidth));
+        $height = $this->autoHeight ? null : max(80, min(1080, $this->cardHeight));
+        $frameWidth = $width + self::FRAME_PADDING;
+        $frameHeight = $height !== null ? $height + self::FRAME_PADDING : ($this->layout === 'horizontal' ? 220 : 640);
+        $fit = min(1, 400 / $frameWidth, 420 / $frameHeight);
+
+        $query = http_build_query([
+            'preview' => 1,
+            'layout' => $this->layout,
+            'w' => $width,
+            'h' => $height ?? 'auto',
+            'accent' => ltrim(preg_match('/^#[0-9A-Fa-f]{6}$/', $this->accentColor) ? $this->accentColor : '#D82A1C', '#'),
+            'scale' => max(60, min(200, $this->fontScale)),
+            'players' => $this->maxPlayers,
+            'now' => (int) $this->showNowPlaying,
+            'score' => (int) $this->showScore,
+            'packages' => (int) $this->showPackages,
+            'transparent' => (int) $this->transparentMode,
+        ]);
+
+        return [
+            'src' => $overlayUrl.'?'.$query,
+            'frame_width' => $frameWidth,
+            'frame_height' => $frameHeight,
+            'fit' => round($fit, 4),
+            'obs_width' => $frameWidth,
+            'obs_height' => $height !== null ? $frameHeight : null,
+        ];
     }
 
     private function snapshot(?OverlaySetting $saved = null): array
     {
         return $saved
-            ? [strtoupper($saved->accent_color), (int) $saved->font_scale, (int) $saved->max_players, (bool) $saved->show_now_playing, (bool) $saved->transparent_mode, (bool) $saved->censor_names, $saved->show_score === null ? true : (bool) $saved->show_score, $saved->show_packages === null ? true : (bool) $saved->show_packages]
-            : [strtoupper($this->accentColor), $this->fontScale, $this->maxPlayers, $this->showNowPlaying, $this->transparentMode, $this->censorNames, $this->showScore, $this->showPackages];
+            ? [strtoupper($saved->accent_color), (int) $saved->font_scale, (int) $saved->max_players, (bool) $saved->show_now_playing, (bool) $saved->transparent_mode, (bool) $saved->censor_names, $saved->show_score === null ? true : (bool) $saved->show_score, $saved->show_packages === null ? true : (bool) $saved->show_packages, $saved->layout === 'horizontal' ? 'horizontal' : 'vertical', (int) ($saved->card_width ?: 440), $saved->card_height ? (int) $saved->card_height : null]
+            : [strtoupper($this->accentColor), $this->fontScale, $this->maxPlayers, $this->showNowPlaying, $this->transparentMode, $this->censorNames, $this->showScore, $this->showPackages, $this->layout, $this->cardWidth, $this->autoHeight ? null : $this->cardHeight];
     }
 }
