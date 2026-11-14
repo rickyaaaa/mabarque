@@ -63,7 +63,8 @@ class SessionRecapService
             ->map(fn (Collection $group, int $index) => [
                 'number' => $index + 1,
                 'time' => $group->first()->played_at,
-                'players' => $group->map(fn (MatchRecord $record) => $record->queueEntry->display_name)->values()->all(),
+                'players' => $group->map(fn (MatchRecord $record) => $record->queueEntry->display_name.($record->is_mvp ? ' ⭐' : ''))->values()->all(),
+                'mvp' => $group->first(fn (MatchRecord $record) => $record->is_mvp)?->queueEntry->display_name,
                 'note' => $group->pluck('note')->filter()->first(),
                 'result' => $group->pluck('result')->filter()->first(),
             ]);
@@ -80,7 +81,8 @@ class SessionRecapService
                 /** @var QueueEntry $entry */
                 $entry = $group->first()->queueEntry;
                 // Sisa saat sesi berakhir = jatah total − semua match pemain ini sampai sesi itu selesai.
-                $playedUntilEnd = $entry->matches()->where('played_at', '<=', $end)->count();
+                // Game MVP ("main lagi") tidak memotong jatah.
+                $playedUntilEnd = $entry->matches()->where('played_at', '<=', $end)->where('is_mvp', false)->count();
 
                 return [
                     'name' => $entry->display_name,

@@ -60,7 +60,7 @@
             <div class="party-body">
                 <ol class="party-list" aria-label="Pemain di party">
                     @foreach ($party as $member)
-                        <li class="party-slot is-filled" wire:key="party-{{ $member->id }}">
+                        <li @class(['party-slot', 'is-filled', 'is-mvp' => $mvpId === $member->id]) wire:key="party-{{ $member->id }}">
                             <span class="avatar" style="background: {{ $avatarColors[$member->id % 6] }}" aria-hidden="true">{{ $initials($member->display_name) }}</span>
                             <span class="party-slot-text">
                                 <strong>{{ $member->display_name }}</strong>
@@ -70,6 +70,11 @@
                                     @if ($cap > 0) · sesi {{ $played[$member->id] ?? 0 }}/{{ $cap }}@endif
                                 </small>
                             </span>
+                            @if ($mvpEnabled && $isLive)
+                                <button type="button" @class(['mvp-toggle', 'is-active' => $mvpId === $member->id]) wire:click="toggleMvp({{ $member->id }})"
+                                        title="{{ $mvpId === $member->id ? 'Batalkan MVP' : 'Tandai MVP — main lagi, sisa tidak berkurang' }}"
+                                        aria-pressed="{{ $mvpId === $member->id ? 'true' : 'false' }}" aria-label="MVP: {{ $member->display_name }}">⭐ MVP</button>
+                            @endif
                         </li>
                     @endforeach
                     @for ($slot = $party->count(); $slot < $partySizeLimit; $slot++)
@@ -118,6 +123,7 @@
             <p class="party-rules-note">
                 {{ $partySizeLimit }} pemain per game ·
                 {{ $cap > 0 ? "maks {$cap} game per orang tiap sesi" : 'tanpa batas game per sesi' }}
+                @if ($mvpEnabled)<br />⭐ MVP = main lagi @endif
                 <br />Donasi: {{ ['smart' => 'otomatis bila pesan berisi ID/“mabar”', 'manual' => 'selalu konfirmasi manual', 'auto' => 'otomatis semua donasi'][$donationMode] ?? '' }}
             </p>
             <button class="button button-primary button-add" type="button" wire:click="openAddPlayer"><span class="add-icon" aria-hidden="true">+</span> Tambah pemain</button>
@@ -363,6 +369,11 @@
                     @endforeach
                 </select>
                 @error('donationModeInput') <p class="form-error" role="alert">{{ $message }}</p> @enderror
+                <label class="switch-control rules-switch">
+                    <input type="checkbox" wire:model="mvpFreeGame" />
+                    <span class="switch-track"></span>
+                    <span><strong>MVP = main lagi</strong><small>Muncul tombol ⭐ MVP di kartu party. Pemain yang MVP tidak berkurang sisa game-nya dan tidak dihitung ke batas game per sesi. Tercatat di rekap sesi.</small></span>
+                </label>
                 <label class="switch-control rules-switch">
                     <input type="checkbox" wire:model="censorNames" />
                     <span class="switch-track"></span>

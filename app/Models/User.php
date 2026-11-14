@@ -75,6 +75,7 @@ class User extends Authenticatable
             'party_size' => 'integer',
             'session_match_cap' => 'integer',
             'donation_links' => 'array',
+            'mvp_free_game' => 'boolean',
         ];
     }
 

@@ -70,6 +70,12 @@ class QueueBoard extends Component
     /** Sensor nama & ID di halaman viewer dan overlay (pengaturan yang sama dengan halaman Overlay). */
     public bool $censorNames = false;
 
+    /** Aturan "MVP = main lagi" (form Aturan party). */
+    public bool $mvpFreeGame = false;
+
+    /** Pemain party yang ditandai MVP untuk game yang sedang berjalan. */
+    public ?int $mvpId = null;
+
     /** Pemain yang dicentang untuk aksi massal (hapus / offline / siap). */
     public array $selected = [];
 
@@ -299,14 +305,31 @@ class QueueBoard extends Component
     }
 
     /** Game party selesai: semua anggota party berkurang 1 game. */
+    /** Tandai/lepas MVP game ini (satu pemain per game). Hanya bila aturan "MVP = main lagi" aktif. */
+    public function toggleMvp(int $entryId, QueueService $queueService): void
+    {
+        if (! $queueService->mvpFreeGame($this->session) || ! $queueService->party($this->session)->contains('id', $entryId)) {
+            $this->mvpId = null;
+
+            return;
+        }
+
+        $this->mvpId = $this->mvpId === $entryId ? null : $entryId;
+    }
+
     /** Game party selesai dengan hasil: "win", "lose", atau kosong (mis. remake / tidak dihitung). */
     public function finishGame(QueueService $queueService, string $outcome = ''): void
     {
         $this->attemptLive(function () use ($queueService, $outcome): string {
             $outcome = in_array($outcome, ['win', 'lose'], true) ? $outcome : null;
-            $result = $queueService->finishGame($this->session, $outcome);
+            $result = $queueService->finishGame($this->session, $outcome, $this->mvpId);
+            $this->mvpId = null;
             $label = ['win' => 'Menang', 'lose' => 'Kalah'][$outcome] ?? 'Game selesai';
             $message = $label.' — dicatat untuk '.$result['played']->count().' pemain.';
+
+            if ($result['mvp']) {
+                $message .= " ⭐ {$result['mvp']->display_name} MVP — main lagi, sisa tidak berkurang.";
+            }
 
             if ($result['finished']->isNotEmpty()) {
                 $message .= ' Habis: '.$result['finished']->pluck('display_name')->join(', ').'.';
@@ -377,6 +400,7 @@ class QueueBoard extends Component
         $this->sessionCap = (int) $user->session_match_cap;
         $this->donationModeInput = array_key_exists((string) $user->donation_queue_mode, DonationQueueService::MODES) ? $user->donation_queue_mode : 'smart';
         $this->censorNames = (bool) $user->overlaySetting()->value('censor_names');
+        $this->mvpFreeGame = (bool) $user->mvp_free_game;
         $this->showRules = true;
     }
 
@@ -397,7 +421,11 @@ class QueueBoard extends Component
             'party_size' => $this->partySize,
             'session_match_cap' => $this->sessionCap,
             'donation_queue_mode' => $this->donationModeInput,
+            'mvp_free_game' => $this->mvpFreeGame,
         ])->save();
+        if (! $this->mvpFreeGame) {
+            $this->mvpId = null;
+        }
         auth()->user()->overlaySetting()->updateOrCreate(['user_id' => auth()->id()], ['censor_names' => $this->censorNames]);
         $this->session->unsetRelation('user');
         $this->showRules = false;
@@ -490,6 +518,7 @@ class QueueBoard extends Component
             'played' => $queue->playedThisSession($this->session),
             'cap' => $queue->sessionCap($this->session),
             'isLive' => $this->session->status === 'active',
+            'mvpEnabled' => $queue->mvpFreeGame($this->session),
             'donationMode' => $this->session->user?->donation_queue_mode ?: 'smart',
             'matches' => app(MatchService::class),
         ]);

@@ -291,6 +291,45 @@ class PartyQueueTest extends TestCase
         $this->getJson("/api/channels/{$this->owner->slug}/queue")->assertJsonPath('data.joki', []);
     }
 
+    public function test_mvp_plays_again_without_losing_a_game_when_rule_is_on(): void
+    {
+        $this->owner->forceFill(['party_size' => 2])->save();
+        $this->cap(1);
+        ['Dey' => $dey, 'Kyoto' => $kyoto] = $this->players(['Dey' => 3, 'Kyoto' => 3, 'Indira' => 3]);
+        $this->queue->fillParty($this->session);
+
+        // Aturan mati: tombol MVP tidak tampil dan tanda MVP diabaikan.
+        $board = Livewire::actingAs($this->owner)->test(QueueBoard::class, ['session' => $this->session])
+            ->assertDontSee('⭐ MVP')
+            ->call('toggleMvp', $dey->id)
+            ->assertSet('mvpId', null);
+
+        $board->call('openRules')->set('mvpFreeGame', true)->call('saveRules')->assertHasNoErrors()
+            ->assertSee('⭐ MVP')
+            ->call('toggleMvp', $dey->id)
+            ->assertSet('mvpId', $dey->id)
+            ->call('finishGame', 'win')
+            ->assertDispatched('notify', message: 'Menang — dicatat untuk 2 pemain. ⭐ Dey MVP — main lagi, sisa tidak berkurang. Batas sesi: Kyoto. Masuk party: Indira.')
+            ->assertSet('mvpId', null);
+
+        // Dey: sisa tetap 3 dan tidak kena batas sesi (1) → tetap di party. Kyoto: berkurang & kena batas.
+        $this->assertSame(3, $dey->refresh()->matches_remaining);
+        $this->assertSame('playing', $dey->status);
+        $this->assertSame(2, $kyoto->refresh()->matches_remaining);
+        $this->assertSame(['Dey', 'Indira'], $this->partyNames());
+        $this->assertTrue((bool) \App\Models\MatchRecord::query()->where('queue_entry_id', $dey->id)->value('is_mvp'));
+
+        // Koreksi game MVP tidak menambah jatah.
+        app(\App\Services\MatchService::class)->undoLatest($dey);
+        $this->assertSame(3, $dey->refresh()->matches_remaining);
+
+        // Rekap arsip menandai MVP.
+        $this->queue->fillParty($this->session);
+        $board->call('toggleMvp', $dey->id)->call('finishGame', 'lose');
+        app(LiveSessionService::class)->end($this->owner, $this->session);
+        $this->get('/live-session/'.$this->session->id)->assertOk()->assertSee('Dey ⭐');
+    }
+
     public function test_board_party_controls_and_rules(): void
     {
         $this->players(['Dey' => 2, 'Ir.fing' => 1, 'Indira' => 3]);

@@ -49,9 +49,12 @@ class MatchService
      *
      * @throws InvalidArgumentException jatah habis
      */
-    public function record(QueueEntry $entry, ?string $note = null, bool $countSessionMatch = true, ?string $result = null): MatchRecord
+    /**
+     * @param  bool  $mvp  MVP dengan aturan "MVP = main lagi": match dicatat sebagai bukti, tetapi jatah tidak berkurang
+     */
+    public function record(QueueEntry $entry, ?string $note = null, bool $countSessionMatch = true, ?string $result = null, bool $mvp = false): MatchRecord
     {
-        return DB::transaction(function () use ($entry, $note, $countSessionMatch, $result): MatchRecord {
+        return DB::transaction(function () use ($entry, $note, $countSessionMatch, $result, $mvp): MatchRecord {
             $locked = QueueEntry::query()->whereKey($entry->id)->lockForUpdate()->firstOrFail();
             $this->assertCanRecord($locked);
 
@@ -61,10 +64,13 @@ class MatchService
                 'match_number' => (int) $locked->matches()->max('match_number') + 1,
                 'note' => filled($note) ? trim($note) : null,
                 'result' => in_array($result, ['win', 'lose'], true) ? $result : null,
+                'is_mvp' => $mvp,
                 'played_at' => now(),
             ]);
 
-            $locked->increment('matches_played');
+            if (! $mvp) {
+                $locked->increment('matches_played');
+            }
             // Satu game party = satu match sesi walau dicatat untuk beberapa pemain (QueueService::finishGame).
             if ($countSessionMatch) {
                 LiveSession::query()->whereKey($locked->live_session_id)->increment('total_matches');
@@ -86,12 +92,16 @@ class MatchService
             $record = MatchRecord::query()->whereKey($match->id)->lockForUpdate()->firstOrFail();
             $entry = QueueEntry::query()->whereKey($record->queue_entry_id)->lockForUpdate()->firstOrFail();
 
-            if (! $this->canCorrect($entry)) {
+            // Game MVP tidak memotong jatah, jadi boleh dikoreksi walau jatah terpakai masih 0.
+            if (! $record->is_mvp && ! $this->canCorrect($entry)) {
                 throw new InvalidArgumentException('Tidak ada match tercatat yang bisa dikoreksi.');
             }
 
             $record->delete();
-            $entry->decrement('matches_played');
+            // Game MVP tidak memotong jatah, jadi koreksinya juga tidak mengembalikan jatah.
+            if (! $record->is_mvp) {
+                $entry->decrement('matches_played');
+            }
             LiveSession::query()->whereKey($entry->live_session_id)->where('total_matches', '>', 0)->decrement('total_matches');
 
             return $entry->refresh();

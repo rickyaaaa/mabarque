@@ -386,6 +386,12 @@ class QueueService
         return min(self::MAX_PARTY_SIZE, max(1, $size ?: 4));
     }
 
+    /** Aturan "MVP = main lagi" aktif untuk streamer sesi ini. */
+    public function mvpFreeGame(LiveSession $session): bool
+    {
+        return (bool) ($session->user?->mvp_free_game ?? false);
+    }
+
     /** Batas game per pemain dalam satu sesi live; 0 = tanpa batas. */
     public function sessionCap(LiveSession $session): int
     {
@@ -395,8 +401,10 @@ class QueueService
     /** @return array<int, int> id pemain => jumlah game yang sudah dimainkan di sesi ini */
     public function playedThisSession(LiveSession $session): array
     {
+        // Game MVP ("main lagi") tidak dihitung ke batas game per sesi.
         return MatchRecord::query()
             ->where('live_session_id', $session->id)
+            ->where('is_mvp', false)
             ->selectRaw('queue_entry_id, COUNT(*) as played')
             ->groupBy('queue_entry_id')
             ->pluck('played', 'queue_entry_id')
@@ -473,11 +481,15 @@ class QueueService
      *
      * @return array{played: Collection<int, QueueEntry>, finished: Collection<int, QueueEntry>, capped: Collection<int, QueueEntry>, joined: Collection<int, QueueEntry>}
      */
-    public function finishGame(LiveSession $session, ?string $result = null): array
+    /**
+     * @param  int|null  $mvpId  pemain party yang MVP; dengan aturan "MVP = main lagi" sisa game-nya tidak berkurang
+     */
+    public function finishGame(LiveSession $session, ?string $result = null, ?int $mvpId = null): array
     {
         $result = in_array($result, ['win', 'lose'], true) ? $result : null;
+        $mvpId = $this->mvpFreeGame($session) ? $mvpId : null;
 
-        return DB::transaction(function () use ($session, $result): array {
+        return DB::transaction(function () use ($session, $result, $mvpId): array {
             $party = $this->party($session);
 
             if ($party->isEmpty()) {
@@ -485,7 +497,7 @@ class QueueService
             }
 
             $matches = app(MatchService::class);
-            $party->each(fn (QueueEntry $entry) => $matches->record($entry, countSessionMatch: false, result: $result));
+            $party->each(fn (QueueEntry $entry) => $matches->record($entry, countSessionMatch: false, result: $result, mvp: $entry->id === $mvpId));
             LiveSession::query()->whereKey($session->id)->increment('total_matches');
 
             // Skor Win/Lose dihitung per game party (bukan per pemain).
@@ -497,7 +509,7 @@ class QueueService
             // Batas game = saat alami mengisi slot yang belum terisi (mis. donasi baru masuk selama game).
             $settled['joined'] = $settled['joined']->merge($this->fillParty($session));
 
-            return ['played' => $party] + $settled;
+            return ['played' => $party, 'mvp' => $party->firstWhere('id', $mvpId)] + $settled;
         });
     }
 

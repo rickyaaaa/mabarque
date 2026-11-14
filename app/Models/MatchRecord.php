@@ -19,12 +19,14 @@ class MatchRecord extends Model
         'match_number',
         'note',
         'result',
+        'is_mvp',
         'played_at',
     ];
 
     protected $casts = [
         'match_number' => 'integer',
         'played_at' => 'datetime',
+        'is_mvp' => 'boolean',
     ];
 
     public function liveSession(): BelongsTo
