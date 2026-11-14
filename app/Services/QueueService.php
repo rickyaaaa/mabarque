@@ -46,6 +46,11 @@ class QueueService
         $matchesTotal = (int) ($data['matches_total'] ?? 0);
         $donationAmount = (int) ($data['donation_amount'] ?? 0);
 
+        // VIP Mainin akun tidak memakai hitungan game: cukup Menunggu → Sedang dimainkan → Selesai.
+        if ($attributes['service_type'] === 'joki') {
+            $matchesTotal = max(1, $matchesTotal);
+        }
+
         if ($matchesTotal < 1 || $matchesTotal > self::MAX_MATCHES) {
             throw new InvalidArgumentException('Jatah game harus 1–'.self::MAX_MATCHES.'.');
         }
@@ -84,6 +89,10 @@ class QueueService
         $attributes = $this->playerAttributes($data);
         $remaining = (int) ($data['matches_remaining'] ?? -1);
 
+        if ($attributes['service_type'] === 'joki') {
+            $remaining = max(1, $this->remaining($entry));
+        }
+
         if ($remaining < 0 || $remaining > self::MAX_MATCHES) {
             throw new InvalidArgumentException('Sisa game harus 0–'.self::MAX_MATCHES.'.');
         }
@@ -120,6 +129,11 @@ class QueueService
 
             $parts = array_map('trim', explode('|', $line));
             $matches = $parts[2] ?? '';
+
+            // VIP Mainin akun tidak memakai hitungan game: kolom sisa boleh kosong.
+            if ($matches === '' && in_array(mb_strtolower($parts[3] ?? ''), ['joki', 'akun', 'mainin akun'], true)) {
+                $matches = '1';
+            }
 
             try {
                 if (! ctype_digit($matches)) {
@@ -330,6 +344,38 @@ class QueueService
             ->values();
     }
 
+    // ── VIP Mainin akun (joki) ──────────────────────────────────────────
+
+    /** Mulai memainkan akun pemesan (tampil "Sedang dimainkan" di halaman viewer). */
+    public function startJoki(LiveSession $session, QueueEntry $entry): QueueEntry
+    {
+        $this->ensureEntryBelongsToSession($session, $entry);
+        $entry->refresh();
+
+        if ($entry->service_type !== 'joki') {
+            throw new InvalidArgumentException('Hanya untuk pesanan VIP Mainin akun.');
+        }
+
+        $entry->update(['status' => 'playing']);
+
+        return $entry->refresh();
+    }
+
+    /** Akun selesai dimainkan (checklist): pesanan selesai, tampil "Selesai" di halaman viewer. */
+    public function finishJoki(LiveSession $session, QueueEntry $entry): QueueEntry
+    {
+        $this->ensureEntryBelongsToSession($session, $entry);
+        $entry->refresh();
+
+        if ($entry->service_type !== 'joki') {
+            throw new InvalidArgumentException('Hanya untuk pesanan VIP Mainin akun.');
+        }
+
+        $this->complete($session, $entry);
+
+        return $entry->refresh();
+    }
+
     // ── Party & batas game per sesi ─────────────────────────────────────
 
     /** Jumlah viewer per game (streamer + N, 5-stack MLBB → maks 4). */
@@ -371,7 +417,9 @@ class QueueService
     /** @return Collection<int, QueueEntry> pemain yang sedang main (urut posisi) */
     public function party(LiveSession $session): Collection
     {
-        return $this->orderedEntries($session)->where('status', 'playing')->values();
+        return $this->orderedEntries($session)
+            ->filter(fn (QueueEntry $entry): bool => $entry->status === 'playing' && $entry->service_type !== 'joki')
+            ->values();
     }
 
     /**
@@ -469,7 +517,7 @@ class QueueService
 
         foreach ($entries as $entry) {
             $entry->refresh();
-            $wasPlaying = $entry->status === 'playing';
+            $wasPlaying = $entry->status === 'playing' && $entry->service_type !== 'joki';
 
             if ($this->remaining($entry) < 1) {
                 $entry->update(['status' => 'done', 'position' => ++$last]);
@@ -519,7 +567,7 @@ class QueueService
     {
         return DB::transaction(function () use ($session, $entry): ?QueueEntry {
             $this->ensureEntryBelongsToSession($session, $entry);
-            $wasPlaying = $entry->status === 'playing';
+            $wasPlaying = $entry->status === 'playing' && $entry->service_type !== 'joki';
 
             $lastPosition = (int) $this->orderedEntries($session)->max('position');
             $entry->update(['status' => 'skipped', 'position' => $lastPosition + 1]);
@@ -535,7 +583,7 @@ class QueueService
     {
         return DB::transaction(function () use ($session, $entry): ?QueueEntry {
             $this->ensureEntryBelongsToSession($session, $entry);
-            $wasPlaying = $entry->status === 'playing';
+            $wasPlaying = $entry->status === 'playing' && $entry->service_type !== 'joki';
             $this->discard($entry);
             $this->normalizePositions($session);
 
@@ -589,7 +637,7 @@ class QueueService
     {
         return DB::transaction(function () use ($session, $entry): ?QueueEntry {
             $this->ensureEntryBelongsToSession($session, $entry);
-            $wasPlaying = $entry->status === 'playing';
+            $wasPlaying = $entry->status === 'playing' && $entry->service_type !== 'joki';
 
             $lastPosition = (int) $this->orderedEntries($session)->max('position');
             $entry->update(['status' => 'done', 'position' => $lastPosition + 1]);

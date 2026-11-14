@@ -167,7 +167,7 @@
                         <th scope="col" class="select-col"><input type="checkbox" class="row-check" wire:click="toggleSelectAll" @checked($allSelected) @disabled($visibleIds === []) aria-label="Centang semua pemain" /></th>
                         <th scope="col">#</th>
                         <th scope="col">Nama pemain</th>
-                        <th scope="col">Jenis &amp; sumber</th>
+                        <th scope="col">Layanan</th>
                         <th scope="col">Sesi ini</th>
                         <th scope="col">Sisa</th>
                         <th scope="col">Aksi</th>
@@ -179,9 +179,9 @@
                             <td class="select-col"><input type="checkbox" class="row-check" wire:model.live="selected" value="{{ $entry->id }}" aria-label="Centang {{ $entry->display_name }}" /></td>
                             <td>@if ($entry->status === 'playing')<span class="party-marker" title="Sedang main (posisi antrean #{{ $entry->position }})">▶</span>@else{{ $entry->position }}@endif</td>
                             <td><div class="player-cell"><span class="avatar" style="background: {{ $avatarColors[$entry->id % 6] }}">{{ $initials($entry->display_name) }}</span>@include('livewire.partials.player-identity', ['entry' => $entry])@include('livewire.partials.entry-status', ['entry' => $entry])</div></td>
-                            <td><div class="pill-stack">@if ($entry->service_type === 'joki')<span class="service-pill joki">Mainin akun</span>@endif<span class="provider-pill {{ $entry->provider }}">{{ $providerLabels[$entry->provider] ?? $entry->provider }}</span></div></td>
-                            <td>{{ $played[$entry->id] ?? 0 }}{{ $cap > 0 && $entry->service_type !== 'joki' ? '/'.$cap : '' }}</td>
-                            <td>@include('livewire.partials.quota', ['remaining' => $matches->remaining($entry)])</td>
+                            <td>@include('livewire.partials.service-badge', ['entry' => $entry])</td>
+                            <td>{{ $entry->service_type === 'joki' ? '—' : ($played[$entry->id] ?? 0).($cap > 0 ? '/'.$cap : '') }}</td>
+                            <td>@if ($entry->service_type === 'joki')<span class="quota-chip">—</span>@else @include('livewire.partials.quota', ['remaining' => $matches->remaining($entry)]) @endif</td>
                             <td>@include('livewire.partials.row-actions', ['entry' => $entry])</td>
                         </tr>
                     @endforeach
@@ -207,8 +207,10 @@
                         @include('livewire.partials.entry-status', ['entry' => $entry])
                     </div>
                     <div class="player-card-meta">
-                        <div><span>Jenis &amp; sumber</span><strong class="pill-stack">@if ($entry->service_type === 'joki')<span class="service-pill joki">Mainin akun</span>@endif<span class="provider-pill {{ $entry->provider }}">{{ $providerLabels[$entry->provider] ?? $entry->provider }}</span></strong></div>
-                        <div><span>Sesi ini · sisa</span><strong>{{ $played[$entry->id] ?? 0 }}{{ $cap > 0 && $entry->service_type !== 'joki' ? '/'.$cap : '' }} · @include('livewire.partials.quota', ['remaining' => $matches->remaining($entry)])</strong></div>
+                        <div><span>Layanan</span><strong>@include('livewire.partials.service-badge', ['entry' => $entry])</strong></div>
+                        @if ($entry->service_type !== 'joki')
+                            <div><span>Sesi ini · sisa</span><strong>{{ $played[$entry->id] ?? 0 }}{{ $cap > 0 ? '/'.$cap : '' }} · @include('livewire.partials.quota', ['remaining' => $matches->remaining($entry)])</strong></div>
+                        @endif
                     </div>
                     <div class="player-card-foot"><span class="player-card-note"></span>@include('livewire.partials.row-actions', ['entry' => $entry])</div>
                 </article>
@@ -235,12 +237,17 @@
                 @error('mlbbId') <p class="form-error" role="alert">{{ $message }}</p> @enderror
                 <div class="field-row">
                     <div>
-                        <label class="field-label" for="add-player-matches">Jatah game <span>(1–{{ $maxMatches }})</span></label>
-                        <input class="field-input @error('matchesTotal') is-invalid @enderror" id="add-player-matches" type="number" min="1" max="{{ $maxMatches }}" wire:model="matchesTotal" />
+                        @if ($serviceType === 'joki')
+                            <label class="field-label">Jatah game</label>
+                            <p class="field-hint">Mainin akun tidak dihitung per game — cukup tandai selesai.</p>
+                        @else
+                            <label class="field-label" for="add-player-matches">Jatah game <span>(1–{{ $maxMatches }})</span></label>
+                            <input class="field-input @error('matchesTotal') is-invalid @enderror" id="add-player-matches" type="number" min="1" max="{{ $maxMatches }}" wire:model="matchesTotal" />
+                        @endif
                     </div>
                     <div>
                         <label class="field-label" for="add-player-type">Jenis</label>
-                        <select class="field-input" id="add-player-type" wire:model="serviceType">
+                        <select class="field-input" id="add-player-type" wire:model.live="serviceType">
                             @foreach ($serviceTypes as $value => $label)<option value="{{ $value }}">{{ $label }}</option>@endforeach
                         </select>
                     </div>
@@ -275,12 +282,17 @@
                 @error('editMlbbId') <p class="form-error" role="alert">{{ $message }}</p> @enderror
                 <div class="field-row">
                     <div>
-                        <label class="field-label" for="edit-player-remaining">Sisa game <span>(0 = selesai)</span></label>
-                        <input class="field-input @error('editRemaining') is-invalid @enderror" id="edit-player-remaining" type="number" min="0" max="{{ $maxMatches }}" wire:model="editRemaining" />
+                        @if ($editType === 'joki')
+                            <label class="field-label">Sisa game</label>
+                            <p class="field-hint">Mainin akun tidak dihitung per game.</p>
+                        @else
+                            <label class="field-label" for="edit-player-remaining">Sisa game <span>(0 = selesai)</span></label>
+                            <input class="field-input @error('editRemaining') is-invalid @enderror" id="edit-player-remaining" type="number" min="0" max="{{ $maxMatches }}" wire:model="editRemaining" />
+                        @endif
                     </div>
                     <div>
                         <label class="field-label" for="edit-player-type">Jenis</label>
-                        <select class="field-input" id="edit-player-type" wire:model="editType">
+                        <select class="field-input" id="edit-player-type" wire:model.live="editType">
                             @foreach ($serviceTypes as $value => $label)<option value="{{ $value }}">{{ $label }}</option>@endforeach
                         </select>
                     </div>
@@ -306,7 +318,7 @@
                     <div><p class="eyebrow">Pindahan dari notepad</p><h2 id="import-title">Tempel banyak pemain</h2></div>
                     <button class="icon-button" type="button" aria-label="Tutup" wire:click="closeImport">×</button>
                 </div>
-                <p class="modal-help">Satu baris satu pemain, dipisah garis tegak <code>|</code>:<br /><code>nama | ID MLBB | sisa game | jenis | catatan</code><br />ID, jenis, dan catatan boleh kosong. Jenis: <code>vip</code> (Mabar VIP) atau <code>joki</code> (Mainin akun). Pemain masuk di akhir antrean sesuai urutan baris.</p>
+                <p class="modal-help">Satu baris satu pemain, dipisah garis tegak <code>|</code>:<br /><code>nama | ID MLBB | sisa game | jenis | catatan</code><br />ID, jenis, dan catatan boleh kosong. Jenis: <code>vip</code> (Mabar VIP) atau <code>joki</code> (VIP Mainin akun — sisa game boleh kosong). Pemain masuk di akhir antrean sesuai urutan baris.</p>
                 @error('importForm') <p class="form-error" role="alert">{{ $message }}</p> @enderror
                 <label class="field-label" for="import-text">Daftar pemain</label>
                 <textarea class="field-input import-textarea" id="import-text" wire:model="importText" rows="12" spellcheck="false"

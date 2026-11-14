@@ -12,6 +12,8 @@
     $initials = fn (string $name) => mb_strtoupper(collect(preg_split('/\s+/', trim($name)))->filter()->take(2)->map(fn ($w) => mb_substr($w, 0, 1))->join('')) ?: '?';
     $partyNames = $queue['party'] ?? [];
     $nextNames = $queue['next'] ?? [];
+    $jokiOrders = $queue['joki'] ?? [];
+    $jokiLabels = ['playing' => 'Sedang dimainkan', 'waiting' => 'Menunggu', 'done' => 'Selesai ✓'];
     $sessionCap = (int) ($queue['rules']['session_cap'] ?? 0);
     $startedAt = $isLive && ! empty($queue['session']['started_at']) ? \Illuminate\Support\Carbon::parse($queue['session']['started_at']) : null;
 @endphp
@@ -73,6 +75,18 @@
             </ol>
           </div>
         </div>
+      </section>
+
+      <section class="public-joki" aria-labelledby="public-joki-title" id="joki-section" @if ($jokiOrders === []) hidden @endif>
+        <div class="public-section-heading">
+          <div><p class="eyebrow">Cek pesanan kamu</p><h2 id="public-joki-title">VIP Mainin akun</h2></div>
+          <span class="public-package-note">Status akun yang dimainkan streamer · yang selesai tampil 3 hari</span>
+        </div>
+        <ul class="public-joki-list" id="joki-list">
+          @foreach ($jokiOrders as $order)
+            <li><span>{{ $order['player_name'] }}</span><em class="joki-badge is-{{ $order['state'] }}">{{ $jokiLabels[$order['state']] }}</em></li>
+          @endforeach
+        </ul>
       </section>
 
       <section class="public-summary" aria-label="Ringkasan antrean">

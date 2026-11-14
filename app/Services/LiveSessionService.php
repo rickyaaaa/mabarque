@@ -91,8 +91,9 @@ class LiveSessionService
         foreach ($entries->values() as $index => $entry) {
             $entry->forceFill([
                 'live_session_id' => $session->id,
-                // Sesi baru = mulai segar: yang tadinya bermain/dilewati/offline kembali siap.
-                'status' => 'ready',
+                // Sesi baru = mulai segar: yang tadinya bermain/dilewati/offline kembali siap — kecuali akun
+                // yang sedang dimainkan (VIP Mainin akun), pengerjaannya berlanjut.
+                'status' => $entry->service_type === 'joki' && $entry->status === 'playing' ? 'playing' : 'ready',
                 'next_order' => null,
                 'position' => $index + 1,
             ])->save();

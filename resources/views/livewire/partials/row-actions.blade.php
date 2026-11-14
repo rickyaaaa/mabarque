@@ -1,10 +1,15 @@
 {{-- Aksi per pemain di papan antrean (dipakai tabel desktop & kartu mobile). --}}
 <div class="row-actions">
-    @if (! $isLive)
+    @if ($entry->service_type === 'joki')
+        @if ($entry->status === 'playing')
+            <button class="row-action row-action-done" type="button" wire:click="finishJoki({{ $entry->id }})" title="Selesai dimainkan" aria-label="Tandai akun {{ $entry->display_name }} selesai dimainkan">✓</button>
+        @else
+            <button class="row-action" type="button" wire:click="startJoki({{ $entry->id }})" title="Mulai mainkan akun" aria-label="Mulai mainkan akun {{ $entry->display_name }}">▶</button>
+        @endif
+    @elseif (! $isLive)
         {{-- Belum live: hanya kelola data pemain; party & catat game tersedia saat live. --}}
     @elseif ($entry->service_type === 'joki')
-        {{-- Mainin akun: tidak ikut party, game dicatat satu per satu. --}}
-        <button class="row-action" type="button" wire:click="finishMatch({{ $entry->id }})" title="Catat 1 game selesai" aria-label="Catat 1 game: {{ $entry->display_name }}">✓</button>
+        {{-- VIP Mainin akun: tidak ikut party & tidak dihitung per game. Menunggu → Sedang dimainkan → Selesai. --}}
     @elseif ($entry->status === 'playing')
         <button class="row-action" type="button" wire:click="finishMatch({{ $entry->id }})" title="Catat 1 game hanya untuk pemain ini" aria-label="Catat 1 game: {{ $entry->display_name }}">✓</button>
         <button class="row-action" type="button" wire:click="bench({{ $entry->id }})" title="Keluarkan dari party" aria-label="Keluarkan {{ $entry->display_name }} dari party">⏏</button>

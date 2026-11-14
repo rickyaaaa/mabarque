@@ -31,6 +31,17 @@
     return node;
   }
 
+  // VIP Mainin akun: pemesan bisa mengecek apakah akunnya sedang/sudah dimainkan.
+  const JOKI_LABELS = { playing: "Sedang dimainkan", waiting: "Menunggu", done: "Selesai ✓" };
+  function renderJoki(orders) {
+    $("#joki-section").hidden = orders.length === 0;
+    $("#joki-list").replaceChildren(...orders.map((order) => {
+      const item = el("li");
+      item.append(el("span", null, order.player_name), el("em", `joki-badge is-${order.state}`, JOKI_LABELS[order.state] || "Menunggu"));
+      return item;
+    }));
+  }
+
   // Party & next game: nama + sisa game, supaya viewer tidak perlu menggulir ke daftar antrean.
   function fillNames(list, members, emptyText) {
     list.replaceChildren(...(members.length
@@ -97,6 +108,8 @@
     $("#session-state").textContent = live ? "Live" : "Offline";
     $("#queue-total").textContent = String(waiting.length);
     $("#matches-done").textContent = String(data.session?.total_matches ?? 0);
+
+    renderJoki(data.joki || []);
 
     const party = data.party || [];
     const next = data.next || [];

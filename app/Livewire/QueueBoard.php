@@ -319,6 +319,26 @@ class QueueBoard extends Component
         });
     }
 
+    /** VIP Mainin akun: mulai memainkan akun pemesan. Boleh tanpa live (dikerjakan di luar stream). */
+    public function startJoki(int $entryId, QueueService $queueService): void
+    {
+        $this->attempt(function () use ($entryId, $queueService): string {
+            $entry = $queueService->startJoki($this->session, $this->entry($entryId));
+
+            return "Akun {$entry->display_name} sedang dimainkan.";
+        });
+    }
+
+    /** VIP Mainin akun: selesai dimainkan (checklist). */
+    public function finishJoki(int $entryId, QueueService $queueService): void
+    {
+        $this->attempt(function () use ($entryId, $queueService): string {
+            $entry = $queueService->finishJoki($this->session, $this->entry($entryId));
+
+            return "Akun {$entry->display_name} selesai dimainkan.";
+        });
+    }
+
     /** Pilih pemain untuk Next game secara manual. */
     public function pickNext(int $entryId, QueueService $queueService): void
     {
@@ -444,7 +464,7 @@ class QueueBoard extends Component
             ->sortBy(fn (QueueEntry $entry) => [$entry->status === 'playing' ? 0 : 1, $entry->position])
             ->values();
         $queue = app(QueueService::class);
-        $party = $all->where('status', 'playing')->values();
+        $party = $all->filter(fn (QueueEntry $entry) => $entry->status === 'playing' && $entry->service_type !== 'joki')->values();
         $size = $queue->partySize($this->session);
 
         return view('livewire.queue-board', [

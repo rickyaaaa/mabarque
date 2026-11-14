@@ -87,3 +87,16 @@
 .package-dialog-links .button { justify-content: center; text-align: center; text-decoration: none; }
 .package-dialog-empty { margin: 16px 0 0; padding: 9px 11px; background: var(--cream); border: 2px dashed var(--line); font-size: 12px; font-weight: 700; }
 @media (prefers-reduced-motion: reduce) { .public-package-list .public-package-card { transition: none; } .public-package-list .public-package-card:hover { transform: none; } }
+
+/* VIP Mainin akun: status akun pemesan */
+.public-joki { margin-bottom: 21px; padding: 17px; color: var(--ink); background: var(--paper); border: 4px solid var(--line); box-shadow: var(--shadow); }
+.public-joki .public-section-heading h2 { font-size: clamp(36px, 4vw, 52px); }
+.public-joki .public-package-note { color: var(--muted); }
+.public-joki-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 13px 0 0; list-style: none; }
+.public-joki-list li { display: flex; align-items: center; gap: 8px; padding: 9px 10px; background: var(--cream); border: 2px solid var(--line); }
+.public-joki-list li > span { flex: 1; min-width: 0; font-size: 14px; font-weight: 800; overflow-wrap: anywhere; }
+.joki-badge { flex: none; padding: 4px 8px; border: 2px solid var(--line); font-size: 10px; font-style: normal; font-weight: 800; text-transform: uppercase; white-space: nowrap; }
+.joki-badge.is-playing { color: var(--cream); background: var(--green); }
+.joki-badge.is-waiting { color: var(--ink); background: #ffe6a4; }
+.joki-badge.is-done { color: var(--cream); background: var(--navy); }
+@media (max-width: 640px) { .public-joki { padding: 13px 10px; } .public-joki-list { grid-template-columns: 1fr; } }

@@ -137,14 +137,13 @@ class PlayerBalanceTest extends TestCase
             ->set('playerName', '')
             ->set('mlbbId', '138765201')
             ->set('matchesTotal', 150)
-            ->set('serviceType', 'joki')
             ->set('note', 'ID dari komentar')
             ->call('addPlayer')
             ->assertHasNoErrors()
             ->assertSee('ID 138765201');
 
         $entry = $this->session->queueEntries()->sole();
-        $this->assertSame(['joki', 150, 'ID dari komentar'], [$entry->service_type, $entry->matches_total, $entry->note]);
+        $this->assertSame(['vip', 150, 'ID dari komentar'], [$entry->service_type, $entry->matches_total, $entry->note]);
 
         $board->call('openEdit', $entry->id)
             ->assertSet('editRemaining', 150)

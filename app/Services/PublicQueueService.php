@@ -38,8 +38,10 @@ class PublicQueueService
 
     public function serialize(?LiveSession $session, bool $censor = false, bool $live = true): array
     {
-        if ($session === null || (! $live && $session->queueEntries->isEmpty())) {
-            return ['status' => 'offline', 'session' => null, 'rules' => null, 'current' => null, 'party' => [], 'next' => [], 'queue' => []];
+        $joki = $session ? $this->jokiOrders($session, $censor) : [];
+
+        if ($session === null || (! $live && $session->queueEntries->isEmpty() && $joki === [])) {
+            return ['status' => 'offline', 'session' => null, 'rules' => null, 'current' => null, 'party' => [], 'next' => [], 'joki' => $joki, 'queue' => []];
         }
 
         $queueService = app(QueueService::class);
@@ -48,7 +50,8 @@ class PublicQueueService
         // Urutan masuk party berikutnya (siap, mabar VIP, belum kena batas sesi).
         $nextRank = $live ? $queueService->nextUp($session)->pluck('id')->flip()->all() : [];
 
-        $queue = $session->queueEntries->map(fn (QueueEntry $entry) => [
+        // VIP Mainin akun punya bagiannya sendiri ("joki") — tidak masuk daftar antrean mabar.
+        $queue = $session->queueEntries->where('service_type', '!=', 'joki')->map(fn (QueueEntry $entry) => [
             'position' => $entry->position,
             'player_name' => $this->displayName($entry, $censor),
             'mlbb_id' => $entry->mlbb_id ? ($censor ? self::censor($entry->mlbb_id) : $entry->mlbb_id) : null,
@@ -79,6 +82,7 @@ class PublicQueueService
             'current' => $party[0]['player_name'] ?? null,
             'party' => $party,
             'next' => $queue->whereNotNull('next_rank')->sortBy('next_rank')->take($size)->map($brief)->values()->all(),
+            'joki' => $joki,
             'queue' => $queue->all(),
         ];
     }
@@ -108,6 +112,36 @@ class PublicQueueService
             'query' => $name,
             'matches' => array_values(array_filter($queue, fn (array $entry): bool => in_array($entry['position'], $ids, true))),
         ];
+    }
+
+    /**
+     * Pesanan VIP Mainin akun untuk halaman viewer: yang sedang dimainkan, yang menunggu, dan yang selesai
+     * dalam 3 hari terakhir — supaya pemesan bisa mengecek apakah akunnya sudah dimainkan.
+     *
+     * @return list<array{player_name: string, state: string}>
+     */
+    private function jokiOrders(LiveSession $session, bool $censor): array
+    {
+        $open = $session->queueEntries()->reorder()
+            ->where('service_type', 'joki')
+            ->whereIn('status', LiveSessionService::UNFINISHED)
+            ->orderByRaw("CASE WHEN status = 'playing' THEN 0 ELSE 1 END")
+            ->orderBy('position')
+            ->get();
+
+        $done = QueueEntry::query()
+            ->whereHas('liveSession', fn ($query) => $query->where('user_id', $session->user_id))
+            ->where('service_type', 'joki')
+            ->where('status', 'done')
+            ->where('updated_at', '>=', now()->subDays(3))
+            ->latest('updated_at')
+            ->limit(20)
+            ->get();
+
+        return $open->concat($done)->map(fn (QueueEntry $entry) => [
+            'player_name' => $this->displayName($entry, $censor),
+            'state' => ['playing' => 'playing', 'done' => 'done'][$entry->status] ?? 'waiting',
+        ])->values()->all();
     }
 
     /** Separuh akhir disamarkan: "WangSukiJomok" → "WangSu*******", "1185010926" → "11850*****". */

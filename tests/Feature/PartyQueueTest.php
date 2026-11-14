@@ -250,6 +250,41 @@ class PartyQueueTest extends TestCase
         $this->assertSame('ignored', $donation->refresh()->status);
     }
 
+    public function test_joki_orders_have_their_own_status_flow_and_viewer_section(): void
+    {
+        $this->owner->forceFill(['party_size' => 2])->save();
+        // Orang yang sama bisa order dua-duanya: Mabar VIP dan VIP Mainin akun → dua baris terpisah.
+        $this->queue->importPlayers($this->session, "Roti |  | 3 | vip\nRoti |  |  | joki | akun utama\nDey |  | 2");
+        [$rotiVip, $rotiJoki] = $this->session->queueEntries()->where('player_name', 'Roti')->orderBy('position')->get()->all();
+        $this->assertSame(['vip', 'joki'], [$rotiVip->service_type, $rotiJoki->service_type]);
+
+        $board = Livewire::actingAs($this->owner)->test(QueueBoard::class, ['session' => $this->session])
+            ->assertSee('VIP Mainin akun')
+            ->assertSee('Menunggu')
+            ->call('startJoki', $rotiJoki->id)
+            ->assertDispatched('notify', message: 'Akun Roti sedang dimainkan.')
+            ->assertSee('Sedang dimainkan');
+
+        // Akun yang sedang dimainkan tidak memakan slot party mabar.
+        $this->assertSame(['Roti', 'Dey'], $this->queue->fillParty($this->session)->pluck('player_name')->all());
+        $this->assertSame(2, $this->queue->party($this->session)->count());
+
+        $this->getJson("/api/channels/{$this->owner->slug}/queue")->assertOk()
+            ->assertJsonPath('data.joki', [['player_name' => 'Roti', 'state' => 'playing']])
+            ->assertJsonPath('data.party.0.player_name', 'Roti')
+            ->assertJsonCount(2, 'data.queue'); // daftar mabar tanpa pesanan joki
+
+        $board->call('finishJoki', $rotiJoki->id)->assertDispatched('notify', message: 'Akun Roti selesai dimainkan.');
+        $this->assertSame('done', $rotiJoki->refresh()->status);
+        $this->assertSame(2, $this->queue->party($this->session)->count()); // party mabar tidak terganggu
+
+        $this->get('/'.$this->owner->slug)->assertOk()->assertSee('VIP Mainin akun')->assertSee('Selesai ✓');
+
+        // Pesanan selesai lebih dari 3 hari lalu tidak ditampilkan lagi.
+        QueueEntry::whereKey($rotiJoki->id)->update(['updated_at' => now()->subDays(4)]);
+        $this->getJson("/api/channels/{$this->owner->slug}/queue")->assertJsonPath('data.joki', []);
+    }
+
     public function test_board_party_controls_and_rules(): void
     {
         $this->players(['Dey' => 2, 'Ir.fing' => 1, 'Indira' => 3]);
