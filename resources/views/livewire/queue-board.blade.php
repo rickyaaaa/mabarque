@@ -108,18 +108,25 @@
                 @elseif ($party->isEmpty())
                     <button class="button button-small button-light" type="button" wire:click="startGame" @disabled($nextUp->isEmpty())><span aria-hidden="true">▶</span> Mulai game</button>
                 @else
-                    <button class="button button-small button-win" type="button" wire:click="finishGame('win')"
-                            title="Game menang — semua pemain di party berkurang 1 game"><span aria-hidden="true">🏆</span> Menang</button>
-                    <button class="button button-small button-lose" type="button" wire:click="finishGame('lose')"
-                            title="Game kalah — semua pemain di party berkurang 1 game"><span aria-hidden="true">✗</span> Kalah</button>
                     <button class="button button-small button-light" type="button" wire:click="finishGame"
-                            title="Selesai tanpa hasil (mis. remake) — tetap mengurangi 1 game"><span aria-hidden="true">✓</span> Selesai</button>
+                            title="Semua pemain di party berkurang 1 game"><span aria-hidden="true">✓</span> Selesai game</button>
                     @if ($party->count() < $partySizeLimit && $nextUp->isNotEmpty())
                         <button class="button button-small button-light" type="button" wire:click="startGame"><span aria-hidden="true">+</span> Isi slot kosong</button>
                     @endif
+                    <button class="button button-small button-light" type="button" wire:click="benchAll"
+                            wire:confirm="Keluarkan semua pemain dari party? Sisa game mereka tidak berubah."><span aria-hidden="true">⏏</span> Keluarkan semua</button>
                 @endif
                 <button class="button button-small button-light" type="button" wire:click="openRules"><span aria-hidden="true">⚙</span> Aturan party</button>
             </div>
+            @if ($isLive)
+                <div class="score-row" aria-label="Skor Win / Lose sesi ini">
+                    <span class="score-label">Skor</span>
+                    <button class="button button-small button-win" type="button" wire:click="addScore('win')" title="Tambah menang (tidak mengurangi sisa game)"><span aria-hidden="true">🏆</span> Menang <strong>{{ $session->wins }}</strong></button>
+                    <button class="score-undo" type="button" wire:click="undoScore('win')" @disabled($session->wins < 1) aria-label="Koreksi: kurangi menang">−</button>
+                    <button class="button button-small button-lose" type="button" wire:click="addScore('lose')" title="Tambah kalah (tidak mengurangi sisa game)"><span aria-hidden="true">✗</span> Kalah <strong>{{ $session->losses }}</strong></button>
+                    <button class="score-undo" type="button" wire:click="undoScore('lose')" @disabled($session->losses < 1) aria-label="Koreksi: kurangi kalah">−</button>
+                </div>
+            @endif
             <p class="party-rules-note">
                 {{ $partySizeLimit }} pemain per game ·
                 {{ $cap > 0 ? "maks {$cap} game per orang tiap sesi" : 'tanpa batas game per sesi' }}

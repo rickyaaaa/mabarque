@@ -382,6 +382,37 @@ class QueueBoard extends Component
         });
     }
 
+    /** Keluarkan semua pemain dari party sekaligus; slot dibiarkan kosong. */
+    public function benchAll(QueueService $queueService): void
+    {
+        $this->attemptLive(function () use ($queueService): string {
+            $count = $queueService->benchAll($this->session);
+            $this->mvpId = null;
+
+            return $count > 0 ? "{$count} pemain dikeluarkan dari party. Slot kosong — klik \"Mulai game\" untuk mengisi lagi." : 'Party sudah kosong.';
+        });
+    }
+
+    /** Skor Win/Lose: hanya menambah skor sesi, tidak mengurangi sisa game pemain. */
+    public function addScore(string $result, QueueService $queueService): void
+    {
+        $this->attemptLive(function () use ($result, $queueService): string {
+            $session = $queueService->adjustScore($this->session, $result === 'lose' ? 'lose' : 'win');
+
+            return ($result === 'lose' ? 'Kalah' : 'Menang')." dicatat. Skor {$session->wins}–{$session->losses}.";
+        });
+    }
+
+    /** Koreksi skor (salah klik). */
+    public function undoScore(string $result, QueueService $queueService): void
+    {
+        $this->attemptLive(function () use ($result, $queueService): string {
+            $session = $queueService->adjustScore($this->session, $result === 'lose' ? 'lose' : 'win', -1);
+
+            return "Skor dikoreksi: {$session->wins}–{$session->losses}.";
+        });
+    }
+
     /** Keluarkan pemain dari party (urutannya tetap); slotnya dibiarkan kosong. */
     public function bench(int $entryId, QueueService $queueService): void
     {

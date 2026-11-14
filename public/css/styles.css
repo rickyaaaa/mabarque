@@ -400,3 +400,11 @@ textarea.field-input { resize: vertical; }
 .mvp-toggle:hover { background: #ffe6a4; }
 .mvp-toggle.is-active { background: #ffd067; box-shadow: 2px 2px 0 var(--line); }
 .party-slot.is-mvp { background: #fff1bf; }
+
+/* Skor Win/Lose di Kontrol game (terpisah dari Selesai game) */
+.score-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 12px; padding-top: 10px; border-top: 2px dashed rgba(59, 25, 69, .35); }
+.score-label { margin-right: 2px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
+.score-row .button strong { margin-left: 4px; padding: 0 5px; color: var(--ink); background: var(--cream); border: 2px solid var(--line); font-variant-numeric: tabular-nums; }
+.score-undo { width: 26px; height: 26px; padding: 0; color: var(--ink); background: transparent; border: 2px solid var(--line); font-weight: 900; cursor: pointer; }
+.score-undo:hover:not(:disabled) { color: var(--cream); background: var(--navy); }
+.score-undo:disabled { opacity: .4; cursor: not-allowed; }

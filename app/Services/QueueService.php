@@ -289,6 +289,32 @@ class QueueService
     }
 
     /**
+     * Keluarkan semua anggota party sekaligus (urutan antrean tetap). Slot dibiarkan kosong.
+     *
+     * @return int jumlah pemain yang dikeluarkan
+     */
+    public function benchAll(LiveSession $session): int
+    {
+        return DB::transaction(fn (): int => $this->party($session)
+            ->each(fn (QueueEntry $entry) => $entry->update(['status' => 'ready']))
+            ->count());
+    }
+
+    /**
+     * Skor Win/Lose sesi: hanya penghitung, tidak mengurangi sisa game siapa pun.
+     *
+     * @param  int  $delta  +1 tambah, -1 koreksi
+     */
+    public function adjustScore(LiveSession $session, string $result, int $delta = 1): LiveSession
+    {
+        $column = $result === 'lose' ? 'losses' : 'wins';
+        $session->refresh();
+        $session->forceFill([$column => max(0, (int) $session->{$column} + ($delta < 0 ? -1 : 1))])->save();
+
+        return $session;
+    }
+
+    /**
      * Pilih pemain untuk "Next game" secara manual (maks sebanyak slot party). Saat party diisi,
      * pilihan manual diambil duluan sebelum urutan otomatis.
      */

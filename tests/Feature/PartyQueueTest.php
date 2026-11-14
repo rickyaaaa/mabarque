@@ -308,8 +308,8 @@ class PartyQueueTest extends TestCase
             ->assertSee('⭐ MVP')
             ->call('toggleMvp', $dey->id)
             ->assertSet('mvpId', $dey->id)
-            ->call('finishGame', 'win')
-            ->assertDispatched('notify', message: 'Menang — dicatat untuk 2 pemain. ⭐ Dey MVP — main lagi, sisa tidak berkurang. Batas sesi: Kyoto. Masuk party: Indira.')
+            ->call('finishGame')
+            ->assertDispatched('notify', message: 'Game selesai — dicatat untuk 2 pemain. ⭐ Dey MVP — main lagi, sisa tidak berkurang. Batas sesi: Kyoto. Masuk party: Indira.')
             ->assertSet('mvpId', null);
 
         // Dey: sisa tetap 3 dan tidak kena batas sesi (1) → tetap di party. Kyoto: berkurang & kena batas.
@@ -325,7 +325,7 @@ class PartyQueueTest extends TestCase
 
         // Rekap arsip menandai MVP.
         $this->queue->fillParty($this->session);
-        $board->call('toggleMvp', $dey->id)->call('finishGame', 'lose');
+        $board->call('toggleMvp', $dey->id)->call('finishGame');
         app(LiveSessionService::class)->end($this->owner, $this->session);
         $this->get('/live-session/'.$this->session->id)->assertOk()->assertSee('Dey ⭐');
     }
@@ -348,15 +348,28 @@ class PartyQueueTest extends TestCase
 
         $this->assertSame([2, 3], [$this->owner->refresh()->party_size, $this->owner->session_match_cap]);
 
-        $board->call('finishGame', 'win')
-            ->assertDispatched('notify', message: 'Menang — dicatat untuk 2 pemain. Habis: Ir.fing. Masuk party: Indira.')
-            ->assertSeeHtml('<span>Win – Lose</span><strong>1–0</strong>');
+        // Selesai game = mengurangi jatah party; tidak mengubah skor.
+        $board->call('finishGame')
+            ->assertDispatched('notify', message: 'Game selesai — dicatat untuk 2 pemain. Habis: Ir.fing. Masuk party: Indira.');
         $this->assertSame(['Dey', 'Indira'], $this->partyNames());
-        $this->assertSame(['win', 'win'], \App\Models\MatchRecord::query()->pluck('result')->all());
+        $this->assertSame([0, 0, 1], [$this->session->refresh()->wins, $this->session->losses, $this->session->total_matches]);
 
-        // Kalah = +1 lose; "Selesai" tanpa hasil (remake) tidak mengubah skor tapi tetap mengurangi game.
-        $board->call('finishGame', 'lose')->call('finishGame');
-        $this->assertSame([1, 1, 3], [$this->session->refresh()->wins, $this->session->losses, $this->session->total_matches]);
+        // Menang/Kalah = penghitung skor saja, tidak mengurangi sisa game yang sedang main.
+        $remaining = $this->queue->party($this->session)->map->matches_remaining->all();
+        $board->call('addScore', 'win')
+            ->assertDispatched('notify', message: 'Menang dicatat. Skor 1–0.')
+            ->call('addScore', 'win')
+            ->call('addScore', 'lose')
+            ->assertSeeHtml('<span>Win – Lose</span><strong>2–1</strong>')
+            ->call('undoScore', 'win')
+            ->assertDispatched('notify', message: 'Skor dikoreksi: 1–1.');
+        $this->assertSame([1, 1, 1], [$this->session->refresh()->wins, $this->session->losses, $this->session->total_matches]);
+        $this->assertSame($remaining, $this->queue->party($this->session)->map->matches_remaining->all());
+
+        // Keluarkan semua dari party sekaligus: slot kosong, sisa game & urutan tetap.
+        $board->call('benchAll')->assertDispatched('notify', message: '2 pemain dikeluarkan dari party. Slot kosong — klik "Mulai game" untuk mengisi lagi.');
+        $this->assertSame([], $this->partyNames());
+        $this->assertSame($remaining, $this->session->queueEntries()->whereIn('player_name', ['Dey', 'Indira'])->get()->map->matches_remaining->all());
 
         $board->set('partySize', 9)->call('saveRules')->assertHasErrors(['partySize']);
     }
