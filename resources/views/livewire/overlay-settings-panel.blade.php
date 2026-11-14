@@ -56,12 +56,9 @@
             <label class="control-label" for="font-scale">Ukuran huruf <output>{{ $fontScale }}%</output></label>
             <input id="font-scale" type="range" min="60" max="200" step="5" wire:model.live="fontScale" />
 
-            <label class="control-label" for="max-players">Jumlah pemain ditampilkan</label>
-            <select id="max-players" class="field-input" wire:model.live="maxPlayers">
-                @foreach (\App\Livewire\OverlaySettingsPanel::PLAYER_OPTIONS as $option)
-                    <option value="{{ $option }}">{{ $option }} pemain</option>
-                @endforeach
-            </select>
+            <label class="control-label" for="max-players">Jumlah pemain ditampilkan <span class="control-hint">(1–{{ \App\Livewire\OverlaySettingsPanel::MAX_PLAYERS }}, di luar yang sedang main)</span></label>
+            <input id="max-players" class="field-input @error('maxPlayers') is-invalid @enderror" type="number" min="{{ \App\Livewire\OverlaySettingsPanel::MIN_PLAYERS }}" max="{{ \App\Livewire\OverlaySettingsPanel::MAX_PLAYERS }}" step="1" wire:model.live.debounce.400ms="maxPlayers" />
+            @error('maxPlayers') <p class="form-error" role="alert">{{ $message }}</p> @enderror
 
             <label class="switch-control">
                 <input type="checkbox" wire:model.live="showNowPlaying" />

@@ -129,6 +129,12 @@ class OverlayScoreTest extends TestCase
         $this->getJson("/api/overlay/{$token}")->assertJsonPath('data.overlay_settings.card_height', null);
         $panel->set('cardWidth', 5000)->call('save')->assertHasErrors(['cardWidth']);
         $panel->set('cardWidth', 600)->set('fontScale', 300)->call('save')->assertHasErrors(['fontScale']);
+
+        // Jumlah pemain di overlay bebas 1–30.
+        $panel->set('fontScale', 100)->set('maxPlayers', 17)->call('save')->assertHasNoErrors();
+        $this->getJson("/api/overlay/{$token}")->assertJsonPath('data.overlay_settings.max_players', 17);
+        $panel->set('maxPlayers', 0)->call('save')->assertHasErrors(['maxPlayers']);
+        $panel->set('maxPlayers', 31)->call('save')->assertHasErrors(['maxPlayers']);
     }
 
     public function test_statistik_menu_is_gone(): void

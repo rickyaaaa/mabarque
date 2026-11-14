@@ -83,3 +83,4 @@
 .obs-size { margin: 12px 0 0; color: #f8dba3; font-size: 12px; line-height: 1.5; }
 .obs-size strong { color: var(--cream); }
 .obs-size em { display: block; color: var(--orange); font-style: normal; font-weight: 700; }
+.control-hint { color: var(--muted); font-size: 11px; font-weight: 600; text-transform: none; }

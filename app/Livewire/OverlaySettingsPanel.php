@@ -12,7 +12,10 @@ use Livewire\Component;
  */
 class OverlaySettingsPanel extends Component
 {
-    public const PLAYER_OPTIONS = [3, 5, 8, 10];
+    /** Jumlah pemain antrean yang tampil di overlay: bebas diatur streamer dalam rentang ini. */
+    public const MIN_PLAYERS = 1;
+
+    public const MAX_PLAYERS = 30;
 
     /** Ruang di sekitar kartu (padding halaman 16px × 2 + bayangan 7px), dibulatkan. */
     public const FRAME_PADDING = 40;
@@ -54,7 +57,7 @@ class OverlaySettingsPanel extends Component
         $validated = $this->validate([
             'accentColor' => ['required', 'regex:/^#[0-9A-F]{6}$/'],
             'fontScale' => ['required', 'integer', 'between:60,200'],
-            'maxPlayers' => ['required', 'integer', 'in:'.implode(',', self::PLAYER_OPTIONS)],
+            'maxPlayers' => ['required', 'integer', 'between:'.self::MIN_PLAYERS.','.self::MAX_PLAYERS],
             'showNowPlaying' => ['boolean'],
             'transparentMode' => ['boolean'],
             'censorNames' => ['boolean'],
@@ -139,7 +142,7 @@ class OverlaySettingsPanel extends Component
 
         $this->accentColor = strtoupper($saved->accent_color ?: '#D82A1C');
         $this->fontScale = (int) $saved->font_scale;
-        $this->maxPlayers = in_array((int) $saved->max_players, self::PLAYER_OPTIONS, true) ? (int) $saved->max_players : 5;
+        $this->maxPlayers = max(self::MIN_PLAYERS, min(self::MAX_PLAYERS, (int) ($saved->max_players ?: 5)));
         $this->showNowPlaying = (bool) $saved->show_now_playing;
         $this->transparentMode = (bool) $saved->transparent_mode;
         $this->censorNames = (bool) $saved->censor_names;
@@ -186,7 +189,7 @@ class OverlaySettingsPanel extends Component
             'h' => $height ?? 'auto',
             'accent' => ltrim(preg_match('/^#[0-9A-Fa-f]{6}$/', $this->accentColor) ? $this->accentColor : '#D82A1C', '#'),
             'scale' => max(60, min(200, $this->fontScale)),
-            'players' => $this->maxPlayers,
+            'players' => max(self::MIN_PLAYERS, min(self::MAX_PLAYERS, $this->maxPlayers)),
             'now' => (int) $this->showNowPlaying,
             'score' => (int) $this->showScore,
             'packages' => (int) $this->showPackages,
