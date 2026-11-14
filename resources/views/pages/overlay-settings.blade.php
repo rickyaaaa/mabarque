@@ -5,7 +5,7 @@
 @section('main-class', 'overlay-content')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/overlay-settings.css') }}" />
+    <link rel="stylesheet" href="{{ \App\Support\Asset::url('css/overlay-settings.css') }}" />
 @endpush
 
 @section('content')

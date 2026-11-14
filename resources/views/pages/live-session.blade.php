@@ -5,7 +5,7 @@
 @section('main-class', 'live-content')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/live-session.css') }}" />
+    <link rel="stylesheet" href="{{ \App\Support\Asset::url('css/live-session.css') }}" />
 @endpush
 
 @section('content')

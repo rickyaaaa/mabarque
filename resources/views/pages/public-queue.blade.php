@@ -23,8 +23,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Agdasima:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="{{ asset('css/styles.css') }}" />
-    <link rel="stylesheet" href="{{ asset('css/public-queue.css') }}" />
+    <link rel="stylesheet" href="{{ \App\Support\Asset::url('css/styles.css') }}" />
+    <link rel="stylesheet" href="{{ \App\Support\Asset::url('css/public-queue.css') }}" />
   </head>
   <body class="public-body" data-channel-id="{{ $channel['slug'] }}" style="--channel-accent: {{ $channel['accent'] }}">
     <main class="public-shell">
@@ -121,6 +121,6 @@
       </footer>
     </main>
     <div class="toast" id="public-toast" role="status" aria-live="polite"></div>
-    <script src="{{ asset('js/public-queue.js') }}" defer></script>
+    <script src="{{ \App\Support\Asset::url('js/public-queue.js') }}" defer></script>
   </body>
 </html>

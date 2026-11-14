@@ -5,7 +5,7 @@
 @section('main-class', 'match-content')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/match-count.css') }}" />
+    <link rel="stylesheet" href="{{ \App\Support\Asset::url('css/match-count.css') }}" />
 @endpush
 
 @section('content')

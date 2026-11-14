@@ -8,10 +8,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Agdasima:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="{{ asset('css/styles.css') }}" />
-    <link rel="stylesheet" href="{{ asset('css/signup.css') }}" />
-    <link rel="stylesheet" href="{{ asset('css/login.css') }}" />
-    <link rel="stylesheet" href="{{ asset('css/forgot-password.css') }}" />
+    <link rel="stylesheet" href="{{ \App\Support\Asset::url('css/styles.css') }}" />
+    <link rel="stylesheet" href="{{ \App\Support\Asset::url('css/signup.css') }}" />
+    <link rel="stylesheet" href="{{ \App\Support\Asset::url('css/login.css') }}" />
+    <link rel="stylesheet" href="{{ \App\Support\Asset::url('css/forgot-password.css') }}" />
   </head>
   <body class="login-body">
     <main class="login-shell">
@@ -116,6 +116,6 @@
       <footer class="signup-footer"><span>© 2025 MabarQueue</span><span>Link reset berlaku 60 menit</span></footer>
     </main>
     <div class="toast" id="reset-toast" role="status" aria-live="polite"></div>
-    <script src="{{ asset('js/api.js') }}" defer></script><script src="{{ asset('js/forgot-password.js') }}" defer></script>
+    <script src="{{ \App\Support\Asset::url('js/api.js') }}" defer></script><script src="{{ \App\Support\Asset::url('js/forgot-password.js') }}" defer></script>
   </body>
 </html>

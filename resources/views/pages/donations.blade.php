@@ -5,7 +5,7 @@
 @section('main-class', 'donation-content')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/donations.css') }}" />
+    <link rel="stylesheet" href="{{ \App\Support\Asset::url('css/donations.css') }}" />
 @endpush
 
 @section('content')

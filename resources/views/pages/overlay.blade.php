@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Agdasima:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="{{ asset('css/overlay.css') }}" />
+    <link rel="stylesheet" href="{{ \App\Support\Asset::url('css/overlay.css') }}" />
   </head>
   {{-- Browser source OBS: data awal dirender server, lalu diperbarui tiap 3 detik dari /api/overlay/{token}. --}}
   <body class="overlay-body" data-token="{{ $token }}">
@@ -23,6 +23,6 @@
       <p class="overlay-empty" id="overlay-empty" hidden></p>
     </main>
     <script>window.__OVERLAY__ = @json($initial);</script>
-    <script src="{{ asset('js/overlay.js') }}" defer></script>
+    <script src="{{ \App\Support\Asset::url('js/overlay.js') }}" defer></script>
   </body>
 </html>

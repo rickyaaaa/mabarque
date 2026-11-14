@@ -5,7 +5,7 @@
 @section('main-class', 'packages-content')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/vip-packages.css') }}" />
+    <link rel="stylesheet" href="{{ \App\Support\Asset::url('css/vip-packages.css') }}" />
 @endpush
 
 @section('content')
