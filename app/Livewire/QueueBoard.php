@@ -23,7 +23,7 @@ class QueueBoard extends Component
     private const VISIBLE = ['playing', 'ready', 'offline', 'skipped'];
 
     /** Filter daftar: otomatis = masuk dari donasi, manual = diinput streamer, joki = mainin akun. */
-    private const FILTERS = ['all', 'auto', 'manual', 'joki'];
+    private const FILTERS = ['all', 'vip', 'joki', 'auto', 'manual'];
 
     /** Batas game per orang per sesi yang bisa dipilih streamer (0 = tanpa batas). */
     public const MAX_SESSION_CAP = 20;
@@ -146,6 +146,7 @@ class QueueBoard extends Component
         return match ($this->filter) {
             'all' => $all,
             'joki' => $all->where('service_type', 'joki')->values(),
+            'vip' => $all->where('service_type', '!=', 'joki')->values(),
             'auto' => $all->where('provider', '!=', 'manual')->values(),
             'manual' => $all->where('provider', 'manual')->values(),
             default => $all,
@@ -471,6 +472,7 @@ class QueueBoard extends Component
             'entries' => match ($this->filter) {
                 'all' => $all,
                 'joki' => $all->where('service_type', 'joki')->values(),
+                'vip' => $all->where('service_type', '!=', 'joki')->values(),
                 'auto' => $all->where('provider', '!=', 'manual')->values(),
                 'manual' => $all->where('provider', 'manual')->values(),
                 default => $all,
@@ -480,6 +482,7 @@ class QueueBoard extends Component
                 'auto' => $all->where('provider', '!=', 'manual')->count(),
                 'manual' => $all->where('provider', 'manual')->count(),
                 'joki' => $all->where('service_type', 'joki')->count(),
+                'vip' => $all->where('service_type', '!=', 'joki')->count(),
             ],
             'party' => $party,
             'partySizeLimit' => $size,

@@ -244,6 +244,12 @@ class PartyQueueTest extends TestCase
             ->call('setFilter', 'manual')
             ->assertViewHas('entries', fn ($entries) => $entries->pluck('player_name')->all() === ['Manual Dey']);
 
+        $this->players(['Roti' => [8, 'joki']]);
+        $board->call('setFilter', 'vip')
+            ->assertViewHas('entries', fn ($entries) => $entries->pluck('player_name')->sort()->values()->all() === ['Cuma Donasi', 'Manual Dey'])
+            ->call('setFilter', 'joki')
+            ->assertViewHas('entries', fn ($entries) => $entries->pluck('player_name')->all() === ['Roti']);
+
         // Ternyata cuma donasi biasa: hapus dari antrean → donasinya tercatat "Diabaikan".
         $board->call('setFilter', 'auto')->call('toggleSelectAll')->call('bulkRemove');
         $this->assertNull(QueueEntry::find($donor->id));
