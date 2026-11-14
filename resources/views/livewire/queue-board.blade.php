@@ -7,7 +7,8 @@
     $maxMatches = \App\Services\QueueService::MAX_MATCHES;
 @endphp
 
-<div wire:poll.5s="refreshQueue">
+{{-- Refresh otomatis dijeda selama ada popup terbuka supaya isian form tidak tertimpa. --}}
+<div @if (! $showAddPlayer && ! $editingId && ! $showImport && ! $showRules) wire:poll.5s="refreshQueue" @endif>
     {{-- ── Header sesi ─────────────────────────────────────────────── --}}
     <header class="session-header region-session-header">
         <div>
@@ -172,7 +173,7 @@
 
     {{-- ── Modal tambah pemain ─────────────────────────────────────── --}}
     @if ($showAddPlayer)
-        <dialog class="modal" aria-labelledby="add-player-title"
+        <dialog wire:ignore.self class="modal" aria-labelledby="add-player-title"
                 x-data x-init="$el.showModal(); $nextTick(() => $el.querySelector('input')?.focus())"
                 x-on:close="$wire.closeAddPlayer()">
             <form class="modal-card" wire:submit="addPlayer">
@@ -212,7 +213,7 @@
 
     {{-- ── Modal edit pemain ───────────────────────────────────────── --}}
     @if ($editingId)
-        <dialog class="modal" aria-labelledby="edit-player-title" wire:key="edit-modal-{{ $editingId }}"
+        <dialog wire:ignore.self class="modal" aria-labelledby="edit-player-title" wire:key="edit-modal-{{ $editingId }}"
                 x-data x-init="$el.showModal(); $nextTick(() => $el.querySelector('input')?.focus())"
                 x-on:close="$wire.closeEdit()">
             <form class="modal-card" wire:submit="savePlayer">
@@ -252,7 +253,7 @@
 
     {{-- ── Modal tempel banyak pemain ──────────────────────────────── --}}
     @if ($showImport)
-        <dialog class="modal" aria-labelledby="import-title"
+        <dialog wire:ignore.self class="modal" aria-labelledby="import-title"
                 x-data x-init="$el.showModal(); $nextTick(() => $el.querySelector('textarea')?.focus())"
                 x-on:close="$wire.closeImport()">
             <form class="modal-card modal-card-wide" wire:submit="importPlayers">
@@ -275,7 +276,7 @@
 
     {{-- ── Modal aturan party ──────────────────────────────────────── --}}
     @if ($showRules)
-        <dialog class="modal" aria-labelledby="rules-title"
+        <dialog wire:ignore.self class="modal" aria-labelledby="rules-title"
                 x-data x-init="$el.showModal()"
                 x-on:close="$wire.closeRules()">
             <form class="modal-card" wire:submit="saveRules">

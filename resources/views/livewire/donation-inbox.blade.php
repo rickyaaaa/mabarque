@@ -7,7 +7,7 @@
     $avatarColors = ['#3b1945', '#d82a1c', '#1f6faf', '#684780', '#238b39', '#a91b16'];
 @endphp
 
-<div wire:poll.10s>
+<div @if (! $queueing) wire:poll.10s @endif>
     <header class="donation-header">
         <div>
             <p class="eyebrow">Donasi masuk otomatis</p>
@@ -116,7 +116,7 @@
     </section>
 
     @if ($queueing)
-        <dialog class="modal" aria-labelledby="queue-donation-title" x-data x-init="$el.showModal()" x-on:close="$wire.cancelQueue()">
+        <dialog wire:ignore.self class="modal" aria-labelledby="queue-donation-title" x-data x-init="$el.showModal()" x-on:close="$wire.cancelQueue()">
             <form class="modal-card" wire:submit="confirmQueue">
                 <div class="modal-header">
                     <div><p class="eyebrow">Masukkan manual</p><h2 id="queue-donation-title">{{ $queueing->donor_name }}</h2></div>

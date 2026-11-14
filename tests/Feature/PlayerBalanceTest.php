@@ -99,6 +99,7 @@ class PlayerBalanceTest extends TestCase
     public function test_import_players_from_pasted_lines(): void
     {
         $count = $this->queue->importPlayers($this->session, implode("\n", [
+            '```',
             '# nama | ID | sisa | jenis | catatan',
             'Vampire |  | 8 |  |',
             'CELLSEA | 1185010926 | 2 | vip |',

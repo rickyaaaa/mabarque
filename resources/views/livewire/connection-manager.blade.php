@@ -61,7 +61,7 @@
     <p class="provider-note">Setiap provider memverifikasi webhook dengan caranya sendiri (Saweria: signature dari stream key; Trakteer & SociaBuzz: webhook token). Webhook dengan kredensial salah ditolak.</p>
 
     @if ($editing)
-        <dialog class="modal connection-modal" aria-labelledby="connection-title" x-data x-init="$el.showModal()" x-on:close="$wire.close()">
+        <dialog wire:ignore.self class="modal connection-modal" aria-labelledby="connection-title" x-data x-init="$el.showModal()" x-on:close="$wire.close()">
             <form class="modal-card" wire:submit="save">
                 <div class="modal-header">
                     <div><p class="eyebrow">Koneksi provider</p><h2 id="connection-title">{{ $providers[$editing]['label'] }}</h2></div>

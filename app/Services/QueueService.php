@@ -112,7 +112,8 @@ class QueueService
 
         foreach ($lines as $index => $line) {
             $line = trim($line);
-            if ($line === '' || str_starts_with($line, '#')) {
+            // Baris kosong, komentar, dan pembatas blok kode (sering ikut tersalin dari chat) dilewati.
+            if ($line === '' || str_starts_with($line, '#') || str_starts_with($line, '```')) {
                 continue;
             }
 

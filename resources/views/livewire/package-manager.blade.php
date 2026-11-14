@@ -63,7 +63,7 @@
     </section>
 
     @if ($showForm)
-        <dialog class="modal" aria-labelledby="package-modal-title" x-data x-init="$el.showModal(); $nextTick(() => $el.querySelector('input')?.focus())" x-on:close="$wire.closeForm()">
+        <dialog wire:ignore.self class="modal" aria-labelledby="package-modal-title" x-data x-init="$el.showModal(); $nextTick(() => $el.querySelector('input')?.focus())" x-on:close="$wire.closeForm()">
             <form class="modal-card" wire:submit="save">
                 <div class="modal-header">
                     <div><p class="eyebrow">Paket donasi</p><h2 id="package-modal-title">{{ $editingId ? 'Edit paket VIP' : 'Buat paket VIP' }}</h2></div>
