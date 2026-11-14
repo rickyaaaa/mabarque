@@ -43,9 +43,17 @@ step "Install dependensi produksi"
 # script "@php artisan package:discover". Script itu dijalankan langsung di bawah ini.
 $COMPOSER install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader --no-scripts
 # Cache daftar package/provider bisa masih menyebut paket dev yang barusan dihapus (mis. Laravel Pail),
-# sehingga Laravel gagal boot. Hapus dulu, lalu bangun ulang dari paket yang benar-benar terpasang.
-rm -f bootstrap/cache/packages.php bootstrap/cache/services.php bootstrap/cache/config.php
-$PHP artisan package:discover --ansi
+# sehingga Laravel gagal boot. Hapus SEMUA cache bootstrap (packages, services, config, routes, events),
+# lalu bangun ulang dari paket yang benar-benar terpasang. Semuanya dibuat ulang oleh "optimize" di bawah.
+rm -f bootstrap/cache/*.php
+if ! $PHP artisan package:discover --ansi; then
+  # Biasanya karena proses lain (mis. Git auto-deploy hPanel) memasang ulang paket dev bersamaan.
+  echo "package:discover gagal — memasang ulang dependensi produksi lalu mencoba sekali lagi..." >&2
+  $COMPOSER install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader --no-scripts
+  $COMPOSER dump-autoload --no-dev --optimize --no-scripts
+  rm -f bootstrap/cache/*.php
+  $PHP artisan package:discover --ansi
+fi
 
 step "Migrasi database"
 $PHP artisan migrate --force
