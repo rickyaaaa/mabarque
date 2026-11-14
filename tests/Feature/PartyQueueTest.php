@@ -227,6 +227,29 @@ class PartyQueueTest extends TestCase
         $board->call('bulkRemove')->assertHasErrors(['queue']); // tidak ada yang dicentang
     }
 
+    public function test_filter_auto_vs_manual_and_removing_a_donor_marks_donation_ignored(): void
+    {
+        $this->players(['Manual Dey' => 2]);
+        $connection = \App\Models\PlatformConnection::create(['user_id' => $this->owner->id, 'provider' => 'saweria', 'webhook_url' => '', 'signing_secret' => 'x', 'status' => 'active']);
+        $donor = QueueEntry::create(['live_session_id' => $this->session->id, 'player_name' => 'Cuma Donasi', 'provider' => 'saweria', 'donation_amount' => 25000, 'matches_total' => 2, 'status' => 'ready', 'position' => 2]);
+        $donation = \App\Models\Donation::create([
+            'platform_connection_id' => $connection->id, 'live_session_id' => $this->session->id, 'queue_entry_id' => $donor->id,
+            'external_id' => 'd1', 'provider' => 'saweria', 'donor_name' => 'Cuma Donasi', 'amount' => 25000, 'message' => 'semangat bang', 'status' => 'queued',
+        ]);
+
+        $board = Livewire::actingAs($this->owner)->test(QueueBoard::class, ['session' => $this->session])
+            ->call('setFilter', 'auto')
+            ->assertSee('Donasi Rp 25.000 · “semangat bang”')
+            ->assertViewHas('entries', fn ($entries) => $entries->pluck('player_name')->all() === ['Cuma Donasi'])
+            ->call('setFilter', 'manual')
+            ->assertViewHas('entries', fn ($entries) => $entries->pluck('player_name')->all() === ['Manual Dey']);
+
+        // Ternyata cuma donasi biasa: hapus dari antrean → donasinya tercatat "Diabaikan".
+        $board->call('setFilter', 'auto')->call('toggleSelectAll')->call('bulkRemove');
+        $this->assertNull(QueueEntry::find($donor->id));
+        $this->assertSame('ignored', $donation->refresh()->status);
+    }
+
     public function test_board_party_controls_and_rules(): void
     {
         $this->players(['Dey' => 2, 'Ir.fing' => 1, 'Indira' => 3]);

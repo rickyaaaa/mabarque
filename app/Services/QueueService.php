@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Donation;
 use App\Models\LiveSession;
 use App\Models\MatchRecord;
 use App\Models\QueueEntry;
@@ -560,6 +561,10 @@ class QueueService
      */
     private function discard(QueueEntry $entry): void
     {
+        // Pemain dari donasi dihapus (mis. ternyata cuma donasi biasa): donasinya ditandai "Diabaikan".
+        Donation::query()->where('queue_entry_id', $entry->id)->where('status', 'queued')
+            ->update(['status' => 'ignored', 'processed_at' => now()]);
+
         if ($entry->matches()->exists()) {
             $entry->update(['status' => 'done']);
 

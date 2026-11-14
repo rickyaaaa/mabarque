@@ -366,3 +366,4 @@ textarea.field-input { resize: vertical; }
 .button-danger:hover { background: var(--red-dark); }
 .bulk-select-all { display: flex; align-items: center; gap: 8px; margin: 4px 0 10px; font-size: 12px; font-weight: 800; }
 .player-card-name .row-check { flex: none; margin-right: 6px; }
+.player-donation { max-width: 280px; overflow: hidden; color: #1f6faf; font-size: 11px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }

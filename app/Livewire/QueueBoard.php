@@ -22,7 +22,8 @@ class QueueBoard extends Component
     /** Status yang tampil di papan; pemain "done" (jatah habis) disembunyikan. */
     private const VISIBLE = ['playing', 'ready', 'offline', 'skipped'];
 
-    private const FILTERS = ['all', 'ready', 'offline', 'skipped', 'joki'];
+    /** Filter daftar: otomatis = masuk dari donasi, manual = diinput streamer, joki = mainin akun. */
+    private const FILTERS = ['all', 'auto', 'manual', 'joki'];
 
     /** Batas game per orang per sesi yang bisa dipilih streamer (0 = tanpa batas). */
     public const MAX_SESSION_CAP = 20;
@@ -135,14 +136,16 @@ class QueueBoard extends Component
 
     private function visibleEntries()
     {
-        $all = $this->session->queueEntries()->whereIn('status', self::VISIBLE)->get()
+        $all = $this->session->queueEntries()->with('donation')->whereIn('status', self::VISIBLE)->get()
             ->sortBy(fn (QueueEntry $entry) => [$entry->status === 'playing' ? 0 : 1, $entry->position])
             ->values();
 
         return match ($this->filter) {
             'all' => $all,
             'joki' => $all->where('service_type', 'joki')->values(),
-            default => $all->where('status', $this->filter)->values(),
+            'auto' => $all->where('provider', '!=', 'manual')->values(),
+            'manual' => $all->where('provider', 'manual')->values(),
+            default => $all,
         };
     }
 
@@ -429,7 +432,7 @@ class QueueBoard extends Component
     {
         $this->session->loadMissing('user');
         // Anggota party dipin di paling atas, sisanya mengikuti urutan antrean.
-        $all = $this->session->queueEntries()->whereIn('status', self::VISIBLE)->get()
+        $all = $this->session->queueEntries()->with('donation')->whereIn('status', self::VISIBLE)->get()
             ->sortBy(fn (QueueEntry $entry) => [$entry->status === 'playing' ? 0 : 1, $entry->position])
             ->values();
         $queue = app(QueueService::class);
@@ -440,13 +443,14 @@ class QueueBoard extends Component
             'entries' => match ($this->filter) {
                 'all' => $all,
                 'joki' => $all->where('service_type', 'joki')->values(),
-                default => $all->where('status', $this->filter)->values(),
+                'auto' => $all->where('provider', '!=', 'manual')->values(),
+                'manual' => $all->where('provider', 'manual')->values(),
+                default => $all,
             },
             'counts' => [
                 'all' => $all->count(),
-                'ready' => $all->where('status', 'ready')->count(),
-                'offline' => $all->where('status', 'offline')->count(),
-                'skipped' => $all->where('status', 'skipped')->count(),
+                'auto' => $all->where('provider', '!=', 'manual')->count(),
+                'manual' => $all->where('provider', 'manual')->count(),
                 'joki' => $all->where('service_type', 'joki')->count(),
             ],
             'party' => $party,

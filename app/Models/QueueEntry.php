@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class QueueEntry extends Model
 {
@@ -67,6 +68,12 @@ class QueueEntry extends Model
     public function vipPackage(): BelongsTo
     {
         return $this->belongsTo(VipPackage::class);
+    }
+
+    /** Donasi yang membuat pemain ini masuk antrean (kosong untuk pemain manual). */
+    public function donation(): HasOne
+    {
+        return $this->hasOne(Donation::class, 'queue_entry_id');
     }
 
     public function matches(): HasMany

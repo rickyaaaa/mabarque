@@ -124,8 +124,8 @@
     <section class="queue-panel" aria-labelledby="queue-title">
         <div class="queue-heading-row">
             <h2 class="queue-title region-queue-title" id="queue-title">Daftar antrean <span>({{ $counts['all'] }} pemain)</span></h2>
-            <div class="filter-group" role="group" aria-label="Filter status pemain">
-                @foreach (['all' => 'Semua', 'ready' => 'Siap', 'offline' => 'Offline', 'skipped' => 'Dilewati', 'joki' => 'Mainin akun'] as $key => $label)
+            <div class="filter-group" role="group" aria-label="Filter asal pemain" title="Otomatis = masuk dari donasi · Manual = diinput sendiri">
+                @foreach (['all' => 'Semua', 'auto' => 'Otomatis', 'manual' => 'Manual', 'joki' => 'Mainin akun'] as $key => $label)
                     <button type="button" wire:click="setFilter('{{ $key }}')" @class(['filter-button', 'is-active' => $filter === $key]) aria-pressed="{{ $filter === $key ? 'true' : 'false' }}">
                         {{ $label }} <span>({{ $counts[$key] }})</span>
                     </button>
