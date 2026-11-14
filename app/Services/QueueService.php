@@ -553,25 +553,6 @@ class QueueService
         });
     }
 
-    /**
-     * Tandai banyak pemain offline/siap sekaligus. Pemain yang sedang main di party dilewati.
-     *
-     * @param  array<int>  $ids
-     * @return int jumlah pemain yang diubah
-     */
-    public function setStatusMany(LiveSession $session, array $ids, string $status): int
-    {
-        if (! in_array($status, ['ready', 'offline'], true)) {
-            throw new InvalidArgumentException('Status harus siap atau offline.');
-        }
-
-        return DB::transaction(fn (): int => $session->queueEntries()
-            ->whereKey($ids)
-            ->whereIn('status', ['ready', 'offline', 'skipped'])
-            ->get()
-            ->each(fn (QueueEntry $entry) => $entry->update(['status' => $status]))
-            ->count());
-    }
 
     /**
      * Pemain yang sudah punya riwayat game tidak benar-benar dihapus — cukup ditandai selesai supaya

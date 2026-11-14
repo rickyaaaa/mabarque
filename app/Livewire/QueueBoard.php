@@ -116,15 +116,6 @@ class QueueBoard extends Component
         });
     }
 
-    public function bulkStatus(string $status, QueueService $queueService): void
-    {
-        $this->attempt(function () use ($status, $queueService): string {
-            $count = $queueService->setStatusMany($this->session, $this->selectedIds(), $status === 'offline' ? 'offline' : 'ready');
-            $this->selected = [];
-
-            return "{$count} pemain ditandai ".($status === 'offline' ? 'offline' : 'siap').'.';
-        });
-    }
 
     /** @return array<int> */
     private function selectedIds(): array

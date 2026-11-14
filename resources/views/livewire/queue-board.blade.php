@@ -148,8 +148,6 @@
         @if ($selectedVisible !== [])
             <div class="bulk-bar" role="region" aria-label="Aksi untuk pemain yang dicentang">
                 <strong>{{ count($selectedVisible) }} dipilih</strong>
-                <button class="button button-small button-light" type="button" wire:click="bulkStatus('ready')">Tandai siap</button>
-                <button class="button button-small button-light" type="button" wire:click="bulkStatus('offline')">Tandai offline</button>
                 <button class="button button-small button-danger" type="button" wire:click="bulkRemove"
                         wire:confirm="Hapus {{ count($selectedVisible) }} pemain dari antrean? Sisa game mereka ikut hilang.">Hapus</button>
                 <button class="button button-small button-outline" type="button" wire:click="clearSelection">Batal</button>

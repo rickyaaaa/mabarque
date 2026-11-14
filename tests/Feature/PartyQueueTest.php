@@ -195,7 +195,7 @@ class PartyQueueTest extends TestCase
         $this->assertNull($kyoto->refresh()->next_order);
     }
 
-    public function test_bulk_select_remove_and_status(): void
+    public function test_bulk_select_and_remove(): void
     {
         ['Dey' => $dey, 'Kyoto' => $kyoto, 'Roti' => $roti] = $this->players(['Dey' => 3, 'Ir.fing' => 2, 'Kyoto' => 2, 'Roti' => [8, 'joki']]);
         $this->queue->fillParty($this->session); // Dey, Ir.fing, Kyoto main
@@ -210,9 +210,7 @@ class PartyQueueTest extends TestCase
 
         // Filter "Mainin akun": centang semua hanya mengenai yang terlihat.
         $board->call('setFilter', 'joki')->call('toggleSelectAll')->assertSet('selected', [(string) $roti->id])
-            ->call('bulkStatus', 'offline')
-            ->assertDispatched('notify', message: '1 pemain ditandai offline.');
-        $this->assertSame('offline', $roti->refresh()->status);
+            ->assertDontSeeHtml('bulkStatus');
 
         // Hapus massal: yang punya riwayat ditandai selesai (rekap tetap utuh), yang belum dihapus.
         $board->call('setFilter', 'all')
