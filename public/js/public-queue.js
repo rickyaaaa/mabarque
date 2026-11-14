@@ -2,7 +2,6 @@
 // Nama pemain berasal dari donatur — selalu dimasukkan lewat textContent, tidak pernah innerHTML.
 (function () {
   const POLL_MS = 5000;
-  const STATUS = { ready: "Siap", offline: "Menunggu", skipped: "Dilewati", playing: "Bermain", capped: "Maks sesi" };
   const SORTS = {
     queue: (a, b) => a.number - b.number,
     most: (a, b) => b.matches_remaining - a.matches_remaining || a.number - b.number,
@@ -67,10 +66,9 @@
       number.setAttribute("aria-hidden", "true");
       const who = el("div");
       who.append(el("strong", null, entry.player_name), el("span", null, meta(entry)));
-      const left = el("span", "public-match-left", `${entry.matches_remaining} `);
-      left.append(el("small", null, "game"));
-      const status = entry.capped ? "capped" : entry.status;
-      item.append(number, who, left, el("span", `public-ready is-${status}`, STATUS[status] || "Siap"));
+      const left = el("span", "public-match-left");
+      left.append(el("strong", null, String(entry.matches_remaining)), el("small", null, "game"));
+      item.append(number, who, left);
       return item;
     }));
 

@@ -233,7 +233,7 @@ class StageCPagesTest extends TestCase
 
         // Tidak live: daftar sisa game tetap tampil (pengganti notepad streamer).
         $session->update(['status' => 'ended']);
-        $this->get('/andra')->assertOk()->assertSee('Belum live')->assertSee('Sesi mabar VIP belum dibuka')->assertSee('Raka ML')->assertSee('Menunggu');
+        $this->get('/andra')->assertOk()->assertSee('Belum live')->assertSee('Sesi mabar VIP belum dibuka')->assertSee('Raka ML')->assertDontSee('Menunggu');
 
         // Setelah antrean dikosongkan, tidak ada lagi yang ditampilkan.
         $session->queueEntries()->update(['status' => 'done']);

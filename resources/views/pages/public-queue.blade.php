@@ -4,7 +4,6 @@
     $playing = $entries->firstWhere('status', 'playing');
     $waiting = $entries->where('status', '!=', 'playing')->values();
     $providerLabels = ['manual' => 'Manual', 'saweria' => 'Saweria', 'sociabuzz' => 'SociaBuzz', 'trakteer' => 'Trakteer'];
-    $statusLabels = ['ready' => 'Siap', 'offline' => 'Menunggu', 'skipped' => 'Dilewati', 'playing' => 'Bermain', 'capped' => 'Maks sesi'];
     $entryMeta = fn (array $entry) => collect([
         ($entry['service_type'] ?? 'vip') === 'joki' ? 'Mainin akun' : 'Mabar VIP',
         ! empty($entry['mlbb_id']) && ! str_starts_with($entry['player_name'], 'ID ') ? 'ID '.$entry['mlbb_id'] : null,
@@ -116,7 +115,7 @@
         <div class="public-position-note" id="public-position-note" role="status" aria-live="polite">Cari nama atau ID kamu untuk melihat posisi dan sisa game.</div>
         <div class="public-queue-list" id="public-queue-list" aria-live="polite">
           @foreach ($waiting as $entry)
-            <article class="public-queue-item"><span class="public-queue-number" aria-hidden="true">{{ $loop->iteration }}</span><div><strong>{{ $entry['player_name'] }}</strong><span>{{ $entryMeta($entry) }}</span></div><span class="public-match-left">{{ $entry['matches_remaining'] }} <small>game</small></span><span @class(['public-ready', 'is-'.(! empty($entry['capped']) ? 'capped' : $entry['status'])])>{{ $statusLabels[! empty($entry['capped']) ? 'capped' : $entry['status']] ?? 'Siap' }}</span></article>
+            <article class="public-queue-item"><span class="public-queue-number" aria-hidden="true">{{ $loop->iteration }}</span><div><strong>{{ $entry['player_name'] }}</strong><span>{{ $entryMeta($entry) }}</span></div><span class="public-match-left"><strong>{{ $entry['matches_remaining'] }}</strong><small>game</small></span></article>
           @endforeach
         </div>
         <div class="public-empty" id="public-empty" role="status" aria-live="polite" @if ($waiting->isNotEmpty()) hidden @endif>

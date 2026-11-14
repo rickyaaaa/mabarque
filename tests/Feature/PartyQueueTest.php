@@ -238,6 +238,6 @@ class PartyQueueTest extends TestCase
         $this->get('/'.$this->owner->slug)->assertOk()
             ->assertSee('Next game')
             ->assertSee('Maks 1 game per orang tiap sesi live')
-            ->assertSee('Maks sesi');
+            ->assertDontSee('Maks sesi'); // label status tidak ditampilkan di daftar viewer
     }
 }
