@@ -31,8 +31,15 @@
     return node;
   }
 
-  function fillNames(list, names, emptyText) {
-    list.replaceChildren(...(names.length ? names.map((name) => el("li", null, name)) : [el("li", "is-empty", emptyText)]));
+  // Party & next game: nama + sisa game, supaya viewer tidak perlu menggulir ke daftar antrean.
+  function fillNames(list, members, emptyText) {
+    list.replaceChildren(...(members.length
+      ? members.map((member) => {
+        const item = el("li");
+        item.append(el("span", null, member.player_name), el("em", null, `sisa ${member.matches_remaining} game`));
+        return item;
+      })
+      : [el("li", "is-empty", emptyText)]));
   }
 
   function meta(entry) {

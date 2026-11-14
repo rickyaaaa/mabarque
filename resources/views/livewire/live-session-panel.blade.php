@@ -125,14 +125,14 @@
             </div>
             <div class="session-history">
                 @forelse ($archives as $archive)
-                    <div class="session-history-row" wire:key="archive-{{ $archive->id }}">
+                    <a class="session-history-row" href="/live-session/{{ $archive->id }}" wire:key="archive-{{ $archive->id }}" title="Lihat rekap sesi ini">
                         <span class="session-history-icon">✓</span>
                         <div>
                             <strong>{{ $archive->title }}</strong>
                             <small>{{ $archive->started_at?->translatedFormat('j M Y') }} · {{ $archive->started_at?->format('H:i') }}–{{ $archive->ended_at?->format('H:i') }} · {{ $archive->total_players }} pemain · Rp {{ number_format($archive->total_donation, 0, ',', '.') }}</small>
                         </div>
-                        <span class="session-history-value">{{ $archive->total_matches }} match</span>
-                    </div>
+                        <span class="session-history-value">{{ $archive->total_matches }} match<span class="archive-open">Lihat →</span></span>
+                    </a>
                 @empty
                     <p class="session-meta">Belum ada sesi yang selesai.</p>
                 @endforelse

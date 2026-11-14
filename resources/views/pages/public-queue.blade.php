@@ -63,13 +63,13 @@
           <div>
             <p class="eyebrow">Sedang main</p>
             <ol class="public-party-list" id="party-list">
-              @forelse ($partyNames as $name)<li>{{ $name }}</li>@empty<li class="is-empty">Belum ada game berjalan</li>@endforelse
+              @forelse ($partyNames as $member)<li><span>{{ $member['player_name'] }}</span><em>sisa {{ $member['matches_remaining'] }} game</em></li>@empty<li class="is-empty">Belum ada game berjalan</li>@endforelse
             </ol>
           </div>
           <div>
             <p class="eyebrow">Next game</p>
             <ol class="public-party-list is-next" id="next-list">
-              @forelse ($nextNames as $name)<li>{{ $name }}</li>@empty<li class="is-empty">Belum ada yang menunggu</li>@endforelse
+              @forelse ($nextNames as $member)<li><span>{{ $member['player_name'] }}</span><em>sisa {{ $member['matches_remaining'] }} game</em></li>@empty<li class="is-empty">Belum ada yang menunggu</li>@endforelse
             </ol>
           </div>
         </div>

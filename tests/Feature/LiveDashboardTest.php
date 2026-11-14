@@ -61,6 +61,44 @@ class LiveDashboardTest extends TestCase
         $board->call('refreshQueue')->assertRedirect('/dashboard');
     }
 
+    public function test_archived_session_recap_is_view_only(): void
+    {
+        $this->streamer->forceFill(['party_size' => 2])->save();
+        $sessions = app(\App\Services\LiveSessionService::class);
+        $queue = app(\App\Services\QueueService::class);
+        $session = $sessions->start($this->streamer, 'Mabar VIP Minggu');
+        $queue->addPlayer($session, ['player_name' => 'Dey', 'mlbb_id' => '1185010926', 'matches_total' => 3]);
+        $queue->addPlayer($session, ['player_name' => 'Indira', 'matches_total' => 1]);
+        $queue->fillParty($session->refresh());
+        $queue->finishGame($session); // Dey sisa 2, Indira habis
+
+        $session->donations()->create([
+            'platform_connection_id' => \App\Models\PlatformConnection::create(['user_id' => $this->streamer->id, 'provider' => 'saweria', 'webhook_url' => '', 'signing_secret' => 'x', 'status' => 'active'])->id,
+            'external_id' => 'd1', 'provider' => 'saweria', 'donor_name' => 'Kyoto', 'amount' => 25000, 'message' => 'mabar 138765201', 'status' => 'queued', 'received_at' => now(),
+        ]);
+
+        $sessions->end($this->streamer, $session);
+        $sessions->start($this->streamer, 'Live Senin'); // Dey pindah ke sesi baru, rekap tetap utuh
+
+        $this->get('/live-session')->assertOk()->assertSee('/live-session/'.$session->id);
+        $this->get('/live-session/'.$session->id)->assertOk()
+            ->assertSee('Mabar VIP Minggu')
+            ->assertSee('hanya dilihat')
+            ->assertSee('Dey · Indira')        // lineup game 1
+            ->assertSee('ID 1185010926')
+            ->assertSee('2 game')              // sisa Dey saat sesi berakhir
+            ->assertSee('Habis')               // Indira
+            ->assertSee('Kyoto')
+            ->assertSee('Rp 25.000')
+            ->assertDontSee('wire:click');     // tidak ada aksi ubah
+
+        $other = User::factory()->create();
+        $this->actingAs($other)->get('/live-session/'.$session->id)->assertNotFound();
+
+        $active = $this->streamer->liveSessions()->where('status', 'active')->first();
+        $this->actingAs($this->streamer)->get('/live-session/'.$active->id)->assertRedirect('/dashboard');
+    }
+
     public function test_pages_without_active_session_invite_to_start_one(): void
     {
         // Papan antrean tetap bisa dibuka tanpa live untuk mengelola daftar sisa game.

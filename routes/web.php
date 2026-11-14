@@ -40,6 +40,7 @@ Route::middleware(['auth', RedirectSuperAdminToPanel::class])->group(function ()
 Route::middleware(['auth', RedirectSuperAdminToPanel::class, EnsureActiveBeta::class])->group(function (): void {
     Route::get('/dashboard', [DashboardPageController::class, 'queue'])->name('dashboard');
     Route::view('/live-session', 'pages.live-session')->name('live-session');
+    Route::get('/live-session/{liveSession}', \App\Http\Controllers\SessionArchiveController::class)->whereNumber('liveSession')->name('live-session.show');
     Route::get('/match-count', [DashboardPageController::class, 'matches'])->name('match-count');
     Route::view('/vip-packages', 'pages.vip-packages')->name('vip-packages');
     Route::view('/donations', 'pages.donations')->name('donations');

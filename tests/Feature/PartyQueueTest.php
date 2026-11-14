@@ -229,7 +229,7 @@ class PartyQueueTest extends TestCase
         $this->queue->finishGame($this->session); // Dey & Ir.fing kena batas 1 → Indira & Pokedok main
 
         $this->getJson("/api/channels/{$this->owner->slug}/queue")->assertOk()
-            ->assertJsonPath('data.party', ['Indira', 'Pokedok'])
+            ->assertJsonPath('data.party', [['player_name' => 'Indira', 'matches_remaining' => 1], ['player_name' => 'Pokedok', 'matches_remaining' => 3]])
             ->assertJsonPath('data.next', [])
             ->assertJsonPath('data.rules', ['party_size' => 2, 'session_cap' => 1])
             ->assertJsonPath('data.queue.2.player_name', 'Dey')
@@ -237,6 +237,7 @@ class PartyQueueTest extends TestCase
 
         $this->get('/'.$this->owner->slug)->assertOk()
             ->assertSee('Next game')
+            ->assertSee('sisa 3 game')
             ->assertSee('Maks 1 game per orang tiap sesi live')
             ->assertDontSee('Maks sesi'); // label status tidak ditampilkan di daftar viewer
     }

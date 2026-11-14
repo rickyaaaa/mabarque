@@ -62,7 +62,9 @@ class PublicQueueService
             'joined_at' => $entry->joined_at?->toIso8601String(),
         ])->values();
 
-        $party = $queue->where('status', 'playing')->pluck('player_name')->values()->all();
+        // Nama + sisa game supaya viewer tidak perlu menggulir ke daftar antrean.
+        $brief = fn (array $entry) => ['player_name' => $entry['player_name'], 'matches_remaining' => $entry['matches_remaining']];
+        $party = $queue->where('status', 'playing')->map($brief)->values()->all();
 
         return [
             'status' => $live ? 'live' : 'offline',
@@ -74,9 +76,9 @@ class PublicQueueService
                 'total_matches' => $session->total_matches,
             ] : null,
             'rules' => ['party_size' => $size, 'session_cap' => $queueService->sessionCap($session)],
-            'current' => $party[0] ?? null,
+            'current' => $party[0]['player_name'] ?? null,
             'party' => $party,
-            'next' => $queue->whereNotNull('next_rank')->sortBy('next_rank')->take($size)->pluck('player_name')->values()->all(),
+            'next' => $queue->whereNotNull('next_rank')->sortBy('next_rank')->take($size)->map($brief)->values()->all(),
             'queue' => $queue->all(),
         ];
     }

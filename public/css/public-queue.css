@@ -52,3 +52,10 @@
   .public-queue-item > .public-match-left { min-width: 46px; padding: 5px 7px; }
   .public-queue-item > .public-match-left strong { font-size: 21px; }
 }
+
+/* Party & next game: nama di kiri, sisa game di kanan */
+.public-party-list li { display: flex; align-items: center; gap: 8px; }
+.public-party-list li > span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.public-party-list li::before { flex: none; }
+.public-party-list li > em { flex: none; padding: 3px 7px; color: var(--cream); background: var(--navy); border: 2px solid var(--line); font-size: 10px; font-style: normal; font-weight: 800; text-transform: uppercase; white-space: nowrap; }
+.public-party-list.is-next li > em { color: var(--ink); background: var(--orange); }
