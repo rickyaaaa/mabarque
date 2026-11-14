@@ -45,3 +45,25 @@
 .overlay-link { padding: 0; color: var(--orange); background: transparent; border: 0; font: inherit; font-weight: 800; text-decoration: underline; cursor: pointer; }
 .overlay-preview { transform-origin: top center; }
 .control-actions .button:disabled { opacity: .5; }
+
+/* Koreksi skor Win/Lose & pratinjau skor/paket */
+.score-control { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 6px 0 4px; padding: 11px 12px; background: var(--cream); border: 3px solid var(--line); }
+.score-control > div:first-child { flex: 1 1 140px; }
+.score-control strong, .score-control small { display: block; }
+.score-control strong { font-size: 13px; }
+.score-control small { color: var(--muted); font-size: 11px; }
+.score-adjust { display: inline-flex; align-items: center; gap: 4px; }
+.score-adjust button { width: 28px; height: 28px; padding: 0; color: var(--ink); background: transparent; border: 2px solid var(--line); font-weight: 900; cursor: pointer; }
+.score-adjust button:hover:not(:disabled) { color: var(--cream); background: var(--navy); }
+.score-adjust button:disabled { opacity: .45; cursor: not-allowed; }
+.score-pill { min-width: 46px; padding: 4px 7px; text-align: center; border: 2px solid var(--line); font: 700 18px/1 "Agdasima", sans-serif; }
+.score-pill.win { background: #4ad66d; }
+.score-pill.loss { color: var(--cream); background: var(--red); }
+.preview-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.preview-score { display: flex; flex: none; gap: 4px; }
+.preview-score span { padding: 2px 6px; border: 2px solid var(--cream); font: 700 calc(15px * var(--preview-scale, 1))/1 "Agdasima", sans-serif; }
+.preview-score .win { color: #100a16; background: #4ad66d; }
+.preview-score .loss { color: var(--cream); background: var(--preview-accent, var(--red)); }
+.preview-packages { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; padding-top: 8px; border-top: 2px dashed rgba(248, 219, 163, .55); }
+.preview-packages span { padding: 3px 7px; color: #100a16; background: var(--paper); font-size: calc(11px * var(--preview-scale, 1)); font-weight: 700; }
+.preview-packages strong { font: 700 1.2em/1 "Agdasima", sans-serif; }

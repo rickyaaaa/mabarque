@@ -91,3 +91,7 @@ a.session-history-row:hover, a.session-history-row:focus-visible { background: r
 .archive-table td strong { display: block; font-weight: 800; }
 .archive-table td small { display: block; color: var(--muted); font-size: 11px; overflow-wrap: anywhere; }
 @media (max-width: 900px) { .archive-grid { grid-template-columns: 1fr; } }
+
+.archive-result { display: inline-block; margin-top: 3px; padding: 1px 6px; border: 2px solid var(--line); font-size: 10px; font-weight: 800; text-transform: uppercase; }
+.archive-result.win { background: #4ad66d; }
+.archive-result.lose { color: var(--cream); background: var(--red); }

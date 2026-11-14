@@ -67,6 +67,9 @@ class QueueBoard extends Component
 
     public string $donationModeInput = 'smart';
 
+    /** Sensor nama & ID di halaman viewer dan overlay (pengaturan yang sama dengan halaman Overlay). */
+    public bool $censorNames = false;
+
     /** Pemain yang dicentang untuk aksi massal (hapus / offline / siap). */
     public array $selected = [];
 
@@ -295,11 +298,14 @@ class QueueBoard extends Component
     }
 
     /** Game party selesai: semua anggota party berkurang 1 game. */
-    public function finishGame(QueueService $queueService): void
+    /** Game party selesai dengan hasil: "win", "lose", atau kosong (mis. remake / tidak dihitung). */
+    public function finishGame(QueueService $queueService, string $outcome = ''): void
     {
-        $this->attemptLive(function () use ($queueService): string {
-            $result = $queueService->finishGame($this->session);
-            $message = 'Game selesai dicatat untuk '.$result['played']->count().' pemain.';
+        $this->attemptLive(function () use ($queueService, $outcome): string {
+            $outcome = in_array($outcome, ['win', 'lose'], true) ? $outcome : null;
+            $result = $queueService->finishGame($this->session, $outcome);
+            $label = ['win' => 'Menang', 'lose' => 'Kalah'][$outcome] ?? 'Game selesai';
+            $message = $label.' — dicatat untuk '.$result['played']->count().' pemain.';
 
             if ($result['finished']->isNotEmpty()) {
                 $message .= ' Habis: '.$result['finished']->pluck('display_name')->join(', ').'.';
@@ -349,6 +355,7 @@ class QueueBoard extends Component
         $this->partySize = (int) ($user->party_size ?: 4);
         $this->sessionCap = (int) $user->session_match_cap;
         $this->donationModeInput = array_key_exists((string) $user->donation_queue_mode, DonationQueueService::MODES) ? $user->donation_queue_mode : 'smart';
+        $this->censorNames = (bool) $user->overlaySetting()->value('censor_names');
         $this->showRules = true;
     }
 
@@ -370,6 +377,7 @@ class QueueBoard extends Component
             'session_match_cap' => $this->sessionCap,
             'donation_queue_mode' => $this->donationModeInput,
         ])->save();
+        auth()->user()->overlaySetting()->updateOrCreate(['user_id' => auth()->id()], ['censor_names' => $this->censorNames]);
         $this->session->unsetRelation('user');
         $this->showRules = false;
         $this->dispatch('notify', message: 'Aturan party disimpan: '.$this->partySize.' pemain per game, '

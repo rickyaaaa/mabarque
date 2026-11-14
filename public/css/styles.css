@@ -367,3 +367,21 @@ textarea.field-input { resize: vertical; }
 .bulk-select-all { display: flex; align-items: center; gap: 8px; margin: 4px 0 10px; font-size: 12px; font-weight: 800; }
 .player-card-name .row-check { flex: none; margin-right: 6px; }
 .player-donation { max-width: 280px; overflow: hidden; color: #1f6faf; font-size: 11px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Tombol geser di modal Aturan party (salinan gaya switch halaman overlay) */
+.rules-switch { display: grid; grid-template-columns: 42px 1fr; gap: 10px; align-items: start; margin: 16px 0 4px; cursor: pointer; }
+.rules-switch input { position: absolute; opacity: 0; }
+.rules-switch .switch-track { position: relative; width: 42px; height: 23px; border: 3px solid var(--line); background: #d8cbbb; transition: background 160ms ease; }
+.rules-switch .switch-track::after { content: ""; position: absolute; top: 2px; left: 2px; width: 13px; height: 13px; background: var(--line); transition: transform 160ms ease; }
+.rules-switch input:checked + .switch-track { background: var(--green); }
+.rules-switch input:checked + .switch-track::after { transform: translateX(17px); background: var(--cream); }
+.rules-switch input:focus-visible + .switch-track { outline: 3px solid var(--red); outline-offset: 2px; }
+.rules-switch strong, .rules-switch small { display: block; }
+.rules-switch strong { font-size: 13px; }
+.rules-switch small { color: var(--muted); font-size: 11px; }
+
+/* Tombol hasil game */
+.button-win { color: var(--cream); background: var(--green); border: 3px solid var(--line); }
+.button-lose { color: var(--cream); background: var(--red); border: 3px solid var(--line); }
+.button-win:hover { filter: brightness(1.08); }
+.button-lose:hover { background: var(--red-dark); }

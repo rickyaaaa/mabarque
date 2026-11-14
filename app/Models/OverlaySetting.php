@@ -19,6 +19,8 @@ class OverlaySetting extends Model
         'show_now_playing',
         'transparent_mode',
         'censor_names',
+        'show_score',
+        'show_packages',
     ];
 
     protected $casts = [
@@ -27,5 +29,7 @@ class OverlaySetting extends Model
         'show_now_playing' => 'boolean',
         'transparent_mode' => 'boolean',
         'censor_names' => 'boolean',
+        'show_score' => 'boolean',
+        'show_packages' => 'boolean',
     ];
 }

@@ -33,7 +33,7 @@
     <p class="archive-note">Halaman ini hanya rekap. Untuk mengubah sisa game, mengoreksi match, atau mengedit pemain, buka papan antrean.</p>
 
     <section class="live-stat-grid archive-stats" aria-label="Ringkasan sesi">
-        <article class="live-stat live-stat-red"><span>Game dimainkan</span><strong>{{ $summary['games'] }}</strong><small>{{ $session->total_matches }} match tercatat</small></article>
+        <article class="live-stat live-stat-red"><span>Game dimainkan</span><strong>{{ $summary['games'] }}</strong><small>Win {{ $summary['wins'] }} · Lose {{ $summary['losses'] }}</small></article>
         <article class="live-stat live-stat-orange"><span>Pemain ikut main</span><strong>{{ $summary['players'] }}</strong><small>pemain berbeda</small></article>
         <article class="live-stat"><span>Donasi masuk</span><strong>{{ $summary['donations'] }}</strong><small>{{ $rupiah($summary['donation_all']) }} total</small></article>
         <article class="live-stat"><span>Donasi VIP</span><strong class="archive-money">{{ $rupiah($summary['donation_total']) }}</strong><small>yang masuk antrean</small></article>
@@ -47,6 +47,7 @@
                     <span class="archive-game-number">{{ $game['number'] }}</span>
                     <div>
                         <strong>{{ implode(' · ', $game['players']) }}</strong>
+                        @if ($game['result'])<span @class(['archive-result', $game['result']])>{{ $game['result'] === 'win' ? 'Menang' : 'Kalah' }}</span>@endif
                         <small>{{ $game['time']?->format('H:i') }} WIB{{ $game['note'] ? ' · '.$game['note'] : '' }}</small>
                     </div>
                 </div>

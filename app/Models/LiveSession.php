@@ -21,6 +21,8 @@ class LiveSession extends Model
         'total_players',
         'total_matches',
         'total_donation',
+        'wins',
+        'losses',
     ];
 
     protected $casts = [
@@ -29,6 +31,8 @@ class LiveSession extends Model
         'total_players' => 'integer',
         'total_matches' => 'integer',
         'total_donation' => 'integer',
+        'wins' => 'integer',
+        'losses' => 'integer',
     ];
 
     public function queueEntries(): HasMany

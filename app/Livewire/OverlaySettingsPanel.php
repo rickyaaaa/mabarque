@@ -27,6 +27,10 @@ class OverlaySettingsPanel extends Component
 
     public bool $censorNames = false;
 
+    public bool $showScore = true;
+
+    public bool $showPackages = true;
+
     public function mount(): void
     {
         $this->loadSaved();
@@ -43,6 +47,8 @@ class OverlaySettingsPanel extends Component
             'showNowPlaying' => ['boolean'],
             'transparentMode' => ['boolean'],
             'censorNames' => ['boolean'],
+            'showScore' => ['boolean'],
+            'showPackages' => ['boolean'],
         ], ['accentColor.regex' => 'Warna harus kode hex 6 digit, contoh #D82A1C.']);
 
         auth()->user()->overlaySetting()->updateOrCreate(['user_id' => auth()->id()], [
@@ -52,6 +58,8 @@ class OverlaySettingsPanel extends Component
             'show_now_playing' => $validated['showNowPlaying'],
             'transparent_mode' => $validated['transparentMode'],
             'censor_names' => $validated['censorNames'],
+            'show_score' => $validated['showScore'],
+            'show_packages' => $validated['showPackages'],
         ]);
 
         $this->dispatch('notify', message: 'Pengaturan overlay disimpan. OBS memperbarui tampilan dalam beberapa detik.');
@@ -61,6 +69,27 @@ class OverlaySettingsPanel extends Component
     {
         $this->resetValidation();
         $this->loadSaved();
+    }
+
+    /** Koreksi skor Win/Lose sesi live (mis. salah klik Menang/Kalah). */
+    public function adjustScore(string $type, int $delta): void
+    {
+        $session = auth()->user()->liveSessions()->active()->latest('started_at')->first();
+        $column = $type === 'loss' ? 'losses' : 'wins';
+
+        if ($session === null) {
+            $this->dispatch('notify', message: 'Skor hanya bisa diubah saat sesi live berjalan.');
+
+            return;
+        }
+
+        $session->forceFill([$column => max(0, (int) $session->{$column} + ($delta >= 0 ? 1 : -1))])->save();
+    }
+
+    public function resetScore(): void
+    {
+        auth()->user()->liveSessions()->active()->latest('started_at')->first()?->forceFill(['wins' => 0, 'losses' => 0])->save();
+        $this->dispatch('notify', message: 'Skor sesi ini direset ke 0–0.');
     }
 
     public function regenerateLink(OverlayTokenService $tokens): void
@@ -78,6 +107,7 @@ class OverlaySettingsPanel extends Component
         return view('livewire.overlay-settings-panel', [
             'overlayUrl' => $tokens->url($tokens->current($user)),
             'session' => $session,
+            'packages' => $user->vipPackages()->where('is_active', true)->orderBy('sort_order')->orderBy('id')->get(),
             'party' => $session ? $queue->party($session) : collect(),
             'upcoming' => $session ? $queue->nextUp($session, $this->maxPlayers) : collect(),
             'dirty' => $saved === null || $this->snapshot() !== $this->snapshot($saved),
@@ -97,12 +127,14 @@ class OverlaySettingsPanel extends Component
         $this->showNowPlaying = (bool) $saved->show_now_playing;
         $this->transparentMode = (bool) $saved->transparent_mode;
         $this->censorNames = (bool) $saved->censor_names;
+        $this->showScore = $saved->show_score === null ? true : (bool) $saved->show_score;
+        $this->showPackages = $saved->show_packages === null ? true : (bool) $saved->show_packages;
     }
 
     private function snapshot(?OverlaySetting $saved = null): array
     {
         return $saved
-            ? [strtoupper($saved->accent_color), (int) $saved->font_scale, (int) $saved->max_players, (bool) $saved->show_now_playing, (bool) $saved->transparent_mode, (bool) $saved->censor_names]
-            : [strtoupper($this->accentColor), $this->fontScale, $this->maxPlayers, $this->showNowPlaying, $this->transparentMode, $this->censorNames];
+            ? [strtoupper($saved->accent_color), (int) $saved->font_scale, (int) $saved->max_players, (bool) $saved->show_now_playing, (bool) $saved->transparent_mode, (bool) $saved->censor_names, $saved->show_score === null ? true : (bool) $saved->show_score, $saved->show_packages === null ? true : (bool) $saved->show_packages]
+            : [strtoupper($this->accentColor), $this->fontScale, $this->maxPlayers, $this->showNowPlaying, $this->transparentMode, $this->censorNames, $this->showScore, $this->showPackages];
     }
 }

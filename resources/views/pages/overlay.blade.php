@@ -13,7 +13,13 @@
   {{-- Browser source OBS: data awal dirender server, lalu diperbarui tiap 3 detik dari /api/overlay/{token}. --}}
   <body class="overlay-body" data-token="{{ $token }}">
     <main class="overlay-card" id="overlay" aria-live="polite">
-      <div class="overlay-brand"><span id="overlay-channel">{{ $initial['channel_name'] }}</span> <em>VIP</em></div>
+      <div class="overlay-head">
+        <div class="overlay-brand"><span id="overlay-channel">{{ $initial['channel_name'] }}</span> <em>VIP</em></div>
+        <div class="overlay-score" id="overlay-score" hidden aria-label="Skor sesi ini">
+          <span class="overlay-score-win"><small>W</small><strong id="overlay-wins">0</strong></span>
+          <span class="overlay-score-lose"><small>L</small><strong id="overlay-losses">0</strong></span>
+        </div>
+      </div>
       <section class="overlay-now" id="overlay-now" hidden>
         <span class="overlay-now-label">NOW PLAYING</span>
         <strong id="overlay-now-name"></strong>
@@ -21,6 +27,7 @@
       </section>
       <ol class="overlay-queue" id="overlay-queue"></ol>
       <p class="overlay-empty" id="overlay-empty" hidden></p>
+      <ul class="overlay-packages" id="overlay-packages" hidden aria-label="Harga paket VIP"></ul>
     </main>
     <script>window.__OVERLAY__ = @json($initial);</script>
     <script src="{{ \App\Support\Asset::url('js/overlay.js') }}" defer></script>

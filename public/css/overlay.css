@@ -19,3 +19,16 @@ body.overlay-body.is-transparent { background: transparent; }
 .overlay-entry-name { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .overlay-entry-left { flex: 0 0 auto; color: var(--paper); }
 .overlay-empty { margin: .8em 0 0; color: var(--paper); font-size: .8em; font-weight: 700; }
+
+/* Skor Win/Lose & harga paket */
+.overlay-head { display: flex; align-items: flex-start; justify-content: space-between; gap: .6em; margin-bottom: .8em; }
+.overlay-head .overlay-brand { min-width: 0; margin-bottom: 0; }
+.overlay-score { display: flex; flex: none; gap: .3em; }
+.overlay-score > span { display: flex; align-items: baseline; gap: .25em; padding: .2em .45em; border: 2px solid var(--cream); }
+.overlay-score small { font-size: .6em; font-weight: 800; letter-spacing: .1em; }
+.overlay-score strong { font: 700 1.4em/1 "Agdasima", sans-serif; font-variant-numeric: tabular-nums; }
+.overlay-score-win { color: var(--ink); background: #4ad66d; }
+.overlay-score-lose { color: var(--cream); background: var(--accent); }
+.overlay-packages { display: flex; flex-wrap: wrap; gap: .35em; margin: .8em 0 0; padding: .6em 0 0; list-style: none; border-top: 2px dashed rgba(248, 219, 163, .55); }
+.overlay-package { display: flex; align-items: baseline; gap: .3em; padding: .25em .5em; color: var(--ink); background: var(--paper); font-size: .78em; font-weight: 700; }
+.overlay-package strong { font: 700 1.25em/1 "Agdasima", sans-serif; }

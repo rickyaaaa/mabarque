@@ -25,6 +25,7 @@
             </div>
             <div class="session-stats" aria-label="Ringkasan sesi">
                 <div class="session-stat"><span>Di antrean</span><strong>{{ $counts['all'] }}</strong></div>
+                <div class="session-stat"><span>Win – Lose</span><strong>{{ $session->wins }}–{{ $session->losses }}</strong></div>
                 <div class="session-stat"><span>Match selesai</span><strong>{{ $session->total_matches }}</strong></div>
                 <div class="session-stat"><span>Donasi masuk</span><strong>Rp {{ number_format($session->total_donation, 0, ',', '.') }}</strong></div>
             </div>
@@ -102,8 +103,12 @@
                 @elseif ($party->isEmpty())
                     <button class="button button-small button-light" type="button" wire:click="startGame" @disabled($nextUp->isEmpty())><span aria-hidden="true">▶</span> Mulai game</button>
                 @else
+                    <button class="button button-small button-win" type="button" wire:click="finishGame('win')"
+                            title="Game menang — semua pemain di party berkurang 1 game"><span aria-hidden="true">🏆</span> Menang</button>
+                    <button class="button button-small button-lose" type="button" wire:click="finishGame('lose')"
+                            title="Game kalah — semua pemain di party berkurang 1 game"><span aria-hidden="true">✗</span> Kalah</button>
                     <button class="button button-small button-light" type="button" wire:click="finishGame"
-                            title="Semua pemain di party berkurang 1 game"><span aria-hidden="true">✓</span> Selesai game</button>
+                            title="Selesai tanpa hasil (mis. remake) — tetap mengurangi 1 game"><span aria-hidden="true">✓</span> Selesai</button>
                     @if ($party->count() < $partySizeLimit && $nextUp->isNotEmpty())
                         <button class="button button-small button-light" type="button" wire:click="startGame"><span aria-hidden="true">+</span> Isi slot kosong</button>
                     @endif
@@ -346,6 +351,11 @@
                     @endforeach
                 </select>
                 @error('donationModeInput') <p class="form-error" role="alert">{{ $message }}</p> @enderror
+                <label class="switch-control rules-switch">
+                    <input type="checkbox" wire:model="censorNames" />
+                    <span class="switch-track"></span>
+                    <span><strong>Sensor nama &amp; ID</strong><small>Separuh akhir nama dan ID disamarkan di halaman viewer &amp; overlay (sama dengan pengaturan di halaman Overlay).</small></span>
+                </label>
                 <p class="modal-help">Jumlah game dihitung dari kelipatan paket (75rb = 50rb + 25rb). Donasi yang tidak otomatis masuk tetap muncul di halaman Donasi sebagai "Perlu cek".</p>
                 <p class="modal-help">Pemain yang sudah mencapai batas tetap ada di daftar dengan sisa game-nya, tapi dilewati saat mengisi party sampai sesi live berikutnya. Kamu tetap bisa memasukkannya manual dengan tombol ▶. Pemain "Mainin akun" tidak masuk party dan tidak dibatasi.</p>
                 <div class="modal-actions">

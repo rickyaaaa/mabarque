@@ -56,6 +56,34 @@
                 <span class="switch-track"></span>
                 <span><strong>Sensor nama &amp; ID</strong><small>Separuh akhir nama dan ID MLBB disamarkan (WangSu*******) di halaman antrean viewer dan overlay. Mencegah orang mengaku-ngaku sisa game milik orang lain dari screenshot.</small></span>
             </label>
+            <label class="switch-control">
+                <input type="checkbox" wire:model.live="showScore" />
+                <span class="switch-track"></span>
+                <span><strong>Tampilkan skor Win / Lose</strong><small>Skor sesi live, bertambah saat kamu klik Menang/Kalah di papan antrean.</small></span>
+            </label>
+            <label class="switch-control">
+                <input type="checkbox" wire:model.live="showPackages" />
+                <span class="switch-track"></span>
+                <span><strong>Tampilkan harga paket VIP</strong><small>Paket aktif tampil di bawah overlay, mis. 25K · 2 game.</small></span>
+            </label>
+
+            <div class="score-control">
+                <div>
+                    <strong>Skor sesi ini</strong>
+                    <small>{{ $session ? 'Koreksi bila salah klik.' : 'Tersedia saat sesi live berjalan.' }}</small>
+                </div>
+                <div class="score-adjust" aria-label="Koreksi menang">
+                    <button type="button" wire:click="adjustScore('win', -1)" @disabled(! $session) aria-label="Kurangi menang">−</button>
+                    <span class="score-pill win">W {{ $session?->wins ?? 0 }}</span>
+                    <button type="button" wire:click="adjustScore('win', 1)" @disabled(! $session) aria-label="Tambah menang">+</button>
+                </div>
+                <div class="score-adjust" aria-label="Koreksi kalah">
+                    <button type="button" wire:click="adjustScore('loss', -1)" @disabled(! $session) aria-label="Kurangi kalah">−</button>
+                    <span class="score-pill loss">L {{ $session?->losses ?? 0 }}</span>
+                    <button type="button" wire:click="adjustScore('loss', 1)" @disabled(! $session) aria-label="Tambah kalah">+</button>
+                </div>
+                <button class="overlay-link" type="button" wire:click="resetScore" @disabled(! $session) wire:confirm="Reset skor sesi ini ke 0–0?">Reset</button>
+            </div>
 
             <div class="control-actions">
                 <button class="button button-outline" type="button" wire:click="resetToSaved" @disabled(! $dirty)>Batalkan</button>
@@ -70,7 +98,12 @@
             </div>
             <div @class(['overlay-stage', 'is-solid' => ! $transparentMode])>
                 <div class="overlay-preview" style="--preview-accent: {{ $accent }}; --preview-scale: {{ $fontScale / 100 }}">
-                    <div class="preview-brand">{{ \Illuminate\Support\Str::upper($channelName) }} <span>VIP</span></div>
+                    <div class="preview-head">
+                        <div class="preview-brand">{{ \Illuminate\Support\Str::upper($channelName) }} <span>VIP</span></div>
+                        @if ($showScore)
+                            <div class="preview-score"><span class="win">W {{ $session?->wins ?? 0 }}</span><span class="loss">L {{ $session?->losses ?? 0 }}</span></div>
+                        @endif
+                    </div>
                     @if ($showNowPlaying)
                         <div class="preview-now">
                             <span>NOW PLAYING</span>
@@ -85,6 +118,13 @@
                             <div class="preview-entry"><span>Antrean kosong</span><small>—</small></div>
                         @endforelse
                     </div>
+                    @if ($showPackages && $packages->isNotEmpty())
+                        <div class="preview-packages">
+                            @foreach ($packages as $package)
+                                <span><strong>{{ \App\Http\Controllers\OverlayController::compactPrice((int) $package->price) }}</strong> {{ $package->match_count }} game</span>
+                            @endforeach
+                        </div>
+                    @endif
                 </div>
             </div>
             <div class="overlay-url">

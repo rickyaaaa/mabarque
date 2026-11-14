@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Services\OverlayTokenService;
 use App\Services\PublicQueueService;
+use App\Services\VipPackageService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 
@@ -34,11 +35,24 @@ class OverlayController extends Controller
         return view('pages.overlay', ['token' => $token, 'initial' => $this->payload($overlayToken->user, $publicQueueService)]);
     }
 
+    /** Harga ringkas untuk layar live: 25000 → "25K", 12500 → "12.5K", 1500000 → "1.5JT". */
+    public static function compactPrice(int $price): string
+    {
+        $format = fn (float $value) => rtrim(rtrim(number_format($value, 1, '.', ''), '0'), '.');
+
+        return match (true) {
+            $price >= 1_000_000 => $format($price / 1_000_000).'JT',
+            $price >= 1_000 => $format($price / 1_000).'K',
+            default => (string) $price,
+        };
+    }
+
     /** Hanya data yang aman tampil di layar live: tanpa id internal, email, atau nominal donasi. */
     private function payload(User $user, PublicQueueService $publicQueueService): array
     {
         $settings = $user->overlaySetting;
         $queue = $publicQueueService->forUser($user);
+        $live = $user->liveSessions()->active()->latest('started_at')->first();
 
         return [
             'channel_name' => $user->channel_name,
@@ -48,7 +62,17 @@ class OverlayController extends Controller
                 'max_players' => (int) ($settings->max_players ?? 5),
                 'show_now_playing' => (bool) ($settings->show_now_playing ?? true),
                 'transparent_mode' => (bool) ($settings->transparent_mode ?? true),
+                'show_score' => (bool) ($settings->show_score ?? true),
+                'show_packages' => (bool) ($settings->show_packages ?? true),
             ],
+            // Skor Win/Lose sesi live yang sedang berjalan (null saat belum live).
+            'score' => $live ? ['wins' => (int) $live->wins, 'losses' => (int) $live->losses] : null,
+            'packages' => app(VipPackageService::class)->listForUser($user, true)
+                ->map(fn ($package) => [
+                    'name' => $package->name,
+                    'price' => self::compactPrice((int) $package->price),
+                    'games' => (int) $package->match_count,
+                ])->values()->all(),
             'queue' => [
                 'status' => $queue['status'],
                 'current' => $queue['current'] ?? null,

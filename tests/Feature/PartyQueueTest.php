@@ -268,9 +268,15 @@ class PartyQueueTest extends TestCase
 
         $this->assertSame([2, 3], [$this->owner->refresh()->party_size, $this->owner->session_match_cap]);
 
-        $board->call('finishGame')
-            ->assertDispatched('notify', message: 'Game selesai dicatat untuk 2 pemain. Habis: Ir.fing. Masuk party: Indira.');
+        $board->call('finishGame', 'win')
+            ->assertDispatched('notify', message: 'Menang — dicatat untuk 2 pemain. Habis: Ir.fing. Masuk party: Indira.')
+            ->assertSeeHtml('<span>Win – Lose</span><strong>1–0</strong>');
         $this->assertSame(['Dey', 'Indira'], $this->partyNames());
+        $this->assertSame(['win', 'win'], \App\Models\MatchRecord::query()->pluck('result')->all());
+
+        // Kalah = +1 lose; "Selesai" tanpa hasil (remake) tidak mengubah skor tapi tetap mengurangi game.
+        $board->call('finishGame', 'lose')->call('finishGame');
+        $this->assertSame([1, 1, 3], [$this->session->refresh()->wins, $this->session->losses, $this->session->total_matches]);
 
         $board->set('partySize', 9)->call('saveRules')->assertHasErrors(['partySize']);
     }

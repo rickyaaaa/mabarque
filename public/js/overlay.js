@@ -8,6 +8,8 @@
   const nowBox = document.querySelector("#overlay-now");
   const list = document.querySelector("#overlay-queue");
   const empty = document.querySelector("#overlay-empty");
+  const scoreBox = document.querySelector("#overlay-score");
+  const packageList = document.querySelector("#overlay-packages");
 
   function el(tag, className, text) {
     const node = document.createElement(tag);
@@ -44,6 +46,23 @@
     list.replaceChildren(...upcoming.map((entry, index) => {
       const item = el("li", "overlay-entry");
       item.append(el("span", "overlay-entry-name", `${index + 1}. ${entry.player_name}`), el("small", "overlay-entry-left", `${entry.matches_remaining} game`));
+      return item;
+    }));
+
+    // Skor Win/Lose sesi live.
+    const score = data.score;
+    scoreBox.hidden = !(settings.show_score !== false && score);
+    if (score) {
+      document.querySelector("#overlay-wins").textContent = String(score.wins);
+      document.querySelector("#overlay-losses").textContent = String(score.losses);
+    }
+
+    // Harga paket VIP, mis. "25K · 2 game".
+    const packages = data.packages || [];
+    packageList.hidden = !(settings.show_packages !== false && packages.length);
+    packageList.replaceChildren(...packages.map((pkg) => {
+      const item = el("li", "overlay-package");
+      item.append(el("strong", null, pkg.price), el("span", null, `${pkg.games} game`));
       return item;
     }));
 

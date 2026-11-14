@@ -18,6 +18,7 @@ class MatchRecord extends Model
         'live_session_id',
         'match_number',
         'note',
+        'result',
         'played_at',
     ];
 

@@ -425,9 +425,11 @@ class QueueService
      *
      * @return array{played: Collection<int, QueueEntry>, finished: Collection<int, QueueEntry>, capped: Collection<int, QueueEntry>, joined: Collection<int, QueueEntry>}
      */
-    public function finishGame(LiveSession $session): array
+    public function finishGame(LiveSession $session, ?string $result = null): array
     {
-        return DB::transaction(function () use ($session): array {
+        $result = in_array($result, ['win', 'lose'], true) ? $result : null;
+
+        return DB::transaction(function () use ($session, $result): array {
             $party = $this->party($session);
 
             if ($party->isEmpty()) {
@@ -435,8 +437,13 @@ class QueueService
             }
 
             $matches = app(MatchService::class);
-            $party->each(fn (QueueEntry $entry) => $matches->record($entry, countSessionMatch: false));
+            $party->each(fn (QueueEntry $entry) => $matches->record($entry, countSessionMatch: false, result: $result));
             LiveSession::query()->whereKey($session->id)->increment('total_matches');
+
+            // Skor Win/Lose dihitung per game party (bukan per pemain).
+            if ($result !== null) {
+                LiveSession::query()->whereKey($session->id)->increment($result === 'win' ? 'wins' : 'losses');
+            }
 
             $settled = $this->settleAfterMatch($session, $party);
             // Batas game = saat alami mengisi slot yang belum terisi (mis. donasi baru masuk selama game).

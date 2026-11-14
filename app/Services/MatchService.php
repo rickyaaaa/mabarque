@@ -49,9 +49,9 @@ class MatchService
      *
      * @throws InvalidArgumentException jatah habis
      */
-    public function record(QueueEntry $entry, ?string $note = null, bool $countSessionMatch = true): MatchRecord
+    public function record(QueueEntry $entry, ?string $note = null, bool $countSessionMatch = true, ?string $result = null): MatchRecord
     {
-        return DB::transaction(function () use ($entry, $note, $countSessionMatch): MatchRecord {
+        return DB::transaction(function () use ($entry, $note, $countSessionMatch, $result): MatchRecord {
             $locked = QueueEntry::query()->whereKey($entry->id)->lockForUpdate()->firstOrFail();
             $this->assertCanRecord($locked);
 
@@ -60,6 +60,7 @@ class MatchService
                 'live_session_id' => $locked->live_session_id,
                 'match_number' => (int) $locked->matches()->max('match_number') + 1,
                 'note' => filled($note) ? trim($note) : null,
+                'result' => in_array($result, ['win', 'lose'], true) ? $result : null,
                 'played_at' => now(),
             ]);
 
