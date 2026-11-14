@@ -12,10 +12,16 @@ class QueueEntry extends Model
 {
     use HasFactory;
 
+    /** Jenis layanan: mabar bareng streamer (VIP) atau jasa mainin akun (joki). */
+    public const SERVICE_TYPES = ['vip' => 'Mabar VIP', 'joki' => 'Mainin akun'];
+
     protected $fillable = [
         'live_session_id',
         'vip_package_id',
         'player_name',
+        'mlbb_id',
+        'service_type',
+        'note',
         'provider',
         'donation_amount',
         'matches_total',
@@ -53,6 +59,19 @@ class QueueEntry extends Model
     public function getMatchesRemainingAttribute(): int
     {
         return max(0, $this->matches_total - $this->matches_played);
+    }
+
+    /** Nama untuk ditampilkan; pemain yang baru tercatat ID-nya saja ditampilkan sebagai "ID …". */
+    public function getDisplayNameAttribute(): string
+    {
+        $name = trim((string) $this->player_name);
+
+        return $name !== '' ? $name : ($this->mlbb_id ? 'ID '.$this->mlbb_id : 'Tanpa nama');
+    }
+
+    public function getServiceLabelAttribute(): string
+    {
+        return self::SERVICE_TYPES[$this->service_type] ?? self::SERVICE_TYPES['vip'];
     }
 
     public function scopeReady($query)

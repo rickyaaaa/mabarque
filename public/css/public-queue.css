@@ -17,3 +17,10 @@
 /* Badge saat sesi belum dibuka (teks juga berubah, tidak hanya warna). */
 .public-live-badge.is-offline { color: var(--ink); background: #dedbd0; }
 .public-live-badge.is-offline i { background: #a99aa3; animation: none; }
+
+/* Urutkan daftar + status selain "siap" (sisa game terbawa antar sesi) */
+.public-queue-tools .public-sort { min-height: 37px; padding: 6px 9px; color: var(--ink); background: var(--cream); border: 3px solid var(--line); font-size: 11px; font-weight: 700; }
+.public-ready.is-offline { background: #ffe6a4; }
+.public-ready.is-skipped { background: #e7c4f0; }
+.public-queue-item strong { overflow-wrap: anywhere; }
+@media (max-width: 640px) { .public-queue-tools { flex-wrap: wrap; } .public-queue-tools .public-sort { flex: 1 1 100%; } }

@@ -52,7 +52,10 @@ class OverlayController extends Controller
             'queue' => [
                 'status' => $queue['status'],
                 'current' => $queue['current'] ?? null,
-                'entries' => collect($queue['queue'])->map(fn (array $entry) => [
+                // Di layar live hanya yang benar-benar mengantre (siap/bermain) selama sesi aktif.
+                'entries' => collect($queue['status'] === 'live' ? $queue['queue'] : [])
+                    ->whereIn('status', ['ready', 'playing'])
+                    ->map(fn (array $entry) => [
                     'position' => $entry['position'],
                     'player_name' => $entry['player_name'],
                     'status' => $entry['status'],

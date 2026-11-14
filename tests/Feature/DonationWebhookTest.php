@@ -117,16 +117,40 @@ class DonationWebhookTest extends TestCase
         $this->assertSame(1, $session->queueEntries()->count());
     }
 
-    public function test_unmatched_amount_goes_to_review_and_no_session_is_stored_only(): void
+    public function test_amount_is_converted_to_games_by_package_multiples_and_small_donations_are_ignored(): void
     {
         $this->sendSaweria($this->saweria, $this->saweriaPayload('sw-0', 'Sebelum live', 15000), self::KEY)
             ->assertCreated()->assertJsonPath('data.status', 'received');
         $this->assertNull(Donation::firstWhere('external_id', 'sw-0')->live_session_id);
 
+        // Paket aktif: 15rb = 1 game, 35rb = 3 game (paket 50rb nonaktif tidak dipakai).
         $session = $this->openLiveSession();
-        $this->sendSaweria($this->saweria, $this->saweriaPayload('sw-1', 'Nadia', 20000), self::KEY)->assertJsonPath('data.status', 'review');
-        $this->sendSaweria($this->saweria, $this->saweriaPayload('sw-2', 'Bimo', 50000), self::KEY)->assertJsonPath('data.status', 'review'); // paket nonaktif
-        $this->assertSame(0, $session->queueEntries()->count());
+        $this->sendSaweria($this->saweria, $this->saweriaPayload('sw-1', 'Nadia', 20000), self::KEY)->assertJsonPath('data.status', 'queued'); // 15rb, sisa 5rb hangus
+        $this->sendSaweria($this->saweria, $this->saweriaPayload('sw-2', 'Bimo', 50000), self::KEY)->assertJsonPath('data.status', 'queued'); // 35rb + 15rb
+        $this->sendSaweria($this->saweria, $this->saweriaPayload('sw-3', 'Citra', 70000), self::KEY)->assertJsonPath('data.status', 'queued'); // 35rb × 2
+        $this->sendSaweria($this->saweria, $this->saweriaPayload('sw-4', 'Dodi', 10000), self::KEY)->assertJsonPath('data.status', 'ignored'); // < 15rb
+
+        $this->assertSame(['Nadia' => 1, 'Bimo' => 4, 'Citra' => 6], $session->queueEntries()->pluck('matches_total', 'player_name')->all());
+        $this->assertNotNull(Donation::firstWhere('external_id', 'sw-4')->processed_at);
+    }
+
+    public function test_package_multiples_match_streamer_pricing(): void
+    {
+        $user = User::factory()->create();
+        $packages = collect([
+            $user->vipPackages()->create(['name' => 'Mabar 2 game', 'price' => 25000, 'match_count' => 2]),
+            $user->vipPackages()->create(['name' => 'Mabar 5 game', 'price' => 50000, 'match_count' => 5]),
+        ]);
+
+        $games = fn (int $amount) => \App\Services\DonationQueueService::matchesFor($amount, $packages)[1] ?? 0;
+
+        $this->assertSame(0, $games(24999));
+        $this->assertSame(2, $games(25000));
+        $this->assertSame(2, $games(49000));
+        $this->assertSame(5, $games(50000));
+        $this->assertSame(5, $games(60000));
+        $this->assertSame(7, $games(75000));
+        $this->assertSame(10, $games(100000));
     }
 
     public function test_non_donation_events_and_broken_payloads(): void

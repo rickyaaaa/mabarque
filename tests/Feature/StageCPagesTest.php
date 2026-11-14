@@ -89,11 +89,13 @@ class StageCPagesTest extends TestCase
         $this->sendWebhook($connection, ['id' => 'b', 'donor_name' => 'Nadia', 'amount' => 12345])->assertCreated();
         $this->sendWebhook($connection, ['id' => 'b', 'donor_name' => 'Nadia', 'amount' => 12345])->assertOk(); // duplikat: tanpa notifikasi baru
 
-        $this->assertSame(['queued', 'review'], $this->streamer->donationNotifications()->oldest('id')->pluck('type')->all());
+        // 12.345 di bawah paket termurah → diabaikan otomatis, tetap tercatat dan muncul di notifikasi.
+        $this->assertSame(['queued', 'received'], $this->streamer->donationNotifications()->oldest('id')->pluck('type')->all());
+        $this->assertSame('ignored', Donation::firstWhere('external_id', 'b')->status);
 
         Livewire::test(DonationInbox::class)
             ->assertSee('Raka ML masuk antrean otomatis')
-            ->assertSee('Nadia perlu dicek')
+            ->assertSee('Nadia mengirim donasi')
             ->assertSee('2 notifikasi baru')
             ->call('markAllRead')
             ->assertSee('0 notifikasi baru');
@@ -229,7 +231,12 @@ class StageCPagesTest extends TestCase
             ->assertSee('&lt;script&gt;alert(1)&lt;/script&gt;', false)
             ->assertDontSee('Nisa Gaming'); // data tiruan lama sudah hilang
 
+        // Tidak live: daftar sisa game tetap tampil (pengganti notepad streamer).
         $session->update(['status' => 'ended']);
-        $this->get('/andra')->assertOk()->assertSee('Belum live')->assertSee('Sesi belum dimulai');
+        $this->get('/andra')->assertOk()->assertSee('Belum live')->assertSee('Sesi mabar VIP belum dibuka')->assertSee('Raka ML')->assertSee('Menunggu');
+
+        // Setelah antrean dikosongkan, tidak ada lagi yang ditampilkan.
+        $session->queueEntries()->update(['status' => 'done']);
+        $this->get('/andra')->assertOk()->assertDontSee('Raka ML')->assertSee('Antrean masih kosong');
     }
 }

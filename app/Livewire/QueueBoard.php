@@ -29,9 +29,32 @@ class QueueBoard extends Component
 
     public string $playerName = '';
 
+    public string $mlbbId = '';
+
     public int $matchesTotal = 1;
 
+    public string $serviceType = 'vip';
+
+    public string $note = '';
+
     public bool $showAddPlayer = false;
+
+    /** Pemain yang sedang diedit (null = modal edit tertutup). */
+    public ?int $editingId = null;
+
+    public string $editName = '';
+
+    public string $editMlbbId = '';
+
+    public int $editRemaining = 0;
+
+    public string $editType = 'vip';
+
+    public string $editNote = '';
+
+    public bool $showImport = false;
+
+    public string $importText = '';
 
     public function mount(LiveSession $session): void
     {
@@ -65,18 +88,90 @@ class QueueBoard extends Component
     public function addPlayer(QueueService $queueService): void
     {
         $this->validate([
-            'playerName' => ['required', 'string', 'min:2', 'max:120'],
-            'matchesTotal' => ['required', 'integer', 'min:1', 'max:99'],
-        ], [], ['playerName' => 'nama pemain', 'matchesTotal' => 'jatah mabar']);
+            'playerName' => ['nullable', 'string', 'min:2', 'max:120'],
+            'mlbbId' => ['nullable', 'string', 'max:40'],
+            'matchesTotal' => ['required', 'integer', 'min:1', 'max:'.QueueService::MAX_MATCHES],
+            'serviceType' => ['required', 'in:'.implode(',', array_keys(QueueEntry::SERVICE_TYPES))],
+            'note' => ['nullable', 'string', 'max:500'],
+        ], [], ['playerName' => 'nama pemain', 'mlbbId' => 'ID MLBB', 'matchesTotal' => 'jatah game', 'note' => 'catatan']);
 
-        $name = trim($this->playerName);
-        $this->attempt(function () use ($queueService, $name): string {
-            $queueService->addManual($this->session, $name, $this->matchesTotal);
-            $this->reset(['playerName', 'showAddPlayer']);
+        $this->attemptInModal('playerForm', function () use ($queueService): string {
+            $entry = $queueService->addPlayer($this->session, [
+                'player_name' => $this->playerName,
+                'mlbb_id' => $this->mlbbId,
+                'matches_total' => $this->matchesTotal,
+                'service_type' => $this->serviceType,
+                'note' => $this->note,
+            ]);
+            $this->reset(['playerName', 'mlbbId', 'note', 'showAddPlayer']);
             $this->matchesTotal = 1;
+            $this->serviceType = 'vip';
             $this->filter = 'all';
 
-            return "{$name} masuk ke antrean.";
+            return "{$entry->display_name} masuk ke antrean.";
+        });
+    }
+
+    public function openEdit(int $entryId): void
+    {
+        $entry = $this->entry($entryId);
+        $this->resetValidation();
+        $this->editingId = $entry->id;
+        $this->editName = (string) $entry->player_name;
+        $this->editMlbbId = (string) $entry->mlbb_id;
+        $this->editRemaining = $entry->matches_remaining;
+        $this->editType = $entry->service_type ?: 'vip';
+        $this->editNote = (string) $entry->note;
+    }
+
+    public function closeEdit(): void
+    {
+        $this->editingId = null;
+    }
+
+    public function savePlayer(QueueService $queueService): void
+    {
+        $this->validate([
+            'editName' => ['nullable', 'string', 'min:2', 'max:120'],
+            'editMlbbId' => ['nullable', 'string', 'max:40'],
+            'editRemaining' => ['required', 'integer', 'min:0', 'max:'.QueueService::MAX_MATCHES],
+            'editType' => ['required', 'in:'.implode(',', array_keys(QueueEntry::SERVICE_TYPES))],
+            'editNote' => ['nullable', 'string', 'max:500'],
+        ], [], ['editName' => 'nama pemain', 'editMlbbId' => 'ID MLBB', 'editRemaining' => 'sisa game', 'editNote' => 'catatan']);
+
+        $this->attemptInModal('editForm', function () use ($queueService): string {
+            $entry = $queueService->updatePlayer($this->session, $this->entry((int) $this->editingId), [
+                'player_name' => $this->editName,
+                'mlbb_id' => $this->editMlbbId,
+                'matches_remaining' => $this->editRemaining,
+                'service_type' => $this->editType,
+                'note' => $this->editNote,
+            ]);
+            $this->editingId = null;
+
+            return $entry->status === 'done' ? "Sisa game {$entry->display_name} habis — pemain selesai." : "Data {$entry->display_name} disimpan.";
+        });
+    }
+
+    public function openImport(): void
+    {
+        $this->resetValidation();
+        $this->showImport = true;
+    }
+
+    public function closeImport(): void
+    {
+        $this->showImport = false;
+    }
+
+    public function importPlayers(QueueService $queueService): void
+    {
+        $this->attemptInModal('importForm', function () use ($queueService): string {
+            $count = $queueService->importPlayers($this->session, $this->importText);
+            $this->reset(['importText', 'showImport']);
+            $this->filter = 'all';
+
+            return "{$count} pemain masuk ke antrean.";
         });
     }
 
@@ -197,6 +292,21 @@ class QueueBoard extends Component
         } catch (InvalidArgumentException|RuntimeException $exception) {
             $this->addError('queue', $exception->getMessage());
         }
+    }
+
+    /** Seperti attempt(), tetapi pesan kesalahan tampil di dalam modal yang sedang terbuka. */
+    private function attemptInModal(string $errorKey, callable $action): void
+    {
+        $this->resetErrorBag($errorKey);
+        $this->attempt(function () use ($errorKey, $action): ?string {
+            try {
+                return $action();
+            } catch (InvalidArgumentException $exception) {
+                $this->addError($errorKey, $exception->getMessage());
+
+                return null;
+            }
+        });
     }
 
     private function entry(int $entryId): QueueEntry

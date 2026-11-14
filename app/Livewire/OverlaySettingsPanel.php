@@ -25,6 +25,8 @@ class OverlaySettingsPanel extends Component
 
     public bool $transparentMode = true;
 
+    public bool $censorNames = false;
+
     public function mount(): void
     {
         $this->loadSaved();
@@ -40,6 +42,7 @@ class OverlaySettingsPanel extends Component
             'maxPlayers' => ['required', 'integer', 'in:'.implode(',', self::PLAYER_OPTIONS)],
             'showNowPlaying' => ['boolean'],
             'transparentMode' => ['boolean'],
+            'censorNames' => ['boolean'],
         ], ['accentColor.regex' => 'Warna harus kode hex 6 digit, contoh #D82A1C.']);
 
         auth()->user()->overlaySetting()->updateOrCreate(['user_id' => auth()->id()], [
@@ -48,6 +51,7 @@ class OverlaySettingsPanel extends Component
             'max_players' => $validated['maxPlayers'],
             'show_now_playing' => $validated['showNowPlaying'],
             'transparent_mode' => $validated['transparentMode'],
+            'censor_names' => $validated['censorNames'],
         ]);
 
         $this->dispatch('notify', message: 'Pengaturan overlay disimpan. OBS memperbarui tampilan dalam beberapa detik.');
@@ -87,7 +91,7 @@ class OverlaySettingsPanel extends Component
     private function loadSaved(): void
     {
         $saved = auth()->user()->overlaySetting()->first() ?? new OverlaySetting([
-            'accent_color' => '#D82A1C', 'font_scale' => 100, 'max_players' => 5, 'show_now_playing' => true, 'transparent_mode' => true,
+            'accent_color' => '#D82A1C', 'font_scale' => 100, 'max_players' => 5, 'show_now_playing' => true, 'transparent_mode' => true, 'censor_names' => false,
         ]);
 
         $this->accentColor = strtoupper($saved->accent_color ?: '#D82A1C');
@@ -95,12 +99,13 @@ class OverlaySettingsPanel extends Component
         $this->maxPlayers = in_array((int) $saved->max_players, self::PLAYER_OPTIONS, true) ? (int) $saved->max_players : 5;
         $this->showNowPlaying = (bool) $saved->show_now_playing;
         $this->transparentMode = (bool) $saved->transparent_mode;
+        $this->censorNames = (bool) $saved->censor_names;
     }
 
     private function snapshot(?OverlaySetting $saved = null): array
     {
         return $saved
-            ? [strtoupper($saved->accent_color), (int) $saved->font_scale, (int) $saved->max_players, (bool) $saved->show_now_playing, (bool) $saved->transparent_mode]
-            : [strtoupper($this->accentColor), $this->fontScale, $this->maxPlayers, $this->showNowPlaying, $this->transparentMode];
+            ? [strtoupper($saved->accent_color), (int) $saved->font_scale, (int) $saved->max_players, (bool) $saved->show_now_playing, (bool) $saved->transparent_mode, (bool) $saved->censor_names]
+            : [strtoupper($this->accentColor), $this->fontScale, $this->maxPlayers, $this->showNowPlaying, $this->transparentMode, $this->censorNames];
     }
 }

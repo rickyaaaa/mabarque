@@ -1,6 +1,9 @@
 @php
     $accent = preg_match('/^#[0-9A-Fa-f]{6}$/', $accentColor) ? $accentColor : '#D82A1C';
     $providerLabels = ['manual' => 'Manual', 'saweria' => 'Saweria', 'sociabuzz' => 'SociaBuzz', 'trakteer' => 'Trakteer'];
+    $previewName = fn ($entry) => $censorNames
+        ? (trim((string) $entry->player_name) !== '' ? \App\Services\PublicQueueService::censor(trim($entry->player_name)) : ($entry->mlbb_id ? 'ID '.\App\Services\PublicQueueService::censor($entry->mlbb_id) : 'Tanpa nama'))
+        : $entry->display_name;
 @endphp
 
 <div>
@@ -48,6 +51,11 @@
                 <span class="switch-track"></span>
                 <span><strong>Mode transparan</strong><small>Hilangkan latar belakang untuk browser source OBS.</small></span>
             </label>
+            <label class="switch-control">
+                <input type="checkbox" wire:model.live="censorNames" />
+                <span class="switch-track"></span>
+                <span><strong>Sensor nama &amp; ID</strong><small>Separuh akhir nama dan ID MLBB disamarkan (WangSu*******) di halaman antrean viewer dan overlay. Mencegah orang mengaku-ngaku sisa game milik orang lain dari screenshot.</small></span>
+            </label>
 
             <div class="control-actions">
                 <button class="button button-outline" type="button" wire:click="resetToSaved" @disabled(! $dirty)>Batalkan</button>
@@ -66,13 +74,13 @@
                     @if ($showNowPlaying)
                         <div class="preview-now">
                             <span>NOW PLAYING</span>
-                            <strong>{{ $current?->player_name ?? 'Belum ada' }}</strong>
+                            <strong>{{ $current ? $previewName($current) : 'Belum ada' }}</strong>
                             <small>{{ $current ? ($providerLabels[$current->provider] ?? $current->provider).' · '.max(0, $current->matches_total - $current->matches_played).' match tersisa' : 'Mulai main dari papan antrean' }}</small>
                         </div>
                     @endif
                     <div class="preview-queue">
                         @forelse ($upcoming as $index => $entry)
-                            <div class="preview-entry" wire:key="preview-entry-{{ $entry->id }}"><span>{{ $index + 1 }}. {{ $entry->player_name }}</span><small>{{ max(0, $entry->matches_total - $entry->matches_played) }} match</small></div>
+                            <div class="preview-entry" wire:key="preview-entry-{{ $entry->id }}"><span>{{ $index + 1 }}. {{ $previewName($entry) }}</span><small>{{ max(0, $entry->matches_total - $entry->matches_played) }} match</small></div>
                         @empty
                             <div class="preview-entry"><span>Antrean kosong</span><small>—</small></div>
                         @endforelse

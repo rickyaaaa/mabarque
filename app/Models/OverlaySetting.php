@@ -18,6 +18,7 @@ class OverlaySetting extends Model
         'max_players',
         'show_now_playing',
         'transparent_mode',
+        'censor_names',
     ];
 
     protected $casts = [
@@ -25,5 +26,6 @@ class OverlaySetting extends Model
         'max_players' => 'integer',
         'show_now_playing' => 'boolean',
         'transparent_mode' => 'boolean',
+        'censor_names' => 'boolean',
     ];
 }

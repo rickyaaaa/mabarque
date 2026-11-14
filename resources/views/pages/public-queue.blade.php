@@ -4,6 +4,11 @@
     $playing = $entries->firstWhere('status', 'playing');
     $waiting = $entries->where('status', '!=', 'playing')->values();
     $providerLabels = ['manual' => 'Manual', 'saweria' => 'Saweria', 'sociabuzz' => 'SociaBuzz', 'trakteer' => 'Trakteer'];
+    $statusLabels = ['ready' => 'Siap', 'offline' => 'Menunggu', 'skipped' => 'Dilewati', 'playing' => 'Bermain'];
+    $entryMeta = fn (array $entry) => collect([
+        ($entry['service_type'] ?? 'vip') === 'joki' ? 'Mainin akun' : 'Mabar VIP',
+        ! empty($entry['mlbb_id']) && ! str_starts_with($entry['player_name'], 'ID ') ? 'ID '.$entry['mlbb_id'] : null,
+    ])->filter()->join(' · ');
     $rupiah = fn (int $value) => 'Rp '.number_format($value, 0, ',', '.');
     $initials = fn (string $name) => mb_strtoupper(collect(preg_split('/\s+/', trim($name)))->filter()->take(2)->map(fn ($w) => mb_substr($w, 0, 1))->join('')) ?: '?';
     $startedAt = $isLive && ! empty($queue['session']['started_at']) ? \Illuminate\Support\Carbon::parse($queue['session']['started_at']) : null;
@@ -56,14 +61,14 @@
           <div>
             <p class="eyebrow">Giliran sekarang</p>
             <h2 id="public-current-title">{{ $playing['player_name'] ?? '' }}</h2>
-            <p id="current-meta">{{ $playing ? ($providerLabels[$playing['provider']] ?? 'VIP').' · sisa '.$playing['matches_remaining'].' match' : '' }}</p>
+            <p id="current-meta">{{ $playing ? $entryMeta($playing).' · sisa '.$playing['matches_remaining'].' game' : '' }}</p>
           </div>
           <div class="public-current-avatar" id="current-avatar">{{ $playing ? $initials($playing['player_name']) : '' }}</div>
         </div>
       </section>
 
       <section class="public-summary" aria-label="Ringkasan antrean">
-        <article><span>Antrean</span><strong id="queue-total">{{ $waiting->count() }}</strong><small>pemain menunggu</small></article>
+        <article><span>Antrean</span><strong id="queue-total">{{ $waiting->count() }}</strong><small>pemain punya sisa game</small></article>
         <article><span>Sesi</span><strong id="session-state">{{ $isLive ? 'Live' : 'Offline' }}</strong><small>{{ $isLive ? 'donasi VIP dibuka' : 'tunggu streamer mulai' }}</small></article>
         <article><span>Match selesai</span><strong id="matches-done">{{ $queue['session']['total_matches'] ?? 0 }}</strong><small>sejak live dimulai</small></article>
       </section>
@@ -71,11 +76,11 @@
       <section class="public-packages" aria-labelledby="public-packages-title">
         <div class="public-section-heading">
           <div><p class="eyebrow">Pilihan VIP</p><h2 id="public-packages-title">Paket aktif</h2></div>
-          <span class="public-package-note">Donasi dengan nominal tepat otomatis masuk antrean</span>
+          <span class="public-package-note">Donasi kelipatan harga paket otomatis masuk antrean · di bawah harga termurah tidak dihitung</span>
         </div>
         <div class="public-package-list">
           @forelse ($packages as $package)
-            <article @class(['is-featured' => $loop->index === 1])><strong>{{ $package->name }}</strong><span>{{ $rupiah($package->price) }}</span><small>{{ $package->match_count }} match</small></article>
+            <article @class(['is-featured' => $loop->index === 1])><strong>{{ $package->name }}</strong><span>{{ $rupiah($package->price) }}</span><small>{{ $package->match_count }} game</small></article>
           @empty
             <article><strong>Belum ada paket</strong><span>—</span><small>Streamer belum membuka paket VIP</small></article>
           @endforelse
@@ -84,22 +89,29 @@
 
       <section class="public-queue-panel" aria-labelledby="public-queue-title">
         <div class="public-section-heading">
-          <div><p class="eyebrow">Urutan berikutnya</p><h2 id="public-queue-title">Daftar antrean</h2></div>
+          <div><p class="eyebrow">{{ $isLive ? 'Urutan berikutnya' : 'Sisa game' }}</p><h2 id="public-queue-title">Daftar antrean</h2></div>
           <div class="public-queue-tools">
-            <label for="queue-search">Cari nama</label>
-            <input id="queue-search" type="search" placeholder="Nama kamu saat donasi" autocomplete="off" />
+            <label for="queue-search">Cari nama / ID</label>
+            <input id="queue-search" type="search" placeholder="Nama atau ID MLBB kamu" autocomplete="off" />
+            <label for="queue-sort">Urutkan</label>
+            <select id="queue-sort" class="public-sort">
+              <option value="queue">Urutan antrean</option>
+              <option value="most">Sisa terbanyak</option>
+              <option value="least">Sisa paling sedikit</option>
+              <option value="newest">Terbaru</option>
+            </select>
             <button class="filter-button" id="refresh-public-queue" type="button">↻ Refresh</button>
           </div>
         </div>
-        <div class="public-position-note" id="public-position-note" role="status" aria-live="polite">Cari nama kamu untuk melihat posisi di antrean.</div>
+        <div class="public-position-note" id="public-position-note" role="status" aria-live="polite">Cari nama atau ID kamu untuk melihat posisi dan sisa game.</div>
         <div class="public-queue-list" id="public-queue-list" aria-live="polite">
           @foreach ($waiting as $entry)
-            <article class="public-queue-item"><span class="public-queue-number" aria-hidden="true">{{ $loop->iteration }}</span><div><strong>{{ $entry['player_name'] }}</strong><span>{{ $providerLabels[$entry['provider']] ?? 'VIP' }}</span></div><span class="public-match-left">{{ $entry['matches_remaining'] }} <small>match</small></span><span class="public-ready">Siap</span></article>
+            <article class="public-queue-item"><span class="public-queue-number" aria-hidden="true">{{ $loop->iteration }}</span><div><strong>{{ $entry['player_name'] }}</strong><span>{{ $entryMeta($entry) }}</span></div><span class="public-match-left">{{ $entry['matches_remaining'] }} <small>game</small></span><span @class(['public-ready', 'is-'.$entry['status']])>{{ $statusLabels[$entry['status']] ?? 'Siap' }}</span></article>
           @endforeach
         </div>
         <div class="public-empty" id="public-empty" role="status" aria-live="polite" @if ($waiting->isNotEmpty()) hidden @endif>
-          <strong>{{ $isLive ? 'Antrean masih kosong' : 'Sesi belum dimulai' }}</strong>
-          <p>{{ $isLive ? 'Donasi sesuai paket VIP untuk masuk antrean.' : 'Antrean muncul di sini begitu streamer membuka sesi mabar.' }}</p>
+          <strong>Antrean masih kosong</strong>
+          <p>Donasi sesuai paket VIP untuk masuk antrean.</p>
         </div>
       </section>
 

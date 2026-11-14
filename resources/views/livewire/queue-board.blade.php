@@ -4,6 +4,8 @@
     $initials = fn (string $name) => mb_strtoupper(collect(preg_split('/\s+/', trim($name)))->filter()->take(2)->map(fn ($w) => mb_substr($w, 0, 1))->join('')) ?: '?';
     $avatarColors = ['#3b1945', '#d82a1c', '#1f6faf', '#684780', '#238b39', '#a91b16'];
     $isPlaying = $currentEntry?->status === 'playing';
+    $serviceTypes = \App\Models\QueueEntry::SERVICE_TYPES;
+    $maxMatches = \App\Services\QueueService::MAX_MATCHES;
 @endphp
 
 <div wire:poll.5s="refreshQueue">
@@ -26,7 +28,7 @@
         </div>
         <button class="button button-outline" type="button"
                 wire:click="endSession"
-                wire:confirm="Akhiri sesi &quot;{{ $session->title }}&quot;? Donasi baru tidak akan masuk ke antrean ini lagi.">
+                wire:confirm="Akhiri sesi &quot;{{ $session->title }}&quot;? Pemain yang sisa game-nya belum habis otomatis ikut ke sesi berikutnya.">
             Akhiri sesi
         </button>
     </header>
@@ -43,14 +45,16 @@
                 @if ($currentEntry)
                     <div>
                         <div class="badge badge-ready"><span class="badge-dot"></span>{{ $isPlaying ? 'Sedang bermain' : 'Siap — belum mulai' }}</div>
-                        <h2>{{ $currentEntry->player_name }}</h2>
+                        <h2>{{ $currentEntry->display_name }}</h2>
                         <p class="current-player-meta">
+                            @if ($currentEntry->mlbb_id && trim($currentEntry->player_name) !== '')ID: <strong>{{ $currentEntry->mlbb_id }}</strong> <span>•</span> @endif
+                            {{ $currentEntry->service_label }} <span>•</span>
                             Sumber: <strong>{{ $providerLabels[$currentEntry->provider] ?? $currentEntry->provider }}</strong>
                             <span>•</span> Match: <strong>{{ $currentEntry->matches_played }}/{{ $currentEntry->matches_total }}</strong>
                             <span>•</span> Sisa: <strong>{{ $matches->remaining($currentEntry) }}</strong>
                         </p>
                     </div>
-                    <div class="current-player-avatar avatar avatar-large" aria-hidden="true">{{ $initials($currentEntry->player_name) }}</div>
+                    <div class="current-player-avatar avatar avatar-large" aria-hidden="true">{{ $initials($currentEntry->display_name) }}</div>
                 @else
                     <div>
                         <h2>Belum ada pemain</h2>
@@ -72,9 +76,10 @@
                 <button class="button button-small button-light" type="button" @disabled(! $currentEntry || $isPlaying) wire:click="toggleStatus({{ $currentEntry?->id ?? 0 }})"><span aria-hidden="true">↺</span> Offline</button>
                 <button class="button button-small button-light" type="button" @disabled(! $currentEntry)
                         wire:click="remove({{ $currentEntry?->id ?? 0 }})"
-                        wire:confirm="Hapus {{ $currentEntry?->player_name }} dari antrean?"><span aria-hidden="true">⌫</span> Hapus</button>
+                        wire:confirm="Hapus {{ $currentEntry?->display_name }} dari antrean?"><span aria-hidden="true">⌫</span> Hapus</button>
             </div>
             <button class="button button-primary button-add" type="button" wire:click="openAddPlayer"><span class="add-icon" aria-hidden="true">+</span> Tambah pemain</button>
+            <button class="button button-outline button-small button-import" type="button" wire:click="openImport">⇣ Tempel banyak pemain</button>
         </article>
     </section>
 
@@ -94,7 +99,7 @@
         @if ($isPlaying)
             <div class="current-turn-marker" role="status" aria-live="polite">
                 <span class="current-turn-pulse" aria-hidden="true"></span>
-                <span><strong>Giliran sekarang</strong> {{ $currentEntry->player_name }} sedang bermain</span>
+                <span><strong>Giliran sekarang</strong> {{ $currentEntry->display_name }} sedang bermain</span>
             </div>
         @endif
 
@@ -105,7 +110,7 @@
                     <tr>
                         <th scope="col">#</th>
                         <th scope="col">Nama pemain</th>
-                        <th scope="col">Sumber donasi</th>
+                        <th scope="col">Jenis &amp; sumber</th>
                         <th scope="col">Status</th>
                         <th scope="col">Match</th>
                         <th scope="col">Sisa</th>
@@ -116,8 +121,8 @@
                     @foreach ($entries as $entry)
                         <tr wire:key="row-{{ $entry->id }}" @class(['is-playing' => $entry->status === 'playing', 'is-offline' => $entry->status === 'offline'])>
                             <td>{{ $entry->position }}</td>
-                            <td><div class="player-cell"><span class="avatar" style="background: {{ $avatarColors[$entry->id % 6] }}">{{ $initials($entry->player_name) }}</span><span class="player-name">{{ $entry->player_name }}</span></div></td>
-                            <td><span class="provider-pill {{ $entry->provider }}">{{ $providerLabels[$entry->provider] ?? $entry->provider }}</span></td>
+                            <td><div class="player-cell"><span class="avatar" style="background: {{ $avatarColors[$entry->id % 6] }}">{{ $initials($entry->display_name) }}</span>@include('livewire.partials.player-identity', ['entry' => $entry])</div></td>
+                            <td><div class="pill-stack">@if ($entry->service_type === 'joki')<span class="service-pill joki">Mainin akun</span>@endif<span class="provider-pill {{ $entry->provider }}">{{ $providerLabels[$entry->provider] ?? $entry->provider }}</span></div></td>
                             <td><span class="status-pill {{ $entry->status }}"><span class="status-dot"></span>{{ $statusLabels[$entry->status] ?? $entry->status }}</span></td>
                             <td>{{ $entry->matches_played }}/{{ $entry->matches_total }}</td>
                             <td>@include('livewire.partials.quota', ['remaining' => $matches->remaining($entry)])</td>
@@ -139,11 +144,11 @@
             @foreach ($entries as $entry)
                 <article wire:key="card-{{ $entry->id }}" @class(['player-card', 'is-playing' => $entry->status === 'playing', 'is-offline' => $entry->status === 'offline'])>
                     <div class="player-card-head">
-                        <div class="player-card-name"><span class="player-card-position">#{{ $entry->position }}</span><strong>{{ $entry->player_name }}</strong></div>
+                        <div class="player-card-name"><span class="player-card-position">#{{ $entry->position }}</span>@include('livewire.partials.player-identity', ['entry' => $entry])</div>
                         <span class="status-pill {{ $entry->status }}"><span class="status-dot"></span>{{ $statusLabels[$entry->status] ?? $entry->status }}</span>
                     </div>
                     <div class="player-card-meta">
-                        <div><span>Sumber donasi</span><strong><span class="provider-pill {{ $entry->provider }}">{{ $providerLabels[$entry->provider] ?? $entry->provider }}</span></strong></div>
+                        <div><span>Jenis &amp; sumber</span><strong class="pill-stack">@if ($entry->service_type === 'joki')<span class="service-pill joki">Mainin akun</span>@endif<span class="provider-pill {{ $entry->provider }}">{{ $providerLabels[$entry->provider] ?? $entry->provider }}</span></strong></div>
                         <div><span>Match</span><strong>{{ $entry->matches_played }}/{{ $entry->matches_total }} · @include('livewire.partials.quota', ['remaining' => $matches->remaining($entry)])</strong></div>
                     </div>
                     <div class="player-card-foot"><span class="player-card-note"></span>@include('livewire.partials.row-actions', ['entry' => $entry])</div>
@@ -162,12 +167,28 @@
                     <div><p class="eyebrow">Donasi di luar platform</p><h2 id="add-player-title">Tambah pemain</h2></div>
                     <button class="icon-button" type="button" aria-label="Tutup" wire:click="closeAddPlayer">×</button>
                 </div>
-                <label class="field-label" for="add-player-name">Nama pemain</label>
+                @error('playerForm') <p class="form-error" role="alert">{{ $message }}</p> @enderror
+                <label class="field-label" for="add-player-name">Nama pemain <span>(boleh kosong bila ID diisi)</span></label>
                 <input class="field-input @error('playerName') is-invalid @enderror" id="add-player-name" wire:model="playerName" placeholder="Contoh: Kiki ML" maxlength="120" autocomplete="off" />
                 @error('playerName') <p class="form-error" role="alert">{{ $message }}</p> @enderror
-                <label class="field-label" for="add-player-matches">Jatah mabar <span>(1–99 match)</span></label>
-                <input class="field-input @error('matchesTotal') is-invalid @enderror" id="add-player-matches" type="number" min="1" max="99" wire:model="matchesTotal" />
+                <label class="field-label" for="add-player-id">ID MLBB <span>(boleh kosong, bisa diisi nanti)</span></label>
+                <input class="field-input @error('mlbbId') is-invalid @enderror" id="add-player-id" wire:model="mlbbId" placeholder="Contoh: 1185010926 (2345)" maxlength="40" inputmode="numeric" autocomplete="off" />
+                @error('mlbbId') <p class="form-error" role="alert">{{ $message }}</p> @enderror
+                <div class="field-row">
+                    <div>
+                        <label class="field-label" for="add-player-matches">Jatah game <span>(1–{{ $maxMatches }})</span></label>
+                        <input class="field-input @error('matchesTotal') is-invalid @enderror" id="add-player-matches" type="number" min="1" max="{{ $maxMatches }}" wire:model="matchesTotal" />
+                    </div>
+                    <div>
+                        <label class="field-label" for="add-player-type">Jenis</label>
+                        <select class="field-input" id="add-player-type" wire:model="serviceType">
+                            @foreach ($serviceTypes as $value => $label)<option value="{{ $value }}">{{ $label }}</option>@endforeach
+                        </select>
+                    </div>
+                </div>
                 @error('matchesTotal') <p class="form-error" role="alert">{{ $message }}</p> @enderror
+                <label class="field-label" for="add-player-note">Catatan <span>(hanya terlihat oleh kamu)</span></label>
+                <textarea class="field-input" id="add-player-note" wire:model="note" rows="2" maxlength="500" placeholder="Contoh: ID dikirim lewat komentar"></textarea>
                 <div class="modal-actions">
                     <button class="button button-outline" type="button" wire:click="closeAddPlayer">Batal</button>
                     <button class="button button-primary" type="submit" wire:loading.attr="disabled">Masukkan ke antrean</button>
@@ -175,4 +196,68 @@
             </form>
         </dialog>
     @endif
+
+    {{-- ── Modal edit pemain ───────────────────────────────────────── --}}
+    @if ($editingId)
+        <dialog class="modal" aria-labelledby="edit-player-title" wire:key="edit-modal-{{ $editingId }}"
+                x-data x-init="$el.showModal(); $nextTick(() => $el.querySelector('input')?.focus())"
+                x-on:close="$wire.closeEdit()">
+            <form class="modal-card" wire:submit="savePlayer">
+                <div class="modal-header">
+                    <div><p class="eyebrow">Ubah data pemain</p><h2 id="edit-player-title">Edit pemain</h2></div>
+                    <button class="icon-button" type="button" aria-label="Tutup" wire:click="closeEdit">×</button>
+                </div>
+                @error('editForm') <p class="form-error" role="alert">{{ $message }}</p> @enderror
+                <label class="field-label" for="edit-player-name">Nama pemain</label>
+                <input class="field-input @error('editName') is-invalid @enderror" id="edit-player-name" wire:model="editName" maxlength="120" autocomplete="off" />
+                @error('editName') <p class="form-error" role="alert">{{ $message }}</p> @enderror
+                <label class="field-label" for="edit-player-id">ID MLBB</label>
+                <input class="field-input @error('editMlbbId') is-invalid @enderror" id="edit-player-id" wire:model="editMlbbId" placeholder="Contoh: 1185010926 (2345)" maxlength="40" inputmode="numeric" autocomplete="off" />
+                @error('editMlbbId') <p class="form-error" role="alert">{{ $message }}</p> @enderror
+                <div class="field-row">
+                    <div>
+                        <label class="field-label" for="edit-player-remaining">Sisa game <span>(0 = selesai)</span></label>
+                        <input class="field-input @error('editRemaining') is-invalid @enderror" id="edit-player-remaining" type="number" min="0" max="{{ $maxMatches }}" wire:model="editRemaining" />
+                    </div>
+                    <div>
+                        <label class="field-label" for="edit-player-type">Jenis</label>
+                        <select class="field-input" id="edit-player-type" wire:model="editType">
+                            @foreach ($serviceTypes as $value => $label)<option value="{{ $value }}">{{ $label }}</option>@endforeach
+                        </select>
+                    </div>
+                </div>
+                @error('editRemaining') <p class="form-error" role="alert">{{ $message }}</p> @enderror
+                <label class="field-label" for="edit-player-note">Catatan <span>(hanya terlihat oleh kamu)</span></label>
+                <textarea class="field-input" id="edit-player-note" wire:model="editNote" rows="2" maxlength="500"></textarea>
+                <div class="modal-actions">
+                    <button class="button button-outline" type="button" wire:click="closeEdit">Batal</button>
+                    <button class="button button-primary" type="submit" wire:loading.attr="disabled">Simpan</button>
+                </div>
+            </form>
+        </dialog>
+    @endif
+
+    {{-- ── Modal tempel banyak pemain ──────────────────────────────── --}}
+    @if ($showImport)
+        <dialog class="modal" aria-labelledby="import-title"
+                x-data x-init="$el.showModal(); $nextTick(() => $el.querySelector('textarea')?.focus())"
+                x-on:close="$wire.closeImport()">
+            <form class="modal-card modal-card-wide" wire:submit="importPlayers">
+                <div class="modal-header">
+                    <div><p class="eyebrow">Pindahan dari notepad</p><h2 id="import-title">Tempel banyak pemain</h2></div>
+                    <button class="icon-button" type="button" aria-label="Tutup" wire:click="closeImport">×</button>
+                </div>
+                <p class="modal-help">Satu baris satu pemain, dipisah garis tegak <code>|</code>:<br /><code>nama | ID MLBB | sisa game | jenis | catatan</code><br />ID, jenis, dan catatan boleh kosong. Jenis: <code>vip</code> (Mabar VIP) atau <code>joki</code> (Mainin akun). Pemain masuk di akhir antrean sesuai urutan baris.</p>
+                @error('importForm') <p class="form-error" role="alert">{{ $message }}</p> @enderror
+                <label class="field-label" for="import-text">Daftar pemain</label>
+                <textarea class="field-input import-textarea" id="import-text" wire:model="importText" rows="12" spellcheck="false"
+                          placeholder="Vampire |  | 8 | vip |&#10;CELLSEA | 1185010926 | 2 | vip |&#10;BANG ROTI |  | 8 | joki | mulai Minggu"></textarea>
+                <div class="modal-actions">
+                    <button class="button button-outline" type="button" wire:click="closeImport">Batal</button>
+                    <button class="button button-primary" type="submit" wire:loading.attr="disabled">Masukkan ke antrean</button>
+                </div>
+            </form>
+        </dialog>
+    @endif
 </div>
+

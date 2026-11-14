@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Donation;
 use App\Models\QueueEntry;
 use App\Models\VipPackage;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class DonationQueueService
@@ -69,6 +70,35 @@ class DonationQueueService
         return $donation->fresh();
     }
 
+    /**
+     * Hitung jatah game dari nominal donasi: ambil paket termahal yang masih muat, ulangi sampai sisa
+     * nominal di bawah harga paket termurah (sisa itu tidak dihitung).
+     * Contoh paket 25rb = 2 game & 50rb = 5 game: 50rb → 5, 75rb → 5 + 2 = 7, 100rb → 10, 60rb → 5.
+     *
+     * @param  Collection<int, VipPackage>  $packages  paket aktif milik streamer
+     * @return array{0: VipPackage, 1: int}|null  [paket terbesar yang terpakai, total game]; null bila di bawah harga termurah
+     */
+    public static function matchesFor(int $amount, Collection $packages): ?array
+    {
+        $remaining = $amount;
+        $total = 0;
+        $main = null;
+
+        // Harga sama: utamakan yang game-nya lebih banyak.
+        foreach ($packages->sortBy([['price', 'desc'], ['match_count', 'desc']]) as $package) {
+            $count = intdiv($remaining, (int) $package->price);
+            if ($count < 1) {
+                continue;
+            }
+
+            $main ??= $package;
+            $total += $count * (int) $package->match_count;
+            $remaining -= $count * (int) $package->price;
+        }
+
+        return $main !== null && $total > 0 ? [$main, $total] : null;
+    }
+
     public function process(Donation $donation): Donation
     {
         if ($donation->queue_entry_id !== null || $donation->live_session_id === null) {
@@ -87,18 +117,29 @@ class DonationQueueService
                 return $donation->fresh();
             }
 
-            $package = VipPackage::query()
+            $packages = VipPackage::query()
                 ->where('user_id', $session->user_id)
                 ->where('is_active', true)
-                ->where('price', $donation->amount)
-                ->orderBy('sort_order')
-                ->first();
+                ->where('price', '>', 0)
+                ->get();
 
-            if ($package === null) {
+            // Belum ada paket aktif: tidak bisa dihitung otomatis → streamer yang memutuskan.
+            if ($packages->isEmpty()) {
                 $donation->forceFill(['status' => 'review'])->save();
 
                 return $donation->fresh();
             }
+
+            $result = self::matchesFor((int) $donation->amount, $packages);
+
+            // Di bawah harga paket termurah: bukan donasi VIP, tetap tercatat di kotak masuk tanpa masuk antrean.
+            if ($result === null) {
+                $donation->forceFill(['status' => 'ignored', 'processed_at' => now()])->save();
+
+                return $donation->fresh();
+            }
+
+            [$package, $matchesTotal] = $result;
 
             // reorder(): relasi queueEntries punya ORDER BY, yang ditolak MySQL (ONLY_FULL_GROUP_BY) di query agregat.
             $position = ((int) $session->queueEntries()->reorder()->max('position')) + 1;
@@ -108,7 +149,7 @@ class DonationQueueService
                 'player_name' => $donation->donor_name,
                 'provider' => $donation->provider,
                 'donation_amount' => $donation->amount,
-                'matches_total' => $package->match_count,
+                'matches_total' => $matchesTotal,
                 'matches_played' => 0,
                 'status' => 'ready',
                 'position' => $position,

@@ -18,27 +18,42 @@ class QueueService
             ?? $this->orderedEntries($session)->first(fn (QueueEntry $entry): bool => $entry->status === 'ready');
     }
 
+    public const MAX_MATCHES = 999;
+
+    public const MAX_IMPORT_LINES = 300;
+
     public function addManual(LiveSession $session, string $playerName, int $matchesTotal, int $donationAmount = 0): QueueEntry
     {
-        $playerName = trim($playerName);
+        return $this->addPlayer($session, [
+            'player_name' => $playerName,
+            'matches_total' => $matchesTotal,
+            'donation_amount' => $donationAmount,
+        ]);
+    }
 
-        if ($playerName === '') {
-            throw new InvalidArgumentException('Nama pemain wajib diisi.');
-        }
+    /**
+     * Tambah pemain manual. Nama boleh kosong bila ID MLBB diisi (dan sebaliknya).
+     *
+     * @param  array{player_name?: ?string, mlbb_id?: ?string, matches_total: int, service_type?: ?string, note?: ?string, donation_amount?: int}  $data
+     */
+    public function addPlayer(LiveSession $session, array $data): QueueEntry
+    {
+        $attributes = $this->playerAttributes($data);
+        $matchesTotal = (int) ($data['matches_total'] ?? 0);
+        $donationAmount = (int) ($data['donation_amount'] ?? 0);
 
-        if ($matchesTotal < 1) {
-            throw new InvalidArgumentException('Jatah mabar minimal 1.');
+        if ($matchesTotal < 1 || $matchesTotal > self::MAX_MATCHES) {
+            throw new InvalidArgumentException('Jatah game harus 1–'.self::MAX_MATCHES.'.');
         }
 
         if ($donationAmount < 0) {
             throw new InvalidArgumentException('Nominal donasi tidak boleh negatif.');
         }
 
-        return DB::transaction(function () use ($session, $playerName, $matchesTotal, $donationAmount): QueueEntry {
+        return DB::transaction(function () use ($session, $attributes, $matchesTotal, $donationAmount): QueueEntry {
             $position = ((int) $this->orderedEntries($session)->max('position')) + 1;
 
-            $entry = $session->queueEntries()->create([
-                'player_name' => $playerName,
+            $entry = $session->queueEntries()->create($attributes + [
                 'provider' => 'manual',
                 'donation_amount' => $donationAmount,
                 'matches_total' => $matchesTotal,
@@ -52,6 +67,147 @@ class QueueService
 
             return $entry;
         });
+    }
+
+    /**
+     * Ubah detail pemain (nama, ID, jenis, catatan) dan sisa game. Sisa 0 = jatah habis → pemain selesai.
+     *
+     * @param  array{player_name?: ?string, mlbb_id?: ?string, service_type?: ?string, note?: ?string, matches_remaining: int}  $data
+     */
+    public function updatePlayer(LiveSession $session, QueueEntry $entry, array $data): QueueEntry
+    {
+        $this->ensureEntryBelongsToSession($session, $entry);
+        $attributes = $this->playerAttributes($data);
+        $remaining = (int) ($data['matches_remaining'] ?? -1);
+
+        if ($remaining < 0 || $remaining > self::MAX_MATCHES) {
+            throw new InvalidArgumentException('Sisa game harus 0–'.self::MAX_MATCHES.'.');
+        }
+
+        return DB::transaction(function () use ($session, $entry, $attributes, $remaining): QueueEntry {
+            $entry->update($attributes + ['matches_total' => $entry->matches_played + $remaining]);
+
+            if ($remaining === 0 && $entry->status !== 'done') {
+                $this->complete($session, $entry);
+            }
+
+            return $entry->refresh();
+        });
+    }
+
+    /**
+     * Tempel banyak pemain sekaligus, satu baris per pemain: `nama | ID MLBB | sisa game | jenis | catatan`.
+     * Semua baris divalidasi dulu; satu baris salah = tidak ada yang dimasukkan.
+     *
+     * @return int jumlah pemain yang dimasukkan
+     */
+    public function importPlayers(LiveSession $session, string $text): int
+    {
+        $rows = [];
+        $errors = [];
+        $lines = preg_split('/\r\n|\r|\n/', $text) ?: [];
+
+        foreach ($lines as $index => $line) {
+            $line = trim($line);
+            if ($line === '' || str_starts_with($line, '#')) {
+                continue;
+            }
+
+            $parts = array_map('trim', explode('|', $line));
+            $matches = $parts[2] ?? '';
+
+            try {
+                if (! ctype_digit($matches)) {
+                    throw new InvalidArgumentException('sisa game harus angka');
+                }
+
+                if ((int) $matches < 1 || (int) $matches > self::MAX_MATCHES) {
+                    throw new InvalidArgumentException('sisa game harus 1–'.self::MAX_MATCHES);
+                }
+
+                $rows[] = $this->playerAttributes([
+                    'player_name' => $parts[0] ?? '',
+                    'mlbb_id' => $parts[1] ?? '',
+                    'service_type' => $this->parseServiceType($parts[3] ?? ''),
+                    'note' => implode(' | ', array_slice($parts, 4)),
+                ]) + ['matches_total' => (int) $matches];
+            } catch (InvalidArgumentException $exception) {
+                $errors[] = 'Baris '.($index + 1).': '.lcfirst(rtrim($exception->getMessage(), '.'));
+            }
+        }
+
+        if ($errors !== []) {
+            $extra = count($errors) > 5 ? ' · dan '.(count($errors) - 5).' baris lain' : '';
+            throw new InvalidArgumentException(implode(' · ', array_slice($errors, 0, 5)).$extra);
+        }
+
+        if ($rows === []) {
+            throw new InvalidArgumentException('Belum ada baris pemain yang ditempel.');
+        }
+
+        if (count($rows) > self::MAX_IMPORT_LINES) {
+            throw new InvalidArgumentException('Maksimal '.self::MAX_IMPORT_LINES.' pemain sekali tempel.');
+        }
+
+        return DB::transaction(function () use ($session, $rows): int {
+            foreach ($rows as $row) {
+                $this->addPlayer($session, $row);
+            }
+
+            return count($rows);
+        });
+    }
+
+    /** Normalisasi & validasi detail pemain; dipakai tambah, edit, dan tempel banyak. */
+    private function playerAttributes(array $data): array
+    {
+        $name = trim((string) preg_replace('/\s+/u', ' ', (string) ($data['player_name'] ?? '')));
+        $mlbbId = trim((string) preg_replace('/\s+/', ' ', (string) ($data['mlbb_id'] ?? '')));
+        $type = (string) ($data['service_type'] ?? '') ?: 'vip';
+        $note = trim((string) ($data['note'] ?? ''));
+
+        if ($name === '' && $mlbbId === '') {
+            throw new InvalidArgumentException('Nama pemain atau ID MLBB wajib diisi.');
+        }
+
+        if (mb_strlen($name) > 120) {
+            throw new InvalidArgumentException('Nama pemain maksimal 120 karakter.');
+        }
+
+        // ID MLBB: angka, boleh dengan server/zona, mis. "1185010926 (2345)".
+        if ($mlbbId !== '' && ! preg_match('/^\d{4,20}( ?\(?\d{1,8}\)?)?$/', $mlbbId)) {
+            throw new InvalidArgumentException('ID MLBB harus angka, boleh dengan server, mis. 1185010926 (2345).');
+        }
+
+        if (! array_key_exists($type, QueueEntry::SERVICE_TYPES)) {
+            throw new InvalidArgumentException('Jenis harus Mabar VIP atau Mainin akun.');
+        }
+
+        if (mb_strlen($note) > 500) {
+            throw new InvalidArgumentException('Catatan maksimal 500 karakter.');
+        }
+
+        return [
+            'player_name' => $name,
+            'mlbb_id' => $mlbbId !== '' ? $mlbbId : null,
+            'service_type' => $type,
+            'note' => $note !== '' ? $note : null,
+        ];
+    }
+
+    private function parseServiceType(string $value): string
+    {
+        $value = mb_strtolower(trim($value));
+
+        if ($value === '' || in_array($value, ['vip', 'mabar', 'mabar vip'], true)) {
+            return 'vip';
+        }
+
+        if (in_array($value, ['joki', 'akun', 'mainin akun'], true)) {
+            return 'joki';
+        }
+
+        throw new InvalidArgumentException('jenis "'.$value.'" tidak dikenal (pakai vip atau joki)');
     }
 
     public function markPlaying(LiveSession $session, QueueEntry $entry): QueueEntry

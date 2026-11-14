@@ -2,13 +2,20 @@
 // Nama pemain berasal dari donatur — selalu dimasukkan lewat textContent, tidak pernah innerHTML.
 (function () {
   const POLL_MS = 5000;
-  const PROVIDERS = { manual: "Manual", saweria: "Saweria", sociabuzz: "SociaBuzz", trakteer: "Trakteer" };
+  const STATUS = { ready: "Siap", offline: "Menunggu", skipped: "Dilewati", playing: "Bermain" };
+  const SORTS = {
+    queue: (a, b) => a.number - b.number,
+    most: (a, b) => b.matches_remaining - a.matches_remaining || a.number - b.number,
+    least: (a, b) => a.matches_remaining - b.matches_remaining || a.number - b.number,
+    newest: (a, b) => String(b.joined_at || "").localeCompare(String(a.joined_at || "")) || b.number - a.number,
+  };
   const slug = document.body.dataset.channelId;
   const $ = (selector) => document.querySelector(selector);
   const list = $("#public-queue-list");
   const toast = $("#public-toast");
   let waiting = null; // null = belum ada data dari API, render awal dari server dipertahankan
   let query = "";
+  let sort = "queue";
   let lastUpdate = Date.now();
 
   function showToast(message) {
@@ -29,21 +36,40 @@
     return name.trim().split(/\s+/).slice(0, 2).map((part) => part[0] || "").join("").toUpperCase() || "?";
   }
 
+  function meta(entry) {
+    const parts = [entry.service_type === "joki" ? "Mainin akun" : "Mabar VIP"];
+    if (entry.mlbb_id && !entry.player_name.startsWith("ID ")) parts.push(`ID ${entry.mlbb_id}`);
+    return parts.join(" · ");
+  }
+
+  // Nama/ID bisa disensor ("WangSu*******"): cocokkan ke bagian yang terlihat, dan anggap cocok bila
+  // yang diketik pemilik diawali bagian itu (pemilik mengetik nama lengkapnya sendiri).
+  function fieldMatches(value, q) {
+    const text = String(value || "").toLowerCase();
+    if (!text) return false;
+    if (!text.includes("*")) return text.includes(q);
+    const visible = text.replace(/\*+$/, "");
+    return visible.includes(q) || (q.startsWith(visible) && q.length <= text.length);
+  }
+
   function renderList() {
     if (waiting === null) return;
     const q = query.toLowerCase();
-    const visible = waiting.map((entry, index) => ({ ...entry, number: index + 1 })).filter((entry) => entry.player_name.toLowerCase().includes(q));
+    const visible = waiting
+      .map((entry, index) => ({ ...entry, number: index + 1 }))
+      .filter((entry) => !q || fieldMatches(entry.player_name, q) || fieldMatches(entry.mlbb_id, q))
+      .sort(SORTS[sort] || SORTS.queue);
 
     list.replaceChildren(...visible.map((entry) => {
       const item = el("article", `public-queue-item${q ? " is-match" : ""}`);
-      item.setAttribute("aria-label", `Posisi ${entry.number}, ${entry.player_name}, ${entry.matches_remaining} match tersisa`);
+      item.setAttribute("aria-label", `Posisi ${entry.number}, ${entry.player_name}, ${entry.matches_remaining} game tersisa`);
       const number = el("span", "public-queue-number", String(entry.number));
       number.setAttribute("aria-hidden", "true");
       const who = el("div");
-      who.append(el("strong", null, entry.player_name), el("span", null, PROVIDERS[entry.provider] || "VIP"));
+      who.append(el("strong", null, entry.player_name), el("span", null, meta(entry)));
       const left = el("span", "public-match-left", `${entry.matches_remaining} `);
-      left.append(el("small", null, "match"));
-      item.append(number, who, left, el("span", "public-ready", "Siap"));
+      left.append(el("small", null, "game"));
+      item.append(number, who, left, el("span", `public-ready is-${entry.status}`, STATUS[entry.status] || "Siap"));
       return item;
     }));
 
@@ -51,8 +77,8 @@
     const note = $("#public-position-note");
     note.classList.toggle("is-found", Boolean(q && visible.length));
     note.textContent = q && visible.length
-      ? `${visible[0].player_name} berada di posisi #${visible[0].number} (${visible[0].matches_remaining} match tersisa).`
-      : q ? "Nama belum ditemukan di antrean aktif." : "Cari nama kamu untuk melihat posisi di antrean.";
+      ? `${visible[0].player_name} berada di posisi #${visible[0].number} (${visible[0].matches_remaining} game tersisa).`
+      : q ? "Nama atau ID belum ditemukan di antrean." : "Cari nama atau ID kamu untuk melihat posisi dan sisa game.";
   }
 
   function render(data) {
@@ -70,12 +96,10 @@
     $("#current-section").hidden = !playing;
     if (playing) {
       $("#public-current-title").textContent = playing.player_name;
-      $("#current-meta").textContent = `${PROVIDERS[playing.provider] || "VIP"} · sisa ${playing.matches_remaining} match`;
+      $("#current-meta").textContent = `${meta(playing)} · sisa ${playing.matches_remaining} game`;
       $("#current-avatar").textContent = initials(playing.player_name);
     }
 
-    const emptyTitle = $("#public-empty strong");
-    emptyTitle.textContent = live ? "Antrean masih kosong" : "Sesi belum dimulai";
     renderList();
   }
 
@@ -100,6 +124,15 @@
     query = event.target.value.trim();
     if (waiting === null) {
       // Belum ada data API: ambil dulu supaya pencarian memakai daftar terbaru.
+      load(false);
+      return;
+    }
+    renderList();
+  });
+
+  $("#queue-sort").addEventListener("change", (event) => {
+    sort = event.target.value;
+    if (waiting === null) {
       load(false);
       return;
     }

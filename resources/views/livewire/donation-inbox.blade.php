@@ -98,7 +98,7 @@
                     @php
                         $context = $notification->context ?? [];
                         $icon = ['queued' => ['is-green', '✓'], 'review' => ['is-orange', '!'], 'failed' => ['is-red', '×']][$notification->type] ?? ['is-orange', '↗'];
-                        $label = ['queued' => 'masuk antrean otomatis', 'review' => 'perlu dicek (nominal tidak cocok)', 'failed' => 'gagal diproses'][$notification->type] ?? 'mengirim donasi';
+                        $label = ['queued' => 'masuk antrean otomatis', 'review' => 'perlu dicek', 'failed' => 'gagal diproses'][$notification->type] ?? 'mengirim donasi';
                     @endphp
                     <div @class(['activity-item', 'is-unread' => ! $notification->read_at]) wire:key="notif-{{ $notification->id }}">
                         <span class="activity-icon {{ $icon[0] }}" aria-hidden="true">{{ $icon[1] }}</span>
