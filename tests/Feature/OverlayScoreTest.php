@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\LiveSessionService;
 use App\Services\OverlayTokenService;
 use App\Services\QueueService;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -230,6 +231,35 @@ class OverlayScoreTest extends TestCase
 
         $this->postJson('/api/overlay/'.str_repeat('x', 40).'/obs', ['event' => 'started'])->assertNotFound();
         $this->postJson("/api/overlay/{$token}/obs", ['event' => 'hapus'])->assertUnprocessable();
+    }
+
+    public function test_obs_browser_source_can_start_a_session_without_dashboard_cookies(): void
+    {
+        $token = app(OverlayTokenService::class)->current($this->owner);
+        $this->app['auth']->forgetGuards();
+
+        // Exercise Sanctum's real CSRF check, which Laravel normally skips during tests.
+        $csrf = new class($this->app, $this->app['encrypter']) extends ValidateCsrfToken
+        {
+            protected function runningUnitTests(): bool
+            {
+                return false;
+            }
+        };
+        $this->app->instance(ValidateCsrfToken::class, $csrf);
+        config([
+            'sanctum.stateful' => ['localhost'],
+            'sanctum.middleware.validate_csrf_token' => ValidateCsrfToken::class,
+        ]);
+
+        $headers = ['Origin' => 'http://localhost', 'Referer' => "http://localhost/o/{$token}/w/packages"];
+
+        $this->postJson("/api/overlay/{$token}/obs", ['event' => 'started'], $headers)
+            ->assertCreated()
+            ->assertJsonPath('data.action', 'started');
+        $this->assertSame(1, $this->owner->liveSessions()->active()->count());
+
+        $this->postJson('/api/live-sessions', ['title' => 'Live'], $headers)->assertStatus(419);
     }
 
     public function test_overlay_follows_browser_source_size_by_default(): void

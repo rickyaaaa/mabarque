@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\StreamerAccessController;
 use App\Http\Middleware\EnsureActiveBeta;
 use App\Http\Middleware\EnsureSuperAdmin;
 use Illuminate\Support\Facades\Route;
+use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
 
 // ── Super Admin: persetujuan akses beta streamer ────────────────────────
 Route::middleware(['auth', EnsureSuperAdmin::class])->prefix('admin')->group(function (): void {
@@ -30,8 +31,10 @@ Route::post('/webhooks/donations/{provider}/{platformConnection}', [\App\Http\Co
     ->whereIn('provider', ['saweria', 'sociabuzz', 'trakteer'])
     ->middleware('throttle:120,1');
 Route::get('/overlay/{token}', [\App\Http\Controllers\OverlayController::class, 'show']);
-// Event OBS dari browser source overlay: mulai/berhenti streaming → sesi live ikut mulai/berakhir.
-Route::post('/overlay/{token}/obs', [\App\Http\Controllers\OverlayController::class, 'obsEvent'])->middleware('throttle:12,1');
+// Browser Source mengautentikasi event OBS lewat token overlay, tanpa sesi dashboard.
+Route::post('/overlay/{token}/obs', [\App\Http\Controllers\OverlayController::class, 'obsEvent'])
+    ->withoutMiddleware(EnsureFrontendRequestsAreStateful::class)
+    ->middleware('throttle:12,1');
 Route::get('/channels/{user:slug}', [StreamerProfileController::class, 'publicShow']);
 Route::get('/channels/{user:slug}/vip-packages', [\App\Http\Controllers\PublicVipPackageController::class, 'index']);
 Route::get('/channels/{user:slug}/queue', [\App\Http\Controllers\PublicQueueController::class, 'show']);
