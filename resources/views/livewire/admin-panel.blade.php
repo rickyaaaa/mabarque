@@ -52,7 +52,7 @@
                                 <strong>{{ $streamer->channel_name }}</strong>
                                 <small>
                                     @if ($streamer->beta_status === 'active')
-                                        <a href="/{{ $streamer->slug }}" target="_blank" rel="noopener">{{ '@'.$streamer->slug }} ↗</a>
+                                        <a href="/{{ $streamer->slug }}" target="_blank" rel="noopener">{{ '@'.$streamer->slug }} @include('partials.icon', ['name' => 'link', 'size' => 12])</a>
                                     @else
                                         {{ '@'.$streamer->slug }}
                                     @endif
@@ -79,7 +79,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="6" class="admin-empty">{{ $search ? 'Tidak ada streamer yang cocok dengan pencarian.' : ($status === 'pending' ? 'Tidak ada akun yang menunggu persetujuan. 🎉' : 'Belum ada akun di kategori ini.') }}</td></tr>
+                        <tr><td colspan="6" class="admin-empty">{{ $search ? 'Tidak ada streamer yang cocok dengan pencarian.' : ($status === 'pending' ? 'Tidak ada akun yang menunggu persetujuan.' : 'Belum ada akun di kategori ini.') }}</td></tr>
                     @endforelse
                 </tbody>
             </table>

@@ -8,12 +8,13 @@
     <title>Panel Admin — MabarQueue</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Agdasima:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="{{ \App\Support\Asset::url('css/styles.css') }}" />
     <link rel="stylesheet" href="{{ \App\Support\Asset::url('css/admin.css') }}" />
+    <link rel="stylesheet" href="{{ \App\Support\Asset::url('css/ui-v2.css') }}" />
   </head>
   {{-- Area Super Admin: terpisah dari workspace streamer (tanpa sidebar streamer), login tetap lewat /login. --}}
-  <body class="admin-body">
+  <body class="admin-body ui-v2">
     <div class="admin-topbar">
       <a class="public-brand" href="/admin"><span class="brand-mark" aria-hidden="true">MQ</span><span>MabarQueue <em>Admin</em></span></a>
     </div>

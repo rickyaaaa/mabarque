@@ -7,7 +7,10 @@
             <h1>Paket VIP</h1>
             <p class="session-meta">Nominal donasi menentukan jumlah game: paket termahal yang muat dihitung dulu, lalu kelipatannya (mis. 75rb = 50rb + 25rb). Donasi di bawah harga termurah tidak dihitung.</p>
         </div>
-        <button class="button button-primary" type="button" wire:click="create">+ Buat paket baru</button>
+        <div class="packages-header-actions">
+            <a class="button button-outline" href="{{ $publicUrl }}" target="_blank" rel="noopener">@include('partials.icon', ['name' => 'link', 'size' => 16]) Lihat halaman publik</a>
+            <button class="button button-primary" type="button" wire:click="create">@include('partials.icon', ['name' => 'plus', 'size' => 16]) Buat paket baru</button>
+        </div>
     </header>
 
     <section class="package-summary">
@@ -63,22 +66,6 @@
             @error('links') <p class="form-error" role="alert">{{ $message }}</p> @enderror
             <div class="modal-actions"><button class="button button-primary" type="submit" wire:loading.attr="disabled">Simpan link donasi</button></div>
         </form>
-    </section>
-
-    <section class="package-preview">
-        <div>
-            <p class="eyebrow">Tampilan penonton</p>
-            <h2>Pratinjau paket di halaman publik</h2>
-            <p>Penonton melihat paket aktif ini sebelum memilih nominal donasi.</p>
-        </div>
-        <a class="button button-outline" href="{{ $publicUrl }}" target="_blank" rel="noopener">Lihat halaman publik ↗</a>
-        <div class="public-package-preview">
-            @forelse ($activePackages as $package)
-                <div class="public-package-card" wire:key="preview-{{ $package->id }}"><strong>{{ $package->name }}</strong><span>{{ $rupiah($package->price) }} · {{ $package->match_count }} match</span></div>
-            @empty
-                <div class="public-package-card"><strong>Belum ada paket aktif</strong><span>Penonton belum melihat pilihan VIP.</span></div>
-            @endforelse
-        </div>
     </section>
 
     @if ($showForm)
