@@ -55,3 +55,33 @@ body.overlay-body.is-transparent { background: transparent; }
 /* Mode "Ikuti ukuran Browser Source": kartu mengisi penuh viewport browser source OBS (sisa ruang untuk bayangan). */
 body.overlay-body.is-fit { min-height: 0; height: 100vh; padding: 5px 12px 12px 5px; overflow: hidden; }
 body.overlay-body.is-fit .overlay-card { width: 100%; max-width: none; height: 100%; }
+
+/* ── Widget terpisah (/o/{token}/w/{widget}) ──────────────────────────────
+   Satu bagian per browser source; lebar mengikuti browser source OBS, tinggi mengikuti isi. */
+body.overlay-body.is-widget { min-height: 0; padding: 4px 10px 10px 4px; }
+body.is-widget .overlay-card { width: 100%; max-width: none; }
+body.widget-score .overlay-brand, body.widget-score .overlay-now, body.widget-score .overlay-queue, body.widget-score .overlay-empty, body.widget-score .overlay-packages,
+body.widget-party .overlay-head, body.widget-party .overlay-queue, body.widget-party .overlay-empty, body.widget-party .overlay-packages,
+body.widget-queue .overlay-score, body.widget-queue .overlay-now, body.widget-queue .overlay-packages,
+body.widget-packages .overlay-head, body.widget-packages .overlay-now, body.widget-packages .overlay-queue, body.widget-packages .overlay-empty { display: none !important; }
+
+/* Skor: dua kotak besar mengisi lebar */
+body.widget-score .overlay-card { padding: .6em; }
+body.widget-score .overlay-head { margin: 0; }
+body.widget-score .overlay-score { flex: 1; gap: .5em; }
+body.widget-score .overlay-score > span { flex: 1; justify-content: center; gap: .4em; padding: .3em .6em; }
+body.widget-score .overlay-score small { font-size: 1em; }
+body.widget-score .overlay-score strong { font-size: 2.6em; }
+
+/* Party: satu baris per pemain */
+body.widget-party .overlay-card { padding: .6em; }
+body.widget-party .overlay-now strong:empty { display: none; }
+.overlay-party { display: grid; gap: .3em; margin: .45em 0 0; padding: 0; list-style: none; }
+.overlay-party-member { display: flex; align-items: baseline; justify-content: space-between; gap: .6em; padding: .3em .5em; color: var(--ink); background: var(--panel); border: 2px solid var(--ink); }
+.overlay-party-member span { min-width: 0; overflow: hidden; font-size: 1.15em; font-weight: 900; letter-spacing: -.02em; text-overflow: ellipsis; white-space: nowrap; }
+.overlay-party-member small { flex: none; font-size: .75em; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+/* Harga paket: chip memenuhi baris */
+body.widget-packages .overlay-card { padding: .6em; }
+body.widget-packages .overlay-packages { margin: 0; padding: 0; border-top: 0; }
+body.widget-packages .overlay-package { font-size: .95em; }

@@ -10,12 +10,14 @@ use Illuminate\Contracts\View\View;
 use App\Services\LiveSessionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
  * Overlay OBS berbasis token (tanpa login).
- * GET /o/{token}          halaman browser source
+ * GET /o/{token}          halaman browser source (semua dalam satu kartu)
+ * GET /o/{token}/w/{widget} widget terpisah: score | party | queue | packages (ditaruh bebas di OBS)
  * GET /api/overlay/{token} data antrean + pengaturan tampilan (dipoll halaman overlay)
  * GET /o/{token}/bg/{file} gambar latar overlay yang diunggah streamer
  * POST /api/overlay/{token}/obs event OBS (mulai/berhenti streaming) → sesi live ikut mulai/berakhir
@@ -38,7 +40,23 @@ class OverlayController extends Controller
         $overlayToken = $tokenService->resolve($token);
         abort_if($overlayToken === null, 404);
 
-        return view('pages.overlay', ['token' => $token, 'initial' => $this->payload($overlayToken->user, $publicQueueService, $token)]);
+        return view('pages.overlay', ['token' => $token, 'widget' => null, 'initial' => $this->payload($overlayToken->user, $publicQueueService, $token)]);
+    }
+
+    /** Widget terpisah ala Saweria: satu bagian overlay per browser source, posisi & ukuran bebas di OBS. */
+    public const WIDGETS = [
+        'score' => ['label' => 'Skor Win / Lose', 'hint' => 'Skor sesi live dari tombol Menang / Kalah.', 'size' => [360, 110]],
+        'party' => ['label' => 'Sedang main', 'hint' => 'Nama pemain di party + sisa game.', 'size' => [460, 260]],
+        'queue' => ['label' => 'Antrean berikutnya', 'hint' => 'Daftar pemain yang menunggu giliran.', 'size' => [400, 340]],
+        'packages' => ['label' => 'Harga paket', 'hint' => 'Paket aktif, mis. 25K · 2 game.', 'size' => [640, 90]],
+    ];
+
+    public function widget(string $token, string $widget, OverlayTokenService $tokenService, PublicQueueService $publicQueueService): View
+    {
+        $overlayToken = $tokenService->resolve($token);
+        abort_if($overlayToken === null || ! array_key_exists($widget, self::WIDGETS), 404);
+
+        return view('pages.overlay', ['token' => $token, 'widget' => $widget, 'initial' => $this->payload($overlayToken->user, $publicQueueService, $token)]);
     }
 
     /**
@@ -54,7 +72,15 @@ class OverlayController extends Controller
         }
 
         $event = $request->validate(['event' => ['required', 'in:started,stopped']])['event'];
-        $settings = $user->overlaySetting;
+
+        // Beberapa widget di OBS mengirim event yang sama hampir bersamaan: proses satu per satu
+        // supaya tidak tercipta dua sesi live.
+        return Cache::lock('obs-event-'.$user->id, 10)->block(5, fn () => $this->handleObsEvent($user, $event, $sessions));
+    }
+
+    private function handleObsEvent(User $user, string $event, LiveSessionService $sessions): JsonResponse
+    {
+        $settings = $user->overlaySetting()->first();
         $active = $user->liveSessions()->active()->latest('started_at')->first();
 
         if ($event === 'started') {

@@ -10,6 +10,9 @@
   const empty = document.querySelector("#overlay-empty");
   const scoreBox = document.querySelector("#overlay-score");
   const packageList = document.querySelector("#overlay-packages");
+  const partyList = document.querySelector("#overlay-party");
+  // Widget terpisah (/o/{token}/w/{widget}): hanya satu bagian yang tampil, ukuran mengikuti browser source.
+  const widget = document.body.dataset.widget || "";
 
   function el(tag, className, text) {
     const node = document.createElement(tag);
@@ -49,20 +52,31 @@
     document.body.classList.toggle("is-transparent", settings.transparent_mode !== false);
 
     // Bentuk & ukuran kartu diatur streamer → browser source OBS cukup diset seukuran ini (tidak di-scale).
-    card.classList.toggle("is-horizontal", settings.layout === "horizontal");
-    const fit = settings.fit_source !== false;
+    // Widget terpisah selalu mengikuti lebar browser source (diatur lewat CSS).
+    card.classList.toggle("is-horizontal", !widget && settings.layout === "horizontal");
+    const fit = !widget && settings.fit_source !== false;
     document.body.classList.toggle("is-fit", fit);
     // Mode "ikuti Browser Source": kartu mengisi penuh ukuran yang diset di OBS (lewat CSS).
-    card.style.width = fit ? "" : `${Math.max(240, Math.min(1920, settings.card_width || 440))}px`;
-    card.style.height = fit ? "" : (settings.card_height ? `${settings.card_height}px` : "");
+    card.style.width = fit || widget ? "" : `${Math.max(240, Math.min(1920, settings.card_width || 440))}px`;
+    card.style.height = fit || widget ? "" : (settings.card_height ? `${settings.card_height}px` : "");
     document.querySelector("#overlay-channel").textContent = data.channel_name || "";
 
     const entries = queue.entries || [];
     const party = entries.filter((entry) => entry.status === "playing");
-    const showNow = settings.show_now_playing !== false && party.length > 0;
+    const showNow = widget === "party" || (!widget && settings.show_now_playing !== false && party.length > 0);
 
     nowBox.hidden = !showNow;
-    if (showNow) {
+    partyList.hidden = widget !== "party" || party.length === 0;
+    if (widget === "party") {
+      // Widget party: satu baris per pemain + sisa game.
+      document.querySelector("#overlay-now-name").textContent = party.length ? "" : "Belum ada game";
+      document.querySelector("#overlay-now-meta").textContent = party.length ? `${party.length} pemain di party` : (queue.status === "live" ? "Menunggu game dimulai" : "Sesi mabar belum dimulai");
+      partyList.replaceChildren(...party.map((entry) => {
+        const item = el("li", "overlay-party-member");
+        item.append(el("span", null, entry.player_name), el("small", null, `sisa ${entry.matches_remaining}`));
+        return item;
+      }));
+    } else if (showNow) {
       // Party bisa berisi beberapa pemain sekaligus (streamer + N).
       document.querySelector("#overlay-now-name").textContent = party.map((entry) => entry.player_name).join(" · ");
       document.querySelector("#overlay-now-meta").textContent = party.length === 1
@@ -80,22 +94,20 @@
 
     // Skor Win/Lose sesi live.
     const score = data.score;
-    scoreBox.hidden = !(settings.show_score !== false && score);
-    if (score) {
-      document.querySelector("#overlay-wins").textContent = String(score.wins);
-      document.querySelector("#overlay-losses").textContent = String(score.losses);
-    }
+    scoreBox.hidden = widget === "score" ? false : !(settings.show_score !== false && score);
+    document.querySelector("#overlay-wins").textContent = String(score ? score.wins : 0);
+    document.querySelector("#overlay-losses").textContent = String(score ? score.losses : 0);
 
     // Harga paket VIP, mis. "25K · 2 game".
     const packages = data.packages || [];
-    packageList.hidden = !(settings.show_packages !== false && packages.length);
+    packageList.hidden = widget === "packages" ? !packages.length : !(settings.show_packages !== false && packages.length);
     packageList.replaceChildren(...packages.map((pkg) => {
       const item = el("li", "overlay-package");
       item.append(el("strong", null, pkg.price), el("span", null, pkg.gets || `${pkg.games} game`));
       return item;
     }));
 
-    empty.hidden = upcoming.length > 0;
+    empty.hidden = upcoming.length > 0 || (widget !== "" && widget !== "queue");
     empty.textContent = queue.status === "live" ? "Antrean VIP masih kosong" : "Sesi mabar belum dimulai";
     card.classList.toggle("is-offline", queue.status !== "live");
   }

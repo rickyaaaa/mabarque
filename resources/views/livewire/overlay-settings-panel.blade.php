@@ -197,4 +197,34 @@
             </div>
         </section>
     </section>
+
+    {{-- Widget terpisah ala Saweria: tiap bagian punya link sendiri, ditaruh bebas di OBS. --}}
+    <section class="overlay-widgets" aria-labelledby="widgets-title">
+        <div class="panel-heading">
+            <div>
+                <h2 id="widgets-title">Widget terpisah</h2>
+                <p class="session-meta">Pasang bagian yang kamu mau saja, masing-masing sebagai Browser Source sendiri, lalu taruh di mana pun di layar. Warna, latar, dan ukuran huruf ikut pengaturan di atas. Lebar widget mengikuti lebar Browser Source.</p>
+            </div>
+        </div>
+        <div class="widget-grid">
+            @foreach ($widgets as $key => $widget)
+                @php([$w, $h] = $widget['size'])
+                @php($scale = round(min(1, 300 / $w, 170 / $h), 4))
+                <article class="widget-card" wire:key="widget-{{ $key }}">
+                    <div @class(['widget-stage', 'is-solid' => ! $transparentMode])>
+                        <div class="overlay-frame-wrap" style="width: {{ (int) round($w * $scale) }}px; height: {{ (int) round($h * $scale) }}px">
+                            <iframe src="{{ $widget['url'] }}?preview=1" title="Pratinjau widget {{ $widget['label'] }}" width="{{ $w }}" height="{{ $h }}" loading="lazy" style="transform: scale({{ $scale }})"></iframe>
+                        </div>
+                    </div>
+                    <h3>{{ $widget['label'] }}</h3>
+                    <p class="size-help">{{ $widget['hint'] }} Ukuran Browser Source disarankan <strong>{{ $w }} × {{ $h }}</strong>.</p>
+                    <div class="widget-actions" x-data>
+                        <button class="button button-primary button-small" type="button"
+                                x-on:click="navigator.clipboard.writeText(@js($widget['url'])).then(() => $dispatch('notify', { message: 'Link widget {{ $widget['label'] }} disalin. Tempel sebagai Browser Source baru di OBS.' }))">@include('partials.icon', ['name' => 'link', 'size' => 14]) Salin link</button>
+                        <a class="button button-outline button-small" href="{{ $widget['url'] }}" target="_blank" rel="noopener">Buka</a>
+                    </div>
+                </article>
+            @endforeach
+        </div>
+    </section>
 </div>

@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="{{ \App\Support\Asset::url('css/overlay.css') }}" />
   </head>
   {{-- Browser source OBS: data awal dirender server, lalu diperbarui tiap 3 detik dari /api/overlay/{token}. --}}
-  <body class="overlay-body" data-token="{{ $token }}">
+  <body class="overlay-body{{ $widget ? ' is-widget widget-'.$widget : '' }}" data-token="{{ $token }}" data-widget="{{ $widget }}">
     <main class="overlay-card" id="overlay" aria-live="polite">
       <div class="overlay-head">
         <div class="overlay-brand"><span id="overlay-channel">{{ $initial['channel_name'] }}</span> <em>VIP</em></div>
@@ -24,6 +24,7 @@
         <span class="overlay-now-label">NOW PLAYING</span>
         <strong id="overlay-now-name"></strong>
         <small id="overlay-now-meta"></small>
+        <ol class="overlay-party" id="overlay-party" hidden></ol>
       </section>
       <ol class="overlay-queue" id="overlay-queue"></ol>
       <p class="overlay-empty" id="overlay-empty" hidden></p>

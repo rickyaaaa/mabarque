@@ -488,3 +488,17 @@ body.ui-v2 .package-kind-toggle { display: grid; grid-template-columns: 1fr 1fr;
 body.ui-v2 .package-kind-toggle .layout-option { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; padding: 10px 12px; color: var(--v-ink); background: var(--v-panel); border: 2px solid var(--v-line); font-size: 13px; font-weight: 800; cursor: pointer; }
 body.ui-v2 .package-kind-toggle .layout-option small { flex-basis: 100%; }
 body.ui-v2 .package-kind-toggle .layout-option.is-active { background: var(--v-accent); box-shadow: var(--v-shadow-sm); }
+
+/* Pengaturan overlay: widget terpisah */
+body.ui-v2 .overlay-widgets { margin-top: 22px; padding: 20px; background: var(--v-panel); border: 3px solid var(--v-line); box-shadow: var(--v-shadow); }
+body.ui-v2 .overlay-widgets .session-meta { max-width: 760px; margin: 4px 0 0; }
+body.ui-v2 .widget-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; margin-top: 16px; }
+body.ui-v2 .widget-card { display: grid; align-content: start; gap: 8px; padding: 12px; background: var(--v-sunk); border: 2px solid var(--v-line); }
+body.ui-v2 .widget-card h3 { margin: 4px 0 0; font-size: 15px; font-weight: 800; }
+body.ui-v2 .widget-card .size-help { margin: 0; }
+body.ui-v2 .widget-stage { display: grid; min-height: 190px; place-items: center; overflow: hidden; padding: 10px; background: repeating-conic-gradient(#d9d8d0 0% 25%, #f1f0ea 0% 50%) 50% / 18px 18px; border: 2px solid var(--v-line); }
+body.ui-v2 .widget-stage.is-solid { background: #2b2b2b; }
+body.ui-v2 .widget-stage .overlay-frame-wrap { position: relative; overflow: hidden; }
+body.ui-v2 .widget-stage iframe { position: absolute; top: 0; left: 0; border: 0; transform-origin: 0 0; background: transparent; }
+body.ui-v2 .widget-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+body.ui-v2 .widget-actions .button { display: inline-flex; align-items: center; gap: 6px; }

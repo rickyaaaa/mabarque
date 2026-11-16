@@ -189,6 +189,9 @@ class OverlaySettingsPanel extends Component
             'preview' => $this->previewFrame($tokens->url($tokens->current($user))),
             'channelName' => $user->channel_name,
             'backgroundImageUrl' => OverlayController::backgroundUrl($tokens->current($user), $saved?->background_image),
+            'widgets' => collect(OverlayController::WIDGETS)->map(fn (array $widget, string $key) => $widget + [
+                'url' => route('overlay.widget', ['token' => $tokens->current($user), 'widget' => $key]),
+            ])->all(),
         ]);
     }
 

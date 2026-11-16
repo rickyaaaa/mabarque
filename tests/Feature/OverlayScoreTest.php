@@ -172,6 +172,22 @@ class OverlayScoreTest extends TestCase
         $this->getJson("/api/overlay/{$token}")->assertJsonPath('data.overlay_settings.background_image_url', null);
     }
 
+    public function test_separate_widgets_have_their_own_links(): void
+    {
+        $token = app(OverlayTokenService::class)->current($this->owner);
+
+        foreach (['score', 'party', 'queue', 'packages'] as $widget) {
+            $this->get("/o/{$token}/w/{$widget}")->assertOk()->assertSee('widget-'.$widget, false)->assertSee('data-widget="'.$widget.'"', false);
+        }
+        $this->get("/o/{$token}/w/donasi")->assertNotFound();
+        $this->get('/o/'.str_repeat('x', 40).'/w/score')->assertNotFound();
+
+        Livewire::test(OverlaySettingsPanel::class)
+            ->assertSee('Widget terpisah')
+            ->assertSee("/o/{$token}/w/score", false)
+            ->assertSee("/o/{$token}/w/packages", false);
+    }
+
     public function test_overlay_payload_carries_asset_version_for_self_reload(): void
     {
         $token = app(OverlayTokenService::class)->current($this->owner);
