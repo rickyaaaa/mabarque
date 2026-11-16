@@ -26,11 +26,13 @@
     <title>{{ $channel['channel_name'] }} — Antrean VIP · MabarQueue</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Agdasima:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="{{ \App\Support\Asset::url('css/styles.css') }}" />
     <link rel="stylesheet" href="{{ \App\Support\Asset::url('css/public-queue.css') }}" />
+    {{-- Tampilan v2 senada dengan dashboard (dimuat terakhir). --}}
+    <link rel="stylesheet" href="{{ \App\Support\Asset::url('css/public-v2.css') }}" />
   </head>
-  <body class="public-body" data-channel-id="{{ $channel['slug'] }}" style="--channel-accent: {{ $channel['accent'] }}">
+  <body class="public-body ui-v2" data-channel-id="{{ $channel['slug'] }}" style="--channel-accent: {{ $channel['accent'] }}">
     <main class="public-shell">
       <header class="public-header">
         <a class="public-brand" href="/{{ $channel['slug'] }}"><span class="brand-mark" aria-hidden="true">{{ $channel['avatar_initials'] }}</span><span>{{ $channel['channel_name'] }}</span></a>

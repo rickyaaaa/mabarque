@@ -323,6 +323,9 @@ body.ui-v2 .profile-avatar { color: var(--v-ink); background: var(--v-accent); }
 body.ui-v2 .profile-identity p, body.ui-v2 .profile-identity small { color: #c9c8bf; }
 /* Label provider (Saweria/SociaBuzz/Trakteer) selalu teks putih selebar isinya, juga di kartu donasi HP. */
 body.ui-v2 .provider-pill { display: inline-flex; width: fit-content; max-width: 100%; color: #fff !important; }
+/* Radio di kotak pilihan (overlay: bentuk & ukuran): titiknya terlihat juga di pilihan aktif yang hitam. */
+body.ui-v2 .layout-option input { accent-color: var(--v-accent); }
+body.ui-v2 .layout-option.is-active input { outline: 2px solid #fff; outline-offset: 1px; }
 /* Tombol geser (pengaturan overlay, aturan party) */
 body.ui-v2 .switch-track { background: #e3e2db; }
 body.ui-v2 .switch-control input:checked + .switch-track { background: var(--v-accent); }

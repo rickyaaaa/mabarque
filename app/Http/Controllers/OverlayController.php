@@ -57,7 +57,7 @@ class OverlayController extends Controller
         return [
             'channel_name' => $user->channel_name,
             'overlay_settings' => [
-                'accent_color' => $settings->accent_color ?? '#D82A1C',
+                'accent_color' => $settings->accent_color ?? '#C5F02E',
                 'font_scale' => (int) ($settings->font_scale ?? 100),
                 'max_players' => (int) ($settings->max_players ?? 5),
                 'show_now_playing' => (bool) ($settings->show_now_playing ?? true),

@@ -39,7 +39,7 @@
   function render(data) {
     const settings = { ...(data.overlay_settings || {}), ...previewOverrides };
     const queue = data.queue || { status: "offline", entries: [] };
-    const accent = /^#[0-9a-f]{6}$/i.test(settings.accent_color || "") ? settings.accent_color : "#D82A1C";
+    const accent = /^#[0-9a-f]{6}$/i.test(settings.accent_color || "") ? settings.accent_color : "#C5F02E";
 
     document.documentElement.style.setProperty("--accent", accent);
     document.documentElement.style.setProperty("--scale", String((settings.font_scale || 100) / 100));

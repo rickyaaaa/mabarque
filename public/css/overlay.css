@@ -1,47 +1,51 @@
-/* Overlay OBS (browser source). Warna aksen & skala huruf diatur lewat --accent dan --scale dari pengaturan streamer. */
-:root { --accent: #d82a1c; --scale: 1; --cream: #fff7de; --paper: #f8dba3; --ink: #100a16; }
+/* Overlay OBS (browser source) — tampilan v2: kartu putih, garis & bayangan hitam tebal, Inter,
+   warna aksen streamer (--accent, bawaan lime) untuk "Now playing" dan label VIP.
+   Skala huruf diatur lewat --scale dari pengaturan streamer. */
+:root { --accent: #c5f02e; --scale: 1; --ink: #111111; --muted: #57564f; --panel: #ffffff; --sunk: #f3f2ec; --rule: #d9d8d0; --dark: #141414; }
 * { box-sizing: border-box; }
 html, body { margin: 0; }
-body.overlay-body { min-height: 100vh; padding: 16px; color: var(--cream); background: #241429; font-family: "Bricolage Grotesque", system-ui, sans-serif; font-size: calc(16px * var(--scale)); }
+body.overlay-body { min-height: 100vh; padding: 16px; color: var(--ink); background: #2b2b2b; font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; font-size: calc(16px * var(--scale)); }
 body.overlay-body.is-transparent { background: transparent; }
 
-.overlay-card { width: 440px; max-width: 100%; overflow: hidden; padding: 1.1em; background: rgba(16, 10, 22, .93); border: 3px solid var(--accent); box-shadow: 7px 7px 0 var(--accent); }
-.overlay-card.is-offline { opacity: .85; }
-.overlay-brand { margin-bottom: .8em; font: 700 1.8em/.85 "Agdasima", sans-serif; letter-spacing: .05em; text-transform: uppercase; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.overlay-brand em { color: var(--accent); font-style: normal; }
+.overlay-card { width: 440px; max-width: 100%; overflow: hidden; padding: 1em; color: var(--ink); background: var(--panel); border: 3px solid var(--ink); box-shadow: 6px 6px 0 var(--ink); }
+.overlay-card.is-offline { opacity: .9; }
+.overlay-brand { display: flex; align-items: center; gap: .4em; min-width: 0; margin-bottom: .8em; font-size: 1.25em; font-weight: 900; letter-spacing: -.03em; line-height: 1; white-space: nowrap; }
+.overlay-brand > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.overlay-brand em { flex: none; padding: .18em .4em; color: var(--ink); background: var(--accent); border: 2px solid var(--ink); font-size: .55em; font-style: normal; font-weight: 900; letter-spacing: .06em; }
 
-.overlay-now { padding: .75em; color: var(--ink); background: var(--accent); border: 2px solid var(--cream); }
-.overlay-now-label, .overlay-now small { display: block; font-size: .65em; font-weight: 800; letter-spacing: .12em; }
-.overlay-now strong { display: block; margin: .25em 0 .15em; font: 700 2.2em/.85 "Agdasima", sans-serif; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.overlay-now { padding: .65em .75em; color: var(--ink); background: var(--accent); border: 2px solid var(--ink); }
+.overlay-now-label, .overlay-now small { display: block; font-size: .62em; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+/* Party bisa 4 nama: boleh 2 baris sebelum dipotong. */
+.overlay-now strong { display: -webkit-box; margin: .25em 0 .2em; overflow: hidden; font-size: 1.45em; font-weight: 900; line-height: 1.1; letter-spacing: -.03em; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 
-.overlay-queue { display: grid; gap: .4em; margin: .8em 0 0; padding: 0; list-style: none; }
-.overlay-entry { display: flex; justify-content: space-between; gap: .6em; padding: .45em .55em; border: 2px solid rgba(248, 219, 163, .8); font-size: .8em; font-weight: 700; }
-.overlay-entry-name { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.overlay-entry-left { flex: 0 0 auto; color: var(--paper); }
-.overlay-empty { margin: .8em 0 0; color: var(--paper); font-size: .8em; font-weight: 700; }
+.overlay-queue { display: grid; gap: .35em; margin: .7em 0 0; padding: 0; list-style: none; }
+.overlay-entry { display: flex; align-items: center; justify-content: space-between; gap: .6em; padding: .4em .55em; background: var(--panel); border: 2px solid var(--ink); font-size: .82em; font-weight: 700; }
+.overlay-entry-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.overlay-entry-left { flex: 0 0 auto; padding: .1em .4em; color: #fff; background: var(--dark); font-size: .85em; font-weight: 800; font-variant-numeric: tabular-nums; }
+.overlay-empty { margin: .7em 0 0; color: var(--muted); font-size: .82em; font-weight: 700; }
 
 /* Skor Win/Lose & harga paket */
-.overlay-head { display: flex; align-items: flex-start; justify-content: space-between; gap: .6em; margin-bottom: .8em; }
-.overlay-head .overlay-brand { min-width: 0; margin-bottom: 0; }
+.overlay-head { display: flex; align-items: center; justify-content: space-between; gap: .6em; margin-bottom: .8em; }
+.overlay-head .overlay-brand { margin-bottom: 0; }
 .overlay-score { display: flex; flex: none; gap: .3em; }
-.overlay-score > span { display: flex; align-items: baseline; gap: .25em; padding: .2em .45em; border: 2px solid var(--cream); }
-.overlay-score small { font-size: .6em; font-weight: 800; letter-spacing: .1em; }
-.overlay-score strong { font: 700 1.4em/1 "Agdasima", sans-serif; font-variant-numeric: tabular-nums; }
-.overlay-score-win { color: var(--ink); background: #4ad66d; }
-.overlay-score-lose { color: var(--cream); background: var(--accent); }
-.overlay-packages { display: flex; flex-wrap: wrap; gap: .35em; margin: .8em 0 0; padding: .6em 0 0; list-style: none; border-top: 2px dashed rgba(248, 219, 163, .55); }
-.overlay-package { display: flex; align-items: baseline; gap: .3em; padding: .25em .5em; color: var(--ink); background: var(--paper); font-size: .78em; font-weight: 700; }
-.overlay-package strong { font: 700 1.25em/1 "Agdasima", sans-serif; }
+.overlay-score > span { display: flex; align-items: baseline; gap: .25em; padding: .18em .45em; border: 2px solid var(--ink); }
+.overlay-score small { font-size: .6em; font-weight: 800; letter-spacing: .08em; }
+.overlay-score strong { font-size: 1.15em; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; }
+.overlay-score-win { color: var(--ink); background: var(--accent); }
+.overlay-score-lose { color: #fff; background: var(--dark); }
+.overlay-packages { display: flex; flex-wrap: wrap; gap: .35em; margin: .7em 0 0; padding: .6em 0 0; list-style: none; border-top: 2px solid var(--rule); }
+.overlay-package { display: flex; align-items: baseline; gap: .3em; padding: .22em .5em; color: var(--ink); background: var(--sunk); border: 2px solid var(--ink); font-size: .76em; font-weight: 700; }
+.overlay-package strong { font-size: 1.15em; font-weight: 900; }
 
 /* Bentuk horizontal: bar memanjang (cocok di bawah/atas layar) */
-.overlay-card.is-horizontal { display: flex; align-items: stretch; gap: .9em; }
-.overlay-card.is-horizontal .overlay-head { flex: none; flex-direction: column; justify-content: center; margin: 0; }
+.overlay-card.is-horizontal { display: flex; align-items: stretch; gap: .8em; }
+.overlay-card.is-horizontal .overlay-head { flex: none; flex-direction: column; align-items: flex-start; justify-content: center; margin: 0; }
 .overlay-card.is-horizontal .overlay-now { flex: 0 1 auto; min-width: 9em; max-width: 40%; display: flex; flex-direction: column; justify-content: center; }
-.overlay-card.is-horizontal .overlay-queue { display: flex; flex: 1; flex-wrap: wrap; align-content: center; gap: .4em; min-width: 0; margin: 0; overflow: hidden; }
+.overlay-card.is-horizontal .overlay-queue { display: flex; flex: 1; flex-wrap: wrap; align-content: center; gap: .35em; min-width: 0; margin: 0; overflow: hidden; }
 .overlay-card.is-horizontal .overlay-entry { flex: 0 1 auto; min-width: 0; }
 .overlay-card.is-horizontal .overlay-empty { align-self: center; margin: 0; }
-.overlay-card.is-horizontal .overlay-packages { flex: none; flex-direction: column; flex-wrap: nowrap; justify-content: center; margin: 0; padding: 0 0 0 .7em; border-top: 0; border-left: 2px dashed rgba(248, 219, 163, .55); }
+.overlay-card.is-horizontal .overlay-packages { flex: none; flex-direction: column; flex-wrap: nowrap; justify-content: center; margin: 0; padding: 0 0 0 .7em; border-top: 0; border-left: 2px solid var(--rule); }
 
 /* Mode "Ikuti ukuran Browser Source": kartu mengisi penuh viewport browser source OBS (sisa ruang untuk bayangan). */
-body.overlay-body.is-fit { min-height: 0; height: 100vh; padding: 6px 13px 13px 6px; overflow: hidden; }
+body.overlay-body.is-fit { min-height: 0; height: 100vh; padding: 5px 12px 12px 5px; overflow: hidden; }
 body.overlay-body.is-fit .overlay-card { width: 100%; max-width: none; height: 100%; }

@@ -457,7 +457,9 @@ class QueueBoard extends Component
         if (! $this->mvpFreeGame) {
             $this->mvpId = null;
         }
-        auth()->user()->overlaySetting()->updateOrCreate(['user_id' => auth()->id()], ['censor_names' => $this->censorNames]);
+        // Baris pengaturan overlay baru memakai aksen lime (default tampilan v2), bukan default lama di database.
+        auth()->user()->overlaySetting()->firstOrCreate(['user_id' => auth()->id()], ['accent_color' => '#C5F02E'])
+            ->update(['censor_names' => $this->censorNames]);
         $this->session->unsetRelation('user');
         $this->showRules = false;
         $this->dispatch('notify', message: 'Aturan party disimpan: '.$this->partySize.' pemain per game, '

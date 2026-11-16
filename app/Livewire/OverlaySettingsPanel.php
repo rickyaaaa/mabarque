@@ -20,7 +20,7 @@ class OverlaySettingsPanel extends Component
     /** Ruang di sekitar kartu (padding halaman 16px × 2 + bayangan 7px), dibulatkan. */
     public const FRAME_PADDING = 40;
 
-    public string $accentColor = '#D82A1C';
+    public string $accentColor = '#C5F02E';
 
     public int $fontScale = 100;
 
@@ -142,10 +142,10 @@ class OverlaySettingsPanel extends Component
     private function loadSaved(): void
     {
         $saved = auth()->user()->overlaySetting()->first() ?? new OverlaySetting([
-            'accent_color' => '#D82A1C', 'font_scale' => 100, 'max_players' => 5, 'show_now_playing' => true, 'transparent_mode' => true, 'censor_names' => false,
+            'accent_color' => '#C5F02E', 'font_scale' => 100, 'max_players' => 5, 'show_now_playing' => true, 'transparent_mode' => true, 'censor_names' => false,
         ]);
 
-        $this->accentColor = strtoupper($saved->accent_color ?: '#D82A1C');
+        $this->accentColor = strtoupper($saved->accent_color ?: '#C5F02E');
         $this->fontScale = (int) $saved->font_scale;
         $this->maxPlayers = max(self::MIN_PLAYERS, min(self::MAX_PLAYERS, (int) ($saved->max_players ?: 5)));
         $this->showNowPlaying = (bool) $saved->show_now_playing;
@@ -199,7 +199,7 @@ class OverlaySettingsPanel extends Component
             'layout' => $this->layout,
             'w' => $width,
             'h' => $height ?? 'auto',
-            'accent' => ltrim(preg_match('/^#[0-9A-Fa-f]{6}$/', $this->accentColor) ? $this->accentColor : '#D82A1C', '#'),
+            'accent' => ltrim(preg_match('/^#[0-9A-Fa-f]{6}$/', $this->accentColor) ? $this->accentColor : '#C5F02E', '#'),
             'scale' => max(60, min(200, $this->fontScale)),
             'players' => max(self::MIN_PLAYERS, min(self::MAX_PLAYERS, $this->maxPlayers)),
             'now' => (int) $this->showNowPlaying,
