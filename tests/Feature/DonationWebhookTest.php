@@ -312,6 +312,37 @@ class DonationWebhookTest extends TestCase
         $this->assertSame([3, '138765201'], [$session->queueEntries()->sole()->matches_total, $session->queueEntries()->sole()->mlbb_id]);
     }
 
+    /** Kejadian 2026-11-17: `id` SociaBuzz sama untuk tes & donasi asli, sehingga donasi asli dianggap duplikat. */
+    public function test_sociabuzz_donations_sharing_the_same_id_are_all_recorded(): void
+    {
+        $sociabuzz = $this->connect('sociabuzz', 'sbwhook-uji-123');
+        $this->streamer->vipPackages()->create(['name' => '2 ribu', 'price' => 2000, 'match_count' => 2, 'sort_order' => 9]);
+        $session = $this->openLiveSession();
+        $payload = fn (array $overrides) => array_merge([
+            'id' => '1664565323', 'amount' => 2000, 'currency' => 'IDR', 'amount_settled' => 2000, 'currency_settled' => 'IDR',
+            'media_type' => null, 'media_url' => null, 'supporter' => 'Jessica', 'email_supporter' => 'jessica@example.com',
+            'message' => 'Ini hanya test notifikasi', 'created_at' => '2026-11-17T00:22:56+07:00',
+        ], $overrides);
+
+        // Data tes lama yang sudah terlanjur tercatat dengan id yang sama (sebelum perbaikan).
+        Donation::create(['platform_connection_id' => $sociabuzz->id, 'external_id' => '1664565323', 'provider' => 'sociabuzz', 'donor_name' => 'Jessica', 'amount' => 10000, 'status' => 'received']);
+
+        $first = $payload(['supporter' => 'Ricky Adryan Achmad', 'email_supporter' => 'ricky@gmail.com', 'message' => '23588423',
+            'media_url' => 'https://music.youtube.com/watch?v=x', 'created_at' => '2026-11-17T00:25:22+07:00']);
+        $this->sendSociaBuzz($sociabuzz, $first, 'sbwhook-uji-123')->assertCreated()->assertJsonPath('data.status', 'queued');
+
+        $second = $payload(['supporter' => 'Kyoto', 'email_supporter' => 'kyoto@gmail.com', 'message' => 'mabar 138765201', 'created_at' => '2026-11-17T00:31:02+07:00']);
+        $this->sendSociaBuzz($sociabuzz, $second, 'sbwhook-uji-123')->assertCreated()->assertJsonPath('data.status', 'queued');
+
+        // Kiriman ulang yang identik tetap terdeteksi sebagai duplikat.
+        $this->sendSociaBuzz($sociabuzz, $first, 'sbwhook-uji-123')->assertOk()->assertJsonPath('data.duplicate', true);
+
+        $entries = $session->queueEntries()->orderBy('position')->get();
+        $this->assertSame(['Ricky Adryan Achmad', 'Kyoto'], $entries->pluck('player_name')->all());
+        $this->assertSame([2, 2], $entries->pluck('matches_total')->all());
+        $this->assertSame(['23588423', '138765201'], $entries->pluck('mlbb_id')->all());
+    }
+
     public function test_sociabuzz_non_idr_goes_to_review_and_sample_is_stored_masked(): void
     {
         $sociabuzz = $this->connect('sociabuzz', 'sociabuzz-token-uji');

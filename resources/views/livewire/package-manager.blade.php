@@ -5,7 +5,7 @@
         <div>
             <p class="eyebrow">Harga fleksibel untuk komunitas</p>
             <h1>Paket VIP</h1>
-            <p class="session-meta">Nominal donasi menentukan paket: donasi yang sama persis dengan harga paket aktif otomatis masuk antrean.</p>
+            <p class="session-meta">Nominal donasi menentukan jumlah game: paket termahal yang muat dihitung dulu, lalu kelipatannya (mis. 75rb = 50rb + 25rb). Donasi di bawah harga termurah tidak dihitung.</p>
         </div>
         <button class="button button-primary" type="button" wire:click="create">+ Buat paket baru</button>
     </header>
@@ -31,7 +31,7 @@
                     <div class="package-price">{{ $rupiah($package->price) }}</div>
                     <div class="package-matches">{{ $package->match_count }} match per donasi</div>
                     <ul class="package-features">
-                        <li>Donasi tepat {{ $rupiah($package->price) }} → otomatis masuk antrean</li>
+                        <li>Donasi {{ $rupiah($package->price) }} (atau kelipatannya) → {{ $package->match_count }} game per {{ $rupiah($package->price) }}</li>
                         <li>{{ $package->queue_entries_count }} pemain pernah memakai paket ini</li>
                     </ul>
                     <div class="package-actions">

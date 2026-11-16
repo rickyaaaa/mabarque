@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
  * - Notifikasi uji selalu "Jessica" / jessica@example.com / "Ini hanya test notifikasi" dengan id tetap →
  *   dikenali sebagai uji (hanya menandai koneksi aktif, tidak tercatat sebagai donasi).
  * - Nominal = `amount` (yang dibayar donatur, sama dengan harga paket). Donasi non-IDR masuk "Perlu cek".
+ * - `id` sama untuk semua donasi (bukan nomor transaksi) → penanda unik donasi = sidik jari isinya.
  */
 class SociaBuzzAdapter implements ProviderAdapter
 {
@@ -75,9 +76,21 @@ class SociaBuzzAdapter implements ProviderAdapter
             throw new InvalidPayload('Payload SociaBuzz tidak dikenali. Cek contoh payload terakhir di halaman Donasi.');
         }
 
+        // `id` SociaBuzz BUKAN nomor transaksi: nilainya sama untuk notifikasi uji dan setiap donasi asli
+        // (terbukti 2026-11-17), sehingga donasi kedua dst. dianggap duplikat. Sidik jari dari isi donasi
+        // membedakan tiap donasi, sedangkan kiriman ulang yang identik tetap terdeteksi sebagai duplikat.
+        $fingerprint = implode('|', [
+            (string) $id,
+            (string) ($payload['created_at'] ?? ''),
+            $name,
+            (string) $this->first($payload, ['email_supporter', 'email']),
+            (string) $amount,
+            (string) $this->first($payload, ['message', 'supporter_message', 'support_message']),
+            (string) ($payload['media_url'] ?? ''),
+        ]);
+
         return new IncomingDonation(
-            // Tanpa id dari provider, sidik jari payload mencegah donasi yang sama tercatat dua kali saat dikirim ulang.
-            externalId: filled($id) ? (string) $id : 'sb-'.substr(hash('sha256', json_encode($payload)), 0, 40),
+            externalId: 'sb-'.substr(hash('sha256', $fingerprint), 0, 40),
             donorName: $name,
             amount: (int) round((float) $amount),
             donorEmail: ($email = $this->first($payload, ['email_supporter', 'email'])) ? (string) $email : null,
