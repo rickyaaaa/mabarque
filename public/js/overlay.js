@@ -125,6 +125,24 @@
     }
   }
 
+  // Sinkron OBS: event ini hanya dikirim oleh OBS ke browser source (tidak ada di browser biasa / pratinjau).
+  // Server yang memutuskan (sesuai pengaturan streamer) apakah sesi live ikut dimulai/diakhiri.
+  async function sendObsEvent(event) {
+    if (params.get("preview") === "1") return;
+    try {
+      await fetch(`/api/overlay/${encodeURIComponent(token)}/obs`, {
+        method: "POST",
+        headers: { Accept: "application/json", "Content-Type": "application/json" },
+        body: JSON.stringify({ event }),
+      });
+      poll();
+    } catch (error) {
+      // Gagal kirim (jaringan): streamer masih bisa mulai/akhiri sesi dari dashboard.
+    }
+  }
+  window.addEventListener("obsStreamingStarted", () => sendObsEvent("started"));
+  window.addEventListener("obsStreamingStopped", () => sendObsEvent("stopped"));
+
   render(window.__OVERLAY__ || {});
   window.setInterval(poll, POLL_MS);
 })();

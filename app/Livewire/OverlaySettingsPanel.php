@@ -54,6 +54,11 @@ class OverlaySettingsPanel extends Component
 
     public bool $showPackages = true;
 
+    /** Sinkron OBS: mulai sesi saat OBS mulai streaming / akhiri saat OBS berhenti. */
+    public bool $obsAutoStart = true;
+
+    public bool $obsAutoEnd = false;
+
     /** Bentuk & ukuran kartu overlay (piksel). Tinggi otomatis = mengikuti isi. */
     public string $layout = 'vertical';
 
@@ -87,6 +92,8 @@ class OverlaySettingsPanel extends Component
             'censorNames' => ['boolean'],
             'showScore' => ['boolean'],
             'showPackages' => ['boolean'],
+            'obsAutoStart' => ['boolean'],
+            'obsAutoEnd' => ['boolean'],
             'layout' => ['required', 'in:vertical,horizontal'],
             'fitSource' => ['boolean'],
             'cardWidth' => ['required', 'integer', 'between:240,1920'],
@@ -105,6 +112,8 @@ class OverlaySettingsPanel extends Component
             'censor_names' => $validated['censorNames'],
             'show_score' => $validated['showScore'],
             'show_packages' => $validated['showPackages'],
+            'obs_auto_start' => $validated['obsAutoStart'],
+            'obs_auto_end' => $validated['obsAutoEnd'],
             'layout' => $validated['layout'],
             'fit_source' => $validated['fitSource'],
             'card_width' => $validated['cardWidth'],
@@ -220,6 +229,8 @@ class OverlaySettingsPanel extends Component
         $this->censorNames = (bool) $saved->censor_names;
         $this->showScore = $saved->show_score === null ? true : (bool) $saved->show_score;
         $this->showPackages = $saved->show_packages === null ? true : (bool) $saved->show_packages;
+        $this->obsAutoStart = $saved->obs_auto_start === null ? true : (bool) $saved->obs_auto_start;
+        $this->obsAutoEnd = (bool) $saved->obs_auto_end;
         $this->layout = $saved->layout === 'horizontal' ? 'horizontal' : 'vertical';
         $this->fitSource = $saved->fit_source === null ? true : (bool) $saved->fit_source;
         $this->cardWidth = (int) ($saved->card_width ?: 440);
@@ -292,7 +303,7 @@ class OverlaySettingsPanel extends Component
     private function snapshot(?OverlaySetting $saved = null): array
     {
         return $saved
-            ? [strtoupper($saved->accent_color), (int) $saved->font_scale, (int) $saved->max_players, (bool) $saved->show_now_playing, (bool) $saved->transparent_mode, (bool) $saved->censor_names, $saved->show_score === null ? true : (bool) $saved->show_score, $saved->show_packages === null ? true : (bool) $saved->show_packages, $saved->layout === 'horizontal' ? 'horizontal' : 'vertical', (int) ($saved->card_width ?: 440), $saved->card_height ? (int) $saved->card_height : null, $saved->fit_source === null ? true : (bool) $saved->fit_source, strtoupper($saved->background_color ?: '#FFFFFF'), (int) ($saved->background_dim ?? 35)]
-            : [strtoupper($this->accentColor), $this->fontScale, $this->maxPlayers, $this->showNowPlaying, $this->transparentMode, $this->censorNames, $this->showScore, $this->showPackages, $this->layout, $this->cardWidth, $this->autoHeight ? null : $this->cardHeight, $this->fitSource, strtoupper($this->backgroundColor), $this->backgroundDim];
+            ? [strtoupper($saved->accent_color), (int) $saved->font_scale, (int) $saved->max_players, (bool) $saved->show_now_playing, (bool) $saved->transparent_mode, (bool) $saved->censor_names, $saved->show_score === null ? true : (bool) $saved->show_score, $saved->show_packages === null ? true : (bool) $saved->show_packages, $saved->layout === 'horizontal' ? 'horizontal' : 'vertical', (int) ($saved->card_width ?: 440), $saved->card_height ? (int) $saved->card_height : null, $saved->fit_source === null ? true : (bool) $saved->fit_source, strtoupper($saved->background_color ?: '#FFFFFF'), (int) ($saved->background_dim ?? 35), $saved->obs_auto_start === null ? true : (bool) $saved->obs_auto_start, (bool) $saved->obs_auto_end]
+            : [strtoupper($this->accentColor), $this->fontScale, $this->maxPlayers, $this->showNowPlaying, $this->transparentMode, $this->censorNames, $this->showScore, $this->showPackages, $this->layout, $this->cardWidth, $this->autoHeight ? null : $this->cardHeight, $this->fitSource, strtoupper($this->backgroundColor), $this->backgroundDim, $this->obsAutoStart, $this->obsAutoEnd];
     }
 }

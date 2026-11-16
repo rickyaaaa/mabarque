@@ -464,3 +464,5 @@ body.ui-v2 .bg-image-actions .button { display: inline-flex; align-items: center
   .ui-v2 .qb-turn-score { padding: 0 12px 12px; }
   .ui-v2 .qb-turn-score .qb-score-grid { flex: 1 1 100%; }
 }
+
+body.ui-v2 .control-group-title { margin: 22px 0 4px; padding-top: 16px; border-top: 2px solid var(--v-rule); font-size: 15px; font-weight: 800; letter-spacing: -.01em; }

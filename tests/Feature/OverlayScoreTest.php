@@ -171,6 +171,32 @@ class OverlayScoreTest extends TestCase
         $this->getJson("/api/overlay/{$token}")->assertJsonPath('data.overlay_settings.background_image_url', null);
     }
 
+    public function test_obs_streaming_events_start_and_optionally_end_the_live_session(): void
+    {
+        $token = app(OverlayTokenService::class)->current($this->owner);
+        $this->postJson("/api/overlay/{$token}/obs", ['event' => 'started'])->assertCreated()->assertJsonPath('data.action', 'started');
+        $session = $this->owner->liveSessions()->active()->sole();
+
+        // Sudah live: tidak membuat sesi baru.
+        $this->postJson("/api/overlay/{$token}/obs", ['event' => 'started'])->assertOk()->assertJsonPath('data.action', 'already_live');
+        $this->assertSame(1, $this->owner->liveSessions()->active()->count());
+
+        // Akhiri otomatis mati secara bawaan.
+        $this->postJson("/api/overlay/{$token}/obs", ['event' => 'stopped'])->assertJsonPath('data.action', 'disabled');
+        $this->assertSame('active', $session->refresh()->status);
+
+        Livewire::test(OverlaySettingsPanel::class)->set('obsAutoEnd', true)->call('save')->assertHasNoErrors();
+        $this->postJson("/api/overlay/{$token}/obs", ['event' => 'stopped'])->assertJsonPath('data.action', 'ended');
+        $this->assertSame('ended', $session->refresh()->status);
+
+        Livewire::test(OverlaySettingsPanel::class)->set('obsAutoStart', false)->call('save');
+        $this->postJson("/api/overlay/{$token}/obs", ['event' => 'started'])->assertJsonPath('data.action', 'disabled');
+        $this->assertSame(0, $this->owner->liveSessions()->active()->count());
+
+        $this->postJson('/api/overlay/'.str_repeat('x', 40).'/obs', ['event' => 'started'])->assertNotFound();
+        $this->postJson("/api/overlay/{$token}/obs", ['event' => 'hapus'])->assertUnprocessable();
+    }
+
     public function test_overlay_follows_browser_source_size_by_default(): void
     {
         $token = app(OverlayTokenService::class)->current($this->owner);

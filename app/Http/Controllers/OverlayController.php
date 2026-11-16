@@ -7,7 +7,9 @@ use App\Services\OverlayTokenService;
 use App\Services\PublicQueueService;
 use App\Services\VipPackageService;
 use Illuminate\Contracts\View\View;
+use App\Services\LiveSessionService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -16,6 +18,7 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
  * GET /o/{token}          halaman browser source
  * GET /api/overlay/{token} data antrean + pengaturan tampilan (dipoll halaman overlay)
  * GET /o/{token}/bg/{file} gambar latar overlay yang diunggah streamer
+ * POST /api/overlay/{token}/obs event OBS (mulai/berhenti streaming) → sesi live ikut mulai/berakhir
  */
 class OverlayController extends Controller
 {
@@ -36,6 +39,49 @@ class OverlayController extends Controller
         abort_if($overlayToken === null, 404);
 
         return view('pages.overlay', ['token' => $token, 'initial' => $this->payload($overlayToken->user, $publicQueueService, $token)]);
+    }
+
+    /**
+     * OBS mulai streaming → sesi live dimulai (bila belum ada yang berjalan). OBS berhenti → sesi diakhiri,
+     * hanya bila streamer mengaktifkan "akhiri otomatis". Keduanya bisa dimatikan di pengaturan overlay.
+     */
+    public function obsEvent(Request $request, string $token, OverlayTokenService $tokenService, LiveSessionService $sessions): JsonResponse
+    {
+        $user = $tokenService->resolve($token)?->user;
+
+        if ($user === null || ! $user->hasActiveBeta()) {
+            return response()->json(['message' => 'Overlay token tidak valid.'], 404);
+        }
+
+        $event = $request->validate(['event' => ['required', 'in:started,stopped']])['event'];
+        $settings = $user->overlaySetting;
+        $active = $user->liveSessions()->active()->latest('started_at')->first();
+
+        if ($event === 'started') {
+            if (! ($settings->obs_auto_start ?? true)) {
+                return response()->json(['data' => ['action' => 'disabled']]);
+            }
+
+            if ($active !== null) {
+                return response()->json(['data' => ['action' => 'already_live', 'session' => $active->title]]);
+            }
+
+            $session = $sessions->start($user, 'Mabar VIP '.now()->translatedFormat('l, j F'));
+
+            return response()->json(['data' => ['action' => 'started', 'session' => $session->title]], 201);
+        }
+
+        if (! ($settings->obs_auto_end ?? false)) {
+            return response()->json(['data' => ['action' => 'disabled']]);
+        }
+
+        if ($active === null) {
+            return response()->json(['data' => ['action' => 'not_live']]);
+        }
+
+        $sessions->end($user, $active);
+
+        return response()->json(['data' => ['action' => 'ended', 'session' => $active->title]]);
     }
 
     /** Gambar latar: hanya file yang sedang dipakai streamer pemilik token (nama file acak, jadi aman di-cache). */

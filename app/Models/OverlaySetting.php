@@ -28,6 +28,8 @@ class OverlaySetting extends Model
         'background_color',
         'background_image',
         'background_dim',
+        'obs_auto_start',
+        'obs_auto_end',
     ];
 
     protected $casts = [
@@ -42,5 +44,7 @@ class OverlaySetting extends Model
         'card_height' => 'integer',
         'fit_source' => 'boolean',
         'background_dim' => 'integer',
+        'obs_auto_start' => 'boolean',
+        'obs_auto_end' => 'boolean',
     ];
 }

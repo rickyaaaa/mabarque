@@ -131,6 +131,19 @@
                 <span><strong>Tampilkan harga paket VIP</strong><small>Paket aktif tampil di bawah overlay, mis. 25K · 2 game.</small></span>
             </label>
 
+            <h3 class="control-group-title">Sinkron dengan OBS</h3>
+            <label class="switch-control">
+                <input type="checkbox" wire:model.live="obsAutoStart" />
+                <span class="switch-track"></span>
+                <span><strong>Mulai sesi otomatis saat OBS mulai streaming</strong><small>Klik "Start Streaming" di OBS, sesi live di MabarQueue ikut dimulai — tidak perlu klik dua kali. Kalau sesi sudah berjalan, tidak ada yang berubah.</small></span>
+            </label>
+            <label class="switch-control">
+                <input type="checkbox" wire:model.live="obsAutoEnd" />
+                <span class="switch-track"></span>
+                <span><strong>Akhiri sesi otomatis saat OBS berhenti streaming</strong><small>Sisa game pemain tetap tersimpan untuk sesi berikutnya. Biarkan mati kalau kamu sering stop/start stream di tengah sesi.</small></span>
+            </label>
+            <p class="size-help">Syarat: overlay ini sudah dipasang sebagai Browser Source di OBS, dan opsi <strong>"Shutdown source when not visible"</strong> tidak dicentang (atau overlay ada di scene yang sedang tampil).</p>
+
             <div class="score-control">
                 <div>
                     <strong>Skor sesi ini</strong>
