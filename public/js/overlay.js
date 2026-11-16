@@ -116,10 +116,20 @@
     card.classList.toggle("is-dark", (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 < 0.55);
   }
 
+  // Versi tampilan saat halaman dimuat. OBS tidak pernah memuat ulang browser source sendiri, jadi setelah
+  // deploy halaman memuat ulang dirinya supaya CSS/JS baru terpakai.
+  const loadedVersion = (window.__OVERLAY__ || {}).version;
+
   async function poll() {
     try {
       const response = await fetch(`/api/overlay/${encodeURIComponent(token)}`, { headers: { Accept: "application/json" }, cache: "no-store" });
-      if (response.ok) render((await response.json()).data);
+      if (!response.ok) return;
+      const data = (await response.json()).data;
+      if (loadedVersion && data.version && data.version !== loadedVersion) {
+        window.location.reload();
+        return;
+      }
+      render(data);
     } catch (error) {
       // Jaringan putus sebentar: biarkan tampilan terakhir, coba lagi di siklus berikutnya.
     }

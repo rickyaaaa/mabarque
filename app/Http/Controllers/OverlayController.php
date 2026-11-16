@@ -95,6 +95,11 @@ class OverlayController extends Controller
         return response()->file(Storage::disk('local')->path($path), ['Cache-Control' => 'public, max-age=604800, immutable']);
     }
 
+    public static function assetVersion(): string
+    {
+        return \App\Support\Asset::version(['css/overlay.css', 'js/overlay.js']);
+    }
+
     public static function backgroundUrl(string $token, ?string $path): ?string
     {
         return $path ? route('overlay.background', ['token' => $token, 'file' => basename($path)]) : null;
@@ -120,6 +125,9 @@ class OverlayController extends Controller
         $live = $user->liveSessions()->active()->latest('started_at')->first();
 
         return [
+            // Versi tampilan overlay: browser source OBS memuat halaman sekali saja, jadi halaman memuat ulang
+            // sendiri bila versi ini berubah setelah deploy (tanpa streamer klik "Refresh cache").
+            'version' => self::assetVersion(),
             'channel_name' => $user->channel_name,
             'overlay_settings' => [
                 'accent_color' => $settings->accent_color ?? '#C5F02E',

@@ -172,6 +172,16 @@ class OverlayScoreTest extends TestCase
         $this->getJson("/api/overlay/{$token}")->assertJsonPath('data.overlay_settings.background_image_url', null);
     }
 
+    public function test_overlay_payload_carries_asset_version_for_self_reload(): void
+    {
+        $token = app(OverlayTokenService::class)->current($this->owner);
+        $version = OverlayController::assetVersion();
+
+        $this->assertMatchesRegularExpression('/^[0-9a-f]{12}$/', $version);
+        $this->getJson("/api/overlay/{$token}")->assertJsonPath('data.version', $version);
+        $this->get("/o/{$token}")->assertOk()->assertSee('"version":"'.$version.'"', false);
+    }
+
     public function test_obs_streaming_events_start_and_optionally_end_the_live_session(): void
     {
         $token = app(OverlayTokenService::class)->current($this->owner);

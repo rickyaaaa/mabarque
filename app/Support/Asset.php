@@ -18,4 +18,10 @@ final class Asset
     {
         return self::$urls[$path] ??= asset($path).(is_file($file = public_path($path)) ? '?v='.filemtime($file) : '');
     }
+
+    /** Penanda versi gabungan beberapa file (mis. CSS + JS overlay) — berubah setiap kali salah satunya di-deploy. */
+    public static function version(array $paths): string
+    {
+        return substr(md5(implode('|', array_map(fn (string $path) => is_file($file = public_path($path)) ? filemtime($file) : 0, $paths))), 0, 12);
+    }
 }
