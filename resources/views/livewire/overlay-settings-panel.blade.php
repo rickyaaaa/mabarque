@@ -1,5 +1,6 @@
 @php
     $accent = preg_match('/^#[0-9A-Fa-f]{6}$/', $accentColor) ? $accentColor : '#C5F02E';
+    $background = preg_match('/^#[0-9A-Fa-f]{6}$/', $backgroundColor) ? $backgroundColor : '#FFFFFF';
     $providerLabels = ['manual' => 'Manual', 'saweria' => 'Saweria', 'sociabuzz' => 'SociaBuzz', 'trakteer' => 'Trakteer'];
 @endphp
 
@@ -21,12 +22,47 @@
                 <span class="save-status" role="status">{{ $dirty ? 'Ada perubahan belum disimpan' : 'Tersimpan' }}</span>
             </div>
 
-            <label class="control-label" for="accent-color">Warna aksen</label>
+            <label class="control-label" for="accent-color">Warna aksen <span class="control-hint">(label VIP, now playing, skor Win)</span></label>
             <div class="color-control">
                 <input id="accent-color" type="color" wire:model.live="accentColor" value="{{ $accent }}" />
                 <input class="field-input @error('accentColor') is-invalid @enderror" wire:model.live.debounce.400ms="accentColor" maxlength="7" aria-label="Kode warna aksen" />
             </div>
             @error('accentColor') <p class="form-error" role="alert">{{ $message }}</p> @enderror
+
+            <label class="control-label" for="background-color">Warna latar <span class="control-hint">(kotak overlay; teks otomatis putih di latar gelap)</span></label>
+            <div class="color-control">
+                <input id="background-color" type="color" wire:model.live="backgroundColor" value="{{ $background }}" />
+                <input class="field-input @error('backgroundColor') is-invalid @enderror" wire:model.live.debounce.400ms="backgroundColor" maxlength="7" aria-label="Kode warna latar" />
+            </div>
+            <div class="color-swatches" role="group" aria-label="Warna latar siap pakai">
+                @foreach (['#FFFFFF' => 'Putih', '#111111' => 'Hitam', '#1F2A44' => 'Navy', '#3B1F5C' => 'Ungu', '#0F3D2E' => 'Hijau tua', '#5C1A1A' => 'Merah tua'] as $hex => $name)
+                    <button type="button" @class(['color-swatch', 'is-active' => strtoupper($background) === $hex]) style="background: {{ $hex }}" wire:click="$set('backgroundColor', '{{ $hex }}')" aria-label="{{ $name }}" title="{{ $name }}"></button>
+                @endforeach
+            </div>
+            @error('backgroundColor') <p class="form-error" role="alert">{{ $message }}</p> @enderror
+
+            <label class="control-label" for="background-upload">Gambar latar <span class="control-hint">(opsional · JPG, PNG, WEBP, GIF · maks 5 MB)</span></label>
+            <div class="bg-image-control">
+                @if ($backgroundImageUrl)
+                    <img class="bg-image-thumb" src="{{ $backgroundImageUrl }}" alt="Gambar latar overlay saat ini" />
+                @endif
+                <div class="bg-image-actions">
+                    <label class="button button-outline bg-image-pick" for="background-upload">
+                        @include('partials.icon', ['name' => 'plus', 'size' => 16]) {{ $backgroundImageUrl ? 'Ganti gambar' : 'Pilih gambar' }}
+                    </label>
+                    <input id="background-upload" class="sr-only" type="file" accept="image/jpeg,image/png,image/webp,image/gif" wire:model="backgroundUpload" />
+                    @if ($backgroundImageUrl)
+                        <button class="button button-outline" type="button" wire:click="removeBackgroundImage" wire:confirm="Hapus gambar latar overlay?">@include('partials.icon', ['name' => 'trash', 'size' => 16]) Hapus</button>
+                    @endif
+                </div>
+                <p class="size-help" wire:loading wire:target="backgroundUpload">Mengunggah gambar…</p>
+            </div>
+            @error('backgroundUpload') <p class="form-error" role="alert">{{ $message }}</p> @enderror
+            @if ($backgroundImageUrl)
+                <label class="control-label" for="background-dim">Lapisan warna di atas gambar <output>{{ $backgroundDim }}%</output></label>
+                <input id="background-dim" type="range" min="0" max="90" step="5" wire:model.live="backgroundDim" />
+                <p class="size-help">Makin besar, gambar makin tertutup warna latar dan teks makin mudah dibaca.</p>
+            @endif
 
             <label class="control-label">Bentuk &amp; ukuran</label>
             <div class="layout-toggle size-mode" role="radiogroup" aria-label="Cara mengatur ukuran">

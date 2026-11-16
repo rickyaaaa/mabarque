@@ -444,3 +444,13 @@ body.ui-v2 .admin-pagination { color: var(--v-muted); }
 }
 
 body.ui-v2 .modal-help.is-warning { margin-top: 8px; padding: 10px 12px; color: var(--v-ink); background: var(--v-warn-soft); border: 2px solid var(--v-line); }
+
+/* Pengaturan overlay: warna latar siap pakai & gambar latar */
+body.ui-v2 .color-swatches { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+body.ui-v2 .color-swatch { width: 30px; height: 30px; padding: 0; border: 2px solid var(--v-line); cursor: pointer; transition: transform 120ms ease, box-shadow 120ms ease; }
+body.ui-v2 .color-swatch:hover { transform: translate(-1px, -1px); box-shadow: var(--v-shadow-sm); }
+body.ui-v2 .color-swatch.is-active { outline: 3px solid var(--v-accent); outline-offset: 2px; }
+body.ui-v2 .bg-image-control { display: grid; gap: 8px; }
+body.ui-v2 .bg-image-thumb { display: block; width: 100%; max-height: 140px; object-fit: cover; border: 2px solid var(--v-line); }
+body.ui-v2 .bg-image-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+body.ui-v2 .bg-image-actions .button { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }

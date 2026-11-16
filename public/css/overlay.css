@@ -9,6 +9,12 @@ body.overlay-body.is-transparent { background: transparent; }
 
 .overlay-card { width: 440px; max-width: 100%; overflow: hidden; padding: 1em; color: var(--ink); background: var(--panel); border: 3px solid var(--ink); box-shadow: 6px 6px 0 var(--ink); }
 .overlay-card.is-offline { opacity: .9; }
+/* Latar pilihan streamer (warna / gambar diatur dari JS). Teks langsung di atas latar ikut terang bila latarnya gelap. */
+.overlay-card { background-position: center; background-size: cover; background-repeat: no-repeat; }
+.overlay-card.is-dark { color: #fff; }
+.overlay-card.is-dark .overlay-empty { color: #e4e3dc; }
+.overlay-card.has-image .overlay-brand > span { text-shadow: 0 1px 2px rgba(0, 0, 0, .35); }
+.overlay-card.has-image:not(.is-dark) .overlay-brand > span { text-shadow: 0 1px 2px rgba(255, 255, 255, .5); }
 .overlay-brand { display: flex; align-items: center; gap: .4em; min-width: 0; margin-bottom: .8em; font-size: 1.25em; font-weight: 900; letter-spacing: -.03em; line-height: 1; white-space: nowrap; }
 .overlay-brand > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .overlay-brand em { flex: none; padding: .18em .4em; color: var(--ink); background: var(--accent); border: 2px solid var(--ink); font-size: .55em; font-style: normal; font-weight: 900; letter-spacing: .06em; }
@@ -19,7 +25,7 @@ body.overlay-body.is-transparent { background: transparent; }
 .overlay-now strong { display: -webkit-box; margin: .25em 0 .2em; overflow: hidden; font-size: 1.45em; font-weight: 900; line-height: 1.1; letter-spacing: -.03em; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 
 .overlay-queue { display: grid; gap: .35em; margin: .7em 0 0; padding: 0; list-style: none; }
-.overlay-entry { display: flex; align-items: center; justify-content: space-between; gap: .6em; padding: .4em .55em; background: var(--panel); border: 2px solid var(--ink); font-size: .82em; font-weight: 700; }
+.overlay-entry { display: flex; align-items: center; justify-content: space-between; gap: .6em; padding: .4em .55em; color: var(--ink); background: var(--panel); border: 2px solid var(--ink); font-size: .82em; font-weight: 700; }
 .overlay-entry-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .overlay-entry-left { flex: 0 0 auto; padding: .1em .4em; color: #fff; background: var(--dark); font-size: .85em; font-weight: 800; font-variant-numeric: tabular-nums; }
 .overlay-empty { margin: .7em 0 0; color: var(--muted); font-size: .82em; font-weight: 700; }

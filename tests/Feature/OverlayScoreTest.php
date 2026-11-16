@@ -137,6 +137,40 @@ class OverlayScoreTest extends TestCase
         $panel->set('maxPlayers', 31)->call('save')->assertHasErrors(['maxPlayers']);
     }
 
+    public function test_overlay_background_color_and_image_can_be_customized(): void
+    {
+        \Illuminate\Support\Facades\Storage::fake('local');
+        $token = app(OverlayTokenService::class)->current($this->owner);
+        $this->getJson("/api/overlay/{$token}")
+            ->assertJsonPath('data.overlay_settings.background_color', null)
+            ->assertJsonPath('data.overlay_settings.background_image_url', null);
+
+        $panel = Livewire::test(OverlaySettingsPanel::class)
+            ->set('backgroundColor', '#1f2a44')
+            ->assertSee('bg=1f2a44', false)
+            ->call('save')->assertHasNoErrors();
+        $this->getJson("/api/overlay/{$token}")->assertJsonPath('data.overlay_settings.background_color', '#1F2A44');
+        $panel->set('backgroundColor', 'biru')->call('save')->assertHasErrors(['backgroundColor']);
+
+        // Gambar langsung tersimpan dan bisa dibuka lewat link overlay.
+        $panel->set('backgroundColor', '#1F2A44')
+            ->set('backgroundUpload', \Illuminate\Http\UploadedFile::fake()->image('latar.png', 800, 400))
+            ->assertHasNoErrors();
+        $path = $this->owner->overlaySetting()->first()->background_image;
+        \Illuminate\Support\Facades\Storage::disk('local')->assertExists($path);
+        $url = $this->getJson("/api/overlay/{$token}")->json('data.overlay_settings.background_image_url');
+        $this->assertStringContainsString('/o/'.$token.'/bg/', $url);
+        $this->get(parse_url($url, PHP_URL_PATH))->assertOk();
+        $this->get('/o/'.$token.'/bg/bukan-punya-kamu.png')->assertNotFound();
+
+        $panel->set('backgroundUpload', \Illuminate\Http\UploadedFile::fake()->create('virus.pdf', 10, 'application/pdf'))
+            ->assertHasErrors(['backgroundUpload']);
+
+        $panel->call('removeBackgroundImage');
+        \Illuminate\Support\Facades\Storage::disk('local')->assertMissing($path);
+        $this->getJson("/api/overlay/{$token}")->assertJsonPath('data.overlay_settings.background_image_url', null);
+    }
+
     public function test_overlay_follows_browser_source_size_by_default(): void
     {
         $token = app(OverlayTokenService::class)->current($this->owner);

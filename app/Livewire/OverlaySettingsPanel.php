@@ -2,16 +2,25 @@
 
 namespace App\Livewire;
 
+use App\Http\Controllers\OverlayController;
 use App\Models\OverlaySetting;
 use App\Services\OverlayTokenService;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 /**
- * Pengaturan overlay OBS (/overlay-settings): warna aksen, ukuran huruf, jumlah pemain, now playing,
+ * Pengaturan overlay OBS (/overlay-settings): warna aksen, warna/gambar latar, ukuran huruf, jumlah pemain, now playing,
  * mode transparan — dengan pratinjau langsung dari antrean asli dan link browser source.
  */
 class OverlaySettingsPanel extends Component
 {
+    use WithFileUploads;
+
+    /** Batas ukuran gambar latar (KB). */
+    public const MAX_IMAGE_KB = 5120;
+
     /** Jumlah pemain antrean yang tampil di overlay: bebas diatur streamer dalam rentang ini. */
     public const MIN_PLAYERS = 1;
 
@@ -21,6 +30,15 @@ class OverlaySettingsPanel extends Component
     public const FRAME_PADDING = 40;
 
     public string $accentColor = '#C5F02E';
+
+    /** Warna latar kartu overlay (putih bawaan). */
+    public string $backgroundColor = '#FFFFFF';
+
+    /** Tebal lapisan warna latar di atas gambar latar, 0–90%. */
+    public int $backgroundDim = 35;
+
+    /** Gambar latar yang baru dipilih (langsung diunggah & disimpan). */
+    public $backgroundUpload = null;
 
     public int $fontScale = 100;
 
@@ -56,9 +74,12 @@ class OverlaySettingsPanel extends Component
     public function save(): void
     {
         $this->accentColor = strtoupper(trim($this->accentColor));
+        $this->backgroundColor = strtoupper(trim($this->backgroundColor));
 
         $validated = $this->validate([
             'accentColor' => ['required', 'regex:/^#[0-9A-F]{6}$/'],
+            'backgroundColor' => ['required', 'regex:/^#[0-9A-F]{6}$/'],
+            'backgroundDim' => ['required', 'integer', 'between:0,90'],
             'fontScale' => ['required', 'integer', 'between:60,200'],
             'maxPlayers' => ['required', 'integer', 'between:'.self::MIN_PLAYERS.','.self::MAX_PLAYERS],
             'showNowPlaying' => ['boolean'],
@@ -71,10 +92,12 @@ class OverlaySettingsPanel extends Component
             'cardWidth' => ['required', 'integer', 'between:240,1920'],
             'autoHeight' => ['boolean'],
             'cardHeight' => ['required', 'integer', 'between:80,1080'],
-        ], ['accentColor.regex' => 'Warna harus kode hex 6 digit, contoh #D82A1C.'], ['cardWidth' => 'lebar', 'cardHeight' => 'tinggi']);
+        ], ['accentColor.regex' => 'Warna harus kode hex 6 digit, contoh #D82A1C.', 'backgroundColor.regex' => 'Warna latar harus kode hex 6 digit, contoh #111111.'], ['cardWidth' => 'lebar', 'cardHeight' => 'tinggi', 'backgroundDim' => 'lapisan warna']);
 
         auth()->user()->overlaySetting()->updateOrCreate(['user_id' => auth()->id()], [
             'accent_color' => $validated['accentColor'],
+            'background_color' => $validated['backgroundColor'] === '#FFFFFF' ? null : $validated['backgroundColor'],
+            'background_dim' => $validated['backgroundDim'],
             'font_scale' => $validated['fontScale'],
             'max_players' => $validated['maxPlayers'],
             'show_now_playing' => $validated['showNowPlaying'],
@@ -89,6 +112,47 @@ class OverlaySettingsPanel extends Component
         ]);
 
         $this->dispatch('notify', message: 'Pengaturan overlay disimpan. OBS memperbarui tampilan dalam beberapa detik.');
+    }
+
+    /** Gambar latar langsung disimpan begitu dipilih (file lama dihapus). */
+    public function updatedBackgroundUpload(): void
+    {
+        $this->validate(
+            ['backgroundUpload' => ['required', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:'.self::MAX_IMAGE_KB]],
+            ['backgroundUpload.max' => 'Gambar maksimal 5 MB.', 'backgroundUpload.mimes' => 'Format gambar harus JPG, PNG, WEBP, atau GIF.', 'backgroundUpload.image' => 'File harus berupa gambar.'],
+        );
+
+        $user = auth()->user();
+        $extension = strtolower($this->backgroundUpload->guessExtension() ?: $this->backgroundUpload->getClientOriginalExtension());
+        $extension = in_array($extension, ['jpg', 'jpeg', 'png', 'webp', 'gif'], true) ? $extension : 'png';
+        $path = $this->backgroundUpload->storeAs('overlay-backgrounds', $user->id.'-'.Str::lower(Str::random(20)).'.'.$extension, 'local');
+
+        $settings = $this->settingsRow();
+        $old = $settings->background_image;
+        $settings->update(['background_image' => $path]);
+
+        if ($old && $old !== $path) {
+            Storage::disk('local')->delete($old);
+        }
+
+        $this->backgroundUpload = null;
+        $this->dispatch('notify', message: 'Gambar latar dipasang. OBS memperbarui tampilan dalam beberapa detik.');
+    }
+
+    public function removeBackgroundImage(): void
+    {
+        $settings = auth()->user()->overlaySetting()->first();
+
+        if ($settings?->background_image) {
+            Storage::disk('local')->delete($settings->background_image);
+            $settings->update(['background_image' => null]);
+            $this->dispatch('notify', message: 'Gambar latar dihapus.');
+        }
+    }
+
+    private function settingsRow(): OverlaySetting
+    {
+        return auth()->user()->overlaySetting()->firstOrCreate(['user_id' => auth()->id()], ['accent_color' => '#C5F02E']);
     }
 
     public function resetToSaved(): void
@@ -136,6 +200,7 @@ class OverlaySettingsPanel extends Component
             'dirty' => $saved === null || $this->snapshot() !== $this->snapshot($saved),
             'preview' => $this->previewFrame($tokens->url($tokens->current($user))),
             'channelName' => $user->channel_name,
+            'backgroundImageUrl' => OverlayController::backgroundUrl($tokens->current($user), $saved?->background_image),
         ]);
     }
 
@@ -146,6 +211,8 @@ class OverlaySettingsPanel extends Component
         ]);
 
         $this->accentColor = strtoupper($saved->accent_color ?: '#C5F02E');
+        $this->backgroundColor = strtoupper($saved->background_color ?: '#FFFFFF');
+        $this->backgroundDim = (int) ($saved->background_dim ?? 35);
         $this->fontScale = (int) $saved->font_scale;
         $this->maxPlayers = max(self::MIN_PLAYERS, min(self::MAX_PLAYERS, (int) ($saved->max_players ?: 5)));
         $this->showNowPlaying = (bool) $saved->show_now_playing;
@@ -200,6 +267,8 @@ class OverlaySettingsPanel extends Component
             'w' => $width,
             'h' => $height ?? 'auto',
             'accent' => ltrim(preg_match('/^#[0-9A-Fa-f]{6}$/', $this->accentColor) ? $this->accentColor : '#C5F02E', '#'),
+            'bg' => ltrim(preg_match('/^#[0-9A-Fa-f]{6}$/', $this->backgroundColor) ? $this->backgroundColor : '#FFFFFF', '#'),
+            'dim' => max(0, min(90, $this->backgroundDim)),
             'scale' => max(60, min(200, $this->fontScale)),
             'players' => max(self::MIN_PLAYERS, min(self::MAX_PLAYERS, $this->maxPlayers)),
             'now' => (int) $this->showNowPlaying,
@@ -223,7 +292,7 @@ class OverlaySettingsPanel extends Component
     private function snapshot(?OverlaySetting $saved = null): array
     {
         return $saved
-            ? [strtoupper($saved->accent_color), (int) $saved->font_scale, (int) $saved->max_players, (bool) $saved->show_now_playing, (bool) $saved->transparent_mode, (bool) $saved->censor_names, $saved->show_score === null ? true : (bool) $saved->show_score, $saved->show_packages === null ? true : (bool) $saved->show_packages, $saved->layout === 'horizontal' ? 'horizontal' : 'vertical', (int) ($saved->card_width ?: 440), $saved->card_height ? (int) $saved->card_height : null, $saved->fit_source === null ? true : (bool) $saved->fit_source]
-            : [strtoupper($this->accentColor), $this->fontScale, $this->maxPlayers, $this->showNowPlaying, $this->transparentMode, $this->censorNames, $this->showScore, $this->showPackages, $this->layout, $this->cardWidth, $this->autoHeight ? null : $this->cardHeight, $this->fitSource];
+            ? [strtoupper($saved->accent_color), (int) $saved->font_scale, (int) $saved->max_players, (bool) $saved->show_now_playing, (bool) $saved->transparent_mode, (bool) $saved->censor_names, $saved->show_score === null ? true : (bool) $saved->show_score, $saved->show_packages === null ? true : (bool) $saved->show_packages, $saved->layout === 'horizontal' ? 'horizontal' : 'vertical', (int) ($saved->card_width ?: 440), $saved->card_height ? (int) $saved->card_height : null, $saved->fit_source === null ? true : (bool) $saved->fit_source, strtoupper($saved->background_color ?: '#FFFFFF'), (int) ($saved->background_dim ?? 35)]
+            : [strtoupper($this->accentColor), $this->fontScale, $this->maxPlayers, $this->showNowPlaying, $this->transparentMode, $this->censorNames, $this->showScore, $this->showPackages, $this->layout, $this->cardWidth, $this->autoHeight ? null : $this->cardHeight, $this->fitSource, strtoupper($this->backgroundColor), $this->backgroundDim];
     }
 }

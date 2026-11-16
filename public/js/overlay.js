@@ -26,6 +26,8 @@
     card_width: Number(params.get("w")) || undefined,
     card_height: params.get("h") === "auto" ? null : (Number(params.get("h")) || undefined),
     accent_color: params.get("accent") ? `#${params.get("accent")}` : undefined,
+    background_color: params.get("bg") ? `#${params.get("bg")}` : undefined,
+    background_dim: params.has("dim") ? Number(params.get("dim")) : undefined,
     font_scale: Number(params.get("scale")) || undefined,
     max_players: Number(params.get("players")) || undefined,
     show_now_playing: params.has("now") ? params.get("now") === "1" : undefined,
@@ -42,6 +44,7 @@
     const accent = /^#[0-9a-f]{6}$/i.test(settings.accent_color || "") ? settings.accent_color : "#C5F02E";
 
     document.documentElement.style.setProperty("--accent", accent);
+    applyBackground(settings);
     document.documentElement.style.setProperty("--scale", String((settings.font_scale || 100) / 100));
     document.body.classList.toggle("is-transparent", settings.transparent_mode !== false);
 
@@ -95,6 +98,22 @@
     empty.hidden = upcoming.length > 0;
     empty.textContent = queue.status === "live" ? "Antrean VIP masih kosong" : "Sesi mabar belum dimulai";
     card.classList.toggle("is-offline", queue.status !== "live");
+  }
+
+  // Latar kartu: warna pilihan streamer (+ gambar opsional berlapis warna itu). Teks yang langsung di atas
+  // latar otomatis putih bila latarnya gelap, supaya tetap terbaca.
+  function applyBackground(settings) {
+    const color = /^#[0-9a-f]{6}$/i.test(settings.background_color || "") ? settings.background_color : "#FFFFFF";
+    const [r, g, b] = [1, 3, 5].map((i) => parseInt(color.slice(i, i + 2), 16));
+    const dim = Math.max(0, Math.min(90, Number.isFinite(settings.background_dim) ? settings.background_dim : 35)) / 100;
+    const image = settings.background_image_url;
+
+    card.style.backgroundColor = color;
+    card.style.backgroundImage = image
+      ? `linear-gradient(rgba(${r}, ${g}, ${b}, ${dim}), rgba(${r}, ${g}, ${b}, ${dim})), url("${encodeURI(image)}")`
+      : "";
+    card.classList.toggle("has-image", Boolean(image));
+    card.classList.toggle("is-dark", (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 < 0.55);
   }
 
   async function poll() {

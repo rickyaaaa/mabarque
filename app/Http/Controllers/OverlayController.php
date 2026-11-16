@@ -8,11 +8,14 @@ use App\Services\PublicQueueService;
 use App\Services\VipPackageService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
  * Overlay OBS berbasis token (tanpa login).
  * GET /o/{token}          halaman browser source
  * GET /api/overlay/{token} data antrean + pengaturan tampilan (dipoll halaman overlay)
+ * GET /o/{token}/bg/{file} gambar latar overlay yang diunggah streamer
  */
 class OverlayController extends Controller
 {
@@ -24,7 +27,7 @@ class OverlayController extends Controller
             return response()->json(['message' => 'Overlay token tidak valid.'], 404);
         }
 
-        return response()->json(['data' => $this->payload($overlayToken->user, $publicQueueService)]);
+        return response()->json(['data' => $this->payload($overlayToken->user, $publicQueueService, $token)]);
     }
 
     public function page(string $token, OverlayTokenService $tokenService, PublicQueueService $publicQueueService): View
@@ -32,7 +35,23 @@ class OverlayController extends Controller
         $overlayToken = $tokenService->resolve($token);
         abort_if($overlayToken === null, 404);
 
-        return view('pages.overlay', ['token' => $token, 'initial' => $this->payload($overlayToken->user, $publicQueueService)]);
+        return view('pages.overlay', ['token' => $token, 'initial' => $this->payload($overlayToken->user, $publicQueueService, $token)]);
+    }
+
+    /** Gambar latar: hanya file yang sedang dipakai streamer pemilik token (nama file acak, jadi aman di-cache). */
+    public function background(string $token, string $file, OverlayTokenService $tokenService): BinaryFileResponse
+    {
+        $overlayToken = $tokenService->resolve($token);
+        $path = $overlayToken?->user?->overlaySetting?->background_image;
+
+        abort_if($path === null || basename($path) !== $file || ! Storage::disk('local')->exists($path), 404);
+
+        return response()->file(Storage::disk('local')->path($path), ['Cache-Control' => 'public, max-age=604800, immutable']);
+    }
+
+    public static function backgroundUrl(string $token, ?string $path): ?string
+    {
+        return $path ? route('overlay.background', ['token' => $token, 'file' => basename($path)]) : null;
     }
 
     /** Harga ringkas untuk layar live: 25000 → "25K", 12500 → "12.5K", 1500000 → "1.5JT". */
@@ -48,7 +67,7 @@ class OverlayController extends Controller
     }
 
     /** Hanya data yang aman tampil di layar live: tanpa id internal, email, atau nominal donasi. */
-    private function payload(User $user, PublicQueueService $publicQueueService): array
+    private function payload(User $user, PublicQueueService $publicQueueService, string $token): array
     {
         $settings = $user->overlaySetting;
         $queue = $publicQueueService->forUser($user);
@@ -69,6 +88,10 @@ class OverlayController extends Controller
                 'card_height' => $settings?->card_height ? (int) $settings->card_height : null,
                 // Mengisi penuh Browser Source OBS (default) — ukuran cukup diatur di OBS.
                 'fit_source' => (bool) ($settings->fit_source ?? true),
+                // Latar kartu: warna (null = putih bawaan), gambar opsional, dan tebal lapisan warna di atas gambar.
+                'background_color' => $settings?->background_color,
+                'background_image_url' => self::backgroundUrl($token, $settings?->background_image),
+                'background_dim' => (int) ($settings->background_dim ?? 35),
             ],
             // Skor Win/Lose sesi live yang sedang berjalan (null saat belum live).
             'score' => $live ? ['wins' => (int) $live->wins, 'losses' => (int) $live->losses] : null,
