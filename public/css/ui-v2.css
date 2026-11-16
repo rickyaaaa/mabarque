@@ -31,6 +31,38 @@ body.ui-v2 {
   line-height: 1.4;
 }
 
+/* ── Jembatan ke gaya lama ─────────────────────────────────────────────
+   CSS tiap halaman (live-session, donations, vip-packages, overlay-settings, account, …)
+   memakai token lama. Dipetakan ulang ke palet v2: merah → hitam, oranye → lime,
+   krem/kertas → putih/abu terang, supaya semua halaman ikut tanpa ditulis ulang satu per satu. */
+body.ui-v2 {
+  --paper: var(--v-ground);
+  --paper-light: var(--v-panel);
+  --cream: var(--v-panel);
+  --ink: var(--v-ink);
+  --navy: var(--v-dark);
+  --red: var(--v-dark);
+  --red-dark: var(--v-ink);
+  --orange: var(--v-accent);
+  --green: #2f8f2f;
+  --muted: var(--v-muted);
+  --line: var(--v-line);
+  --shadow: 5px 5px 0 var(--v-line);
+}
+/* Satu keluarga huruf (Inter) di seluruh area kerja; kode & contoh webhook tetap monospace. */
+body.ui-v2 .sidebar *:not(code):not(pre):not(kbd):not(samp),
+body.ui-v2 .main-content *:not(code):not(pre):not(kbd):not(samp),
+body.ui-v2 .modal *:not(code):not(pre):not(kbd):not(samp) { font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif !important; }
+body.ui-v2 h1 { margin-bottom: 6px; font-size: clamp(30px, 3.2vw, 44px); font-weight: 900; line-height: 1.05; letter-spacing: -.035em; }
+body.ui-v2 h2 { font-size: clamp(18px, 1.5vw, 22px); font-weight: 800; line-height: 1.15; letter-spacing: -.02em; }
+body.ui-v2 .eyebrow { display: none; }
+body.ui-v2 .session-meta { color: var(--v-muted); }
+body.ui-v2 a { text-underline-offset: 3px; }
+body.ui-v2 .filter-button { border-width: 2px; font-weight: 700; }
+body.ui-v2 .filter-button.is-active { color: #fff; background: var(--v-dark); }
+body.ui-v2 .button-danger { color: #fff; background: var(--v-danger); }
+body.ui-v2 .button-light { background: var(--v-panel); }
+
 body.ui-v2 ::selection { color: var(--v-ink); background: var(--v-accent); }
 body.ui-v2 * { scrollbar-width: thin; scrollbar-color: var(--v-ink) transparent; }
 body.ui-v2 :focus-visible { outline: 3px solid var(--v-ink); outline-offset: 2px; box-shadow: 0 0 0 6px var(--v-accent); }
@@ -268,6 +300,36 @@ body.ui-v2 .button-outline { background: var(--v-panel); }
 body.ui-v2 .rules-switch input:checked + .switch-track { background: var(--v-accent); }
 body.ui-v2 .rules-switch input:checked + .switch-track::after { background: var(--v-ink); }
 body.ui-v2 .toast { color: #fff; background: var(--v-dark); border: 2px solid var(--v-line); box-shadow: 4px 4px 0 var(--v-accent); font-family: inherit; }
+
+/* ── Halaman lain (Sesi Live, Donasi, Paket, Overlay, Akun) ─────────────
+   Warna yang ditulis langsung di CSS halaman (krem, ungu, pink) diselaraskan ke palet v2. */
+body.ui-v2 .live-queue-panel, body.ui-v2 .session-control-panel, body.ui-v2 .recent-sessions-panel,
+body.ui-v2 .provider-panel, body.ui-v2 .recent-panel, body.ui-v2 .donation-table-wrap,
+body.ui-v2 .overlay-controls, body.ui-v2 .account-panel { background: var(--v-panel); border-width: 3px; box-shadow: var(--v-shadow); }
+body.ui-v2 .donation-table tbody tr:hover { background: var(--v-sunk); }
+body.ui-v2 .donation-status.new { background: var(--v-panel); }
+body.ui-v2 .donation-status.queued, body.ui-v2 .queue-marker { background: var(--v-accent); }
+body.ui-v2 .donation-status.review, body.ui-v2 .queue-marker.is-waiting { background: var(--v-warn); }
+body.ui-v2 .activity-item.is-unread { background: var(--v-accent-soft); }
+body.ui-v2 .notification-pulse { background: var(--v-accent); box-shadow: 0 0 0 3px rgba(197, 240, 46, .35); }
+body.ui-v2 .connection-test, body.ui-v2 .start-session-status { color: var(--v-ink); background: var(--v-accent-soft); }
+body.ui-v2 .control-icon-purple, body.ui-v2 .activity-icon.is-purple { color: #fff; background: var(--v-dark); }
+body.ui-v2 .live-queue-position { display: grid; place-items: center; width: 27px; height: 27px; color: var(--v-accent); background: var(--v-dark); font-size: 12px; font-weight: 800; font-variant-numeric: tabular-nums; }
+/* Angka besar: Inter lebih lebar dari font lama → ukuran disesuaikan supaya tidak patah baris. */
+body.ui-v2 .live-stat strong, body.ui-v2 .donation-stat strong { font-size: clamp(26px, 2.4vw, 38px) !important; font-weight: 900; line-height: 1; letter-spacing: -.03em; white-space: nowrap; font-variant-numeric: tabular-nums; }
+body.ui-v2 .live-stat-red small, body.ui-v2 .live-stat-purple small, body.ui-v2 .donation-stat-purple small, body.ui-v2 .live-hero-main p { color: #c9c8bf; }
+body.ui-v2 .live-hero h2, body.ui-v2 .profile-identity h2 { font-size: clamp(26px, 2.6vw, 36px); line-height: 1.05; }
+body.ui-v2 .profile-avatar { color: var(--v-ink); background: var(--v-accent); }
+body.ui-v2 .profile-identity p, body.ui-v2 .profile-identity small { color: #c9c8bf; }
+/* Label provider (Saweria/SociaBuzz/Trakteer) selalu teks putih selebar isinya, juga di kartu donasi HP. */
+body.ui-v2 .provider-pill { display: inline-flex; width: fit-content; max-width: 100%; color: #fff !important; }
+/* Tombol geser (pengaturan overlay, aturan party) */
+body.ui-v2 .switch-track { background: #e3e2db; }
+body.ui-v2 .switch-control input:checked + .switch-track { background: var(--v-accent); }
+body.ui-v2 .switch-control input:checked + .switch-track::after { background: var(--v-ink); }
+body.ui-v2 .switch-control input:focus-visible + .switch-track { outline: 3px solid var(--v-ink); outline-offset: 2px; }
+/* Tautan lime hanya di panel gelap; di panel terang pakai hitam supaya terbaca. */
+body.ui-v2 .score-control .overlay-link, body.ui-v2 .overlay-controls .overlay-link { color: var(--v-ink); }
 
 /* ── Responsif ─────────────────────────────────────────────────────── */
 @media (max-width: 1280px) {

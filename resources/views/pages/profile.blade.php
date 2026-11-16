@@ -6,10 +6,11 @@
     <meta name="description" content="MabarQueue — atur profil channel yang tampil di halaman publik dan overlay." />
     <title>MabarQueue — Pengaturan Profil</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Agdasima:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Agdasima:wght@400;700&family=Inter:wght@400;500;600;700;800;900&family=Bricolage+Grotesque:opsz,wght@12..96,400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="{{ \App\Support\Asset::url('css/styles.css') }}" /><link rel="stylesheet" href="{{ \App\Support\Asset::url('css/account.css') }}" /><link rel="stylesheet" href="{{ \App\Support\Asset::url('css/profile-settings.css') }}" />
+      <link rel="stylesheet" href="{{ \App\Support\Asset::url('css/ui-v2.css') }}" />
   </head>
-  <body>
+  <body class="ui-v2">
     <div class="app-shell account-shell">
       @include('partials.sidebar', ['active' => 'account'])
 
