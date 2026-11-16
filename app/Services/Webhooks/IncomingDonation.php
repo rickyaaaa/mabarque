@@ -12,6 +12,8 @@ final class IncomingDonation
         public readonly ?string $donorEmail = null,
         public readonly ?string $message = null,
         public readonly ?string $currency = 'IDR',
+        /** Nominal asli bila mata uangnya bukan rupiah (mis. 25 untuk 25 MYR); `amount` tetap rupiah. */
+        public readonly ?float $originalAmount = null,
         /** Payload uji dari dashboard provider (mis. tombol "Send Webhook Test"): tidak masuk antrean. */
         public readonly bool $isTest = false,
     ) {

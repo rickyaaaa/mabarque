@@ -58,7 +58,7 @@
                         <td>{{ $donation->received_at?->format('H:i') }} WIB<br /><small>{{ $donation->received_at?->translatedFormat('j M') }}</small></td>
                         <td><div class="donor-cell"><span class="avatar" style="background: {{ $avatarColors[$donation->id % 6] }}">{{ $initials($donation->donor_name) }}</span><div><strong>{{ $donation->donor_name }}</strong><small>{{ $donation->queueEntry ? 'Posisi #'.$donation->queueEntry->position : ($donation->message ? '“'.\Illuminate\Support\Str::limit($donation->message, 40).'”' : '—') }}</small></div></div></td>
                         <td><span class="provider-pill {{ $donation->provider }}">{{ $providerLabels[$donation->provider] ?? $donation->provider }}</span></td>
-                        <td class="donation-amount">{{ $rupiah($donation->amount) }}</td>
+                        <td class="donation-amount">{{ $donation->amountLabel() }}</td>
                         <td>{{ $donation->vipPackage?->name ?? '—' }}</td>
                         <td><span class="donation-status {{ $statusClass[$donation->status] ?? 'new' }}">{{ $statusLabels[$donation->status] ?? $donation->status }}</span></td>
                         <td><span class="donation-actions">@include('livewire.partials.donation-actions', ['donation' => $donation])</span></td>
@@ -71,7 +71,7 @@
             @foreach ($donations as $donation)
                 <article class="donation-card" wire:key="donation-card-{{ $donation->id }}">
                     <div class="donation-card-head"><div class="donor-cell"><span class="avatar" style="background: {{ $avatarColors[$donation->id % 6] }}">{{ $initials($donation->donor_name) }}</span><div><strong>{{ $donation->donor_name }}</strong><small>{{ $donation->received_at?->format('H:i') }} WIB</small></div></div><span class="donation-status {{ $statusClass[$donation->status] ?? 'new' }}">{{ $statusLabels[$donation->status] ?? $donation->status }}</span></div>
-                    <div class="donation-card-meta"><span class="provider-pill {{ $donation->provider }}">{{ $providerLabels[$donation->provider] ?? $donation->provider }}</span><strong>{{ $rupiah($donation->amount) }}</strong><span>{{ $donation->vipPackage?->name ?? 'Tanpa paket' }}</span></div>
+                    <div class="donation-card-meta"><span class="provider-pill {{ $donation->provider }}">{{ $providerLabels[$donation->provider] ?? $donation->provider }}</span><strong>{{ $donation->amountLabel() }}</strong><span>{{ $donation->vipPackage?->name ?? 'Tanpa paket' }}</span></div>
                     <div class="donation-card-foot">@include('livewire.partials.donation-actions', ['donation' => $donation])</div>
                 </article>
             @endforeach
@@ -102,7 +102,7 @@
                     @endphp
                     <div @class(['activity-item', 'is-unread' => ! $notification->read_at]) wire:key="notif-{{ $notification->id }}">
                         <span class="activity-icon {{ $icon[0] }}" aria-hidden="true">@include('partials.icon', ['name' => $icon[1], 'size' => 15])</span>
-                        <div><strong>{{ $context['donor_name'] ?? 'Donatur' }} {{ $label }}</strong><span>{{ $providerLabels[$context['provider'] ?? ''] ?? '' }} · {{ $rupiah((int) ($context['amount'] ?? 0)) }}</span></div>
+                        <div><strong>{{ $context['donor_name'] ?? 'Donatur' }} {{ $label }}</strong><span>{{ $providerLabels[$context['provider'] ?? ''] ?? '' }} · {{ \App\Models\Donation::formatAmount((int) ($context['amount'] ?? 0), $context['currency'] ?? 'IDR', isset($context['original_amount']) ? (float) $context['original_amount'] : null) }}</span></div>
                         <span class="activity-time">{{ $notification->created_at?->format('H:i') }}</span>
                         <button class="notification-read" type="button" wire:click="markRead({{ $notification->id }})" @disabled($notification->read_at)
                                 aria-label="{{ $notification->read_at ? 'Sudah dibaca' : 'Tandai notifikasi '.($context['donor_name'] ?? '').' sudah dibaca' }}">@if ($notification->read_at)@include('partials.icon', ['name' => 'check', 'size' => 13])@else<i class="unread-dot"></i>@endif</button>
@@ -122,7 +122,10 @@
                     <div><p class="eyebrow">Masukkan manual</p><h2 id="queue-donation-title">{{ $queueing->donor_name }}</h2></div>
                     <button class="icon-button" type="button" wire:click="cancelQueue" aria-label="Tutup">×</button>
                 </div>
-                <p class="session-meta">Donasi {{ $rupiah($queueing->amount) }} lewat {{ $providerLabels[$queueing->provider] ?? $queueing->provider }}.</p>
+                <p class="session-meta">Donasi {{ $queueing->amountLabel() }} lewat {{ $providerLabels[$queueing->provider] ?? $queueing->provider }}.</p>
+                @if ($queueing->isForeign())
+                    <p class="modal-help is-warning">Donasi mata uang {{ $queueing->currency }}. {{ $queueing->amount > 0 ? 'Nilai rupiah di atas adalah uang yang diterima (sudah dipotong biaya platform), jadi bisa sedikit di bawah harga paket.' : 'Nilai rupiahnya tidak dikirim platform.' }} Tentukan jumlah game sesuai kesepakatan dengan viewer.</p>
+                @endif
                 @if ($queueing->message)
                     <blockquote class="donation-message">“{{ $queueing->message }}”</blockquote>
                 @endif

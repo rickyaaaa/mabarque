@@ -268,7 +268,7 @@
                         <li class="qb-feed-item" wire:key="don-{{ $donation->id }}">
                             <div class="qb-feed-top">
                                 <strong>{{ $donation->donor_name }}</strong>
-                                <span class="qb-num">Rp {{ number_format((int) $donation->amount, 0, ',', '.') }}</span>
+                                <span class="qb-num">{{ $donation->amountLabel() }}</span>
                             </div>
                             <div class="qb-feed-meta">
                                 <span class="qb-tag is-{{ $donation->status }}">{{ $donationStatus[$donation->status] ?? $donation->status }}</span>

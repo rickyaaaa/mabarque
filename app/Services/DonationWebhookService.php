@@ -90,7 +90,8 @@ class DonationWebhookService
                 $processed->notifications()->create([
                     'user_id' => $connection->user_id,
                     'type' => in_array($processed->status, ['queued', 'review'], true) ? $processed->status : 'received',
-                    'context' => ['donor_name' => $processed->donor_name, 'amount' => $processed->amount, 'provider' => $processed->provider],
+                    'context' => ['donor_name' => $processed->donor_name, 'amount' => $processed->amount, 'provider' => $processed->provider]
+                        + ($processed->isForeign() ? ['currency' => $processed->currency, 'original_amount' => (float) $processed->original_amount] : []),
                 ]);
             }
 
@@ -108,6 +109,8 @@ class DonationWebhookService
                 'donor_name' => Str::limit($incoming->donorName, 120, ''),
                 'donor_email' => $incoming->donorEmail,
                 'amount' => $incoming->amount,
+                'currency' => $incoming->currency ?: 'IDR',
+                'original_amount' => $incoming->originalAmount,
                 'message' => $incoming->message !== null ? Str::limit(trim($incoming->message), 500, '') : null,
                 'status' => $status,
                 'payload' => $payload,

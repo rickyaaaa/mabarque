@@ -22,6 +22,8 @@ class Donation extends Model
         'donor_name',
         'donor_email',
         'amount',
+        'currency',
+        'original_amount',
         'message',
         'status',
         'payload',
@@ -31,6 +33,7 @@ class Donation extends Model
 
     protected $casts = [
         'amount' => 'integer',
+        'original_amount' => 'float',
         'payload' => 'array',
         'received_at' => 'datetime',
         'processed_at' => 'datetime',
@@ -59,6 +62,32 @@ class Donation extends Model
     public function notifications(): HasMany
     {
         return $this->hasMany(DonationNotification::class);
+    }
+
+    /** Donasi dibayar dalam mata uang selain rupiah (mis. MYR dari viewer Malaysia). */
+    public function isForeign(): bool
+    {
+        return ($this->currency ?: 'IDR') !== 'IDR';
+    }
+
+    /** Nominal untuk ditampilkan: "Rp 25.000", atau "MYR 25 · ≈ Rp 89.300" untuk mata uang asing. */
+    public function amountLabel(): string
+    {
+        return self::formatAmount((int) $this->amount, $this->currency, $this->original_amount);
+    }
+
+    public static function formatAmount(int $rupiah, ?string $currency = 'IDR', ?float $original = null): string
+    {
+        $idr = 'Rp '.number_format($rupiah, 0, ',', '.');
+        $currency = strtoupper((string) ($currency ?: 'IDR'));
+
+        if ($currency === 'IDR' || $original === null) {
+            return $idr;
+        }
+
+        $foreign = $currency.' '.number_format($original, fmod($original, 1.0) == 0.0 ? 0 : 2, ',', '.');
+
+        return $rupiah > 0 ? $foreign.' · ≈ '.$idr : $foreign;
     }
 
     public function scopePending($query)

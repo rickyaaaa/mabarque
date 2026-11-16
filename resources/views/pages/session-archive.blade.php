@@ -90,7 +90,7 @@
                             <tr>
                                 <td>{{ $donation->received_at?->format('H:i') }}</td>
                                 <td><strong>{{ $donation->donor_name }}</strong><small>{{ $providerLabels[$donation->provider] ?? $donation->provider }}{{ $donation->message ? ' · “'.\Illuminate\Support\Str::limit($donation->message, 60).'”' : '' }}</small></td>
-                                <td>{{ $rupiah((int) $donation->amount) }}</td>
+                                <td>{{ $donation->amountLabel() }}</td>
                                 <td>{{ $donationStatus[$donation->status] ?? $donation->status }}</td>
                             </tr>
                         @endforeach

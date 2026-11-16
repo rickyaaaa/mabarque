@@ -357,6 +357,29 @@ class DonationWebhookTest extends TestCase
         $this->assertStringNotContainsString('sociabuzz-token-uji', json_encode($sample));
     }
 
+    /** Kejadian 2026-11-17: viewer Malaysia donasi 25 MYR tapi tercatat Rp 25. */
+    public function test_sociabuzz_foreign_currency_uses_settled_rupiah_and_keeps_original(): void
+    {
+        $sociabuzz = $this->connect('sociabuzz', 'sociabuzz-token-uji');
+        $this->openLiveSession();
+
+        $this->sendSociaBuzz($sociabuzz, [
+            'id' => '1664565323', 'amount' => 25, 'currency' => 'MYR', 'amount_settled' => 89300, 'currency_settled' => 'IDR',
+            'supporter' => 'Roti comeback', 'email_supporter' => 'roti@gmail.com', 'message' => 'mabar bang 138765201',
+        ], 'sociabuzz-token-uji')->assertCreated()->assertJsonPath('data.status', 'review');
+
+        $donation = Donation::sole();
+        $this->assertSame([89300, 'MYR', 25.0], [$donation->amount, $donation->currency, $donation->original_amount]);
+        $this->assertSame('MYR 25 · ≈ Rp 89.300', $donation->amountLabel());
+        $this->assertSame('MYR', $donation->notifications()->sole()->context['currency']);
+
+        // Tanpa nilai rupiah dari platform: jangan dianggap Rp 25, cukup tampilkan mata uang aslinya.
+        $this->sendSociaBuzz($sociabuzz, ['id' => 'x', 'amount' => 12.5, 'currency' => 'USD', 'supporter' => 'Tom', 'created_at' => '2026-11-17T01:00:00+07:00'], 'sociabuzz-token-uji')
+            ->assertCreated()->assertJsonPath('data.status', 'review');
+        $usd = Donation::where('donor_name', 'Tom')->sole();
+        $this->assertSame([0, 'USD 12,50'], [$usd->amount, $usd->amountLabel()]);
+    }
+
     public function test_sociabuzz_unknown_format_is_rejected_but_sample_kept_for_matching(): void
     {
         $sociabuzz = $this->connect('sociabuzz', 'sociabuzz-token-uji');

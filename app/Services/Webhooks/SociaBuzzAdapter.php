@@ -12,7 +12,9 @@ use Illuminate\Http\Request;
  *   media_type, media_url, item{name,qty}, level{title,price,...}, vote{...}, content{...}, created_at.
  * - Notifikasi uji selalu "Jessica" / jessica@example.com / "Ini hanya test notifikasi" dengan id tetap →
  *   dikenali sebagai uji (hanya menandai koneksi aktif, tidak tercatat sebagai donasi).
- * - Nominal = `amount` (yang dibayar donatur, sama dengan harga paket). Donasi non-IDR masuk "Perlu cek".
+ * - Nominal = `amount` (yang dibayar donatur, sama dengan harga paket). Donasi mata uang asing (mis. viewer
+ *   Malaysia bayar 25 MYR): `amount` = 25 dalam MYR, jadi rupiahnya diambil dari `amount_settled` bila
+ *   `currency_settled` = IDR (uang yang benar-benar diterima, sudah dipotong biaya). Selalu masuk "Perlu cek".
  * - `id` sama untuk semua donasi (bukan nomor transaksi) → penanda unik donasi = sidik jari isinya.
  */
 class SociaBuzzAdapter implements ProviderAdapter
@@ -89,13 +91,27 @@ class SociaBuzzAdapter implements ProviderAdapter
             (string) ($payload['media_url'] ?? ''),
         ]);
 
+        $currency = $currency ?: 'IDR';
+        $original = null;
+        $rupiah = (int) round((float) $amount);
+
+        if ($currency !== 'IDR') {
+            // Jangan pernah anggap 25 MYR sebagai Rp 25: pakai nilai rupiah yang diterima, atau 0 bila tidak ada.
+            $original = (float) $amount;
+            $settled = $payload['amount_settled'] ?? null;
+            $rupiah = strtoupper(trim((string) ($payload['currency_settled'] ?? ''))) === 'IDR' && is_numeric($settled)
+                ? (int) round((float) $settled)
+                : 0;
+        }
+
         return new IncomingDonation(
             externalId: 'sb-'.substr(hash('sha256', $fingerprint), 0, 40),
             donorName: $name,
-            amount: (int) round((float) $amount),
+            amount: $rupiah,
             donorEmail: ($email = $this->first($payload, ['email_supporter', 'email'])) ? (string) $email : null,
             message: ($m = $this->first($payload, ['message', 'supporter_message', 'support_message'])) ? (string) $m : null,
-            currency: $currency ?: 'IDR',
+            currency: substr($currency, 0, 3),
+            originalAmount: $original,
             isTest: $this->isTestNotification($payload),
         );
     }

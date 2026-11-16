@@ -442,3 +442,5 @@ body.ui-v2 .admin-pagination { color: var(--v-muted); }
   .ui-v2 .qb-queue-tools { padding: 10px 12px; }
   .ui-v2 .qb-search { max-width: none; }
 }
+
+body.ui-v2 .modal-help.is-warning { margin-top: 8px; padding: 10px 12px; color: var(--v-ink); background: var(--v-warn-soft); border: 2px solid var(--v-line); }
