@@ -161,3 +161,11 @@
 /* Pesan donasi di jendela "Masukkan manual" */
 .donation-message { margin: 10px 0 0; padding: 9px 12px; color: var(--ink); background: var(--cream); border-left: 4px solid var(--red); font-size: 13px; font-style: italic; overflow-wrap: anywhere; }
 .modal-card .field-row { margin-top: 2px; }
+
+/* Kartu provider memakai grid 3 kolom: baris URL, error, dan contoh webhook harus selebar kartu
+   (flex-basis tidak berlaku di grid — sebelumnya terjepit di satu kolom sempit). */
+.provider-card > .provider-endpoint,
+.provider-card > .provider-error,
+.provider-card > .provider-sample { grid-column: 1 / -1; }
+.provider-sample-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.provider-sample pre { max-height: 320px; white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere; }

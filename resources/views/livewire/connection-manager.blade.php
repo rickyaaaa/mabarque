@@ -46,11 +46,18 @@
                 @endif
                 @if ($connection?->last_payload)
                     <div class="provider-sample">
-                        <button class="text-button" type="button" wire:click="inspect('{{ $key }}')" aria-expanded="{{ $inspecting === $key ? 'true' : 'false' }}">
-                            {{ $inspecting === $key ? 'Sembunyikan' : 'Lihat' }} contoh webhook terakhir
-                        </button>
+                        @php($samplePayload = json_encode($connection->last_payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE))
+                        <div class="provider-sample-head" x-data>
+                            <button class="text-button" type="button" wire:click="inspect('{{ $key }}')" aria-expanded="{{ $inspecting === $key ? 'true' : 'false' }}">
+                                {{ $inspecting === $key ? 'Sembunyikan' : 'Lihat' }} contoh webhook terakhir
+                            </button>
+                            @if ($inspecting === $key)
+                                <button class="filter-button" type="button"
+                                        x-on:click="navigator.clipboard.writeText(@js($samplePayload)).then(() => $dispatch('notify', { message: 'Contoh webhook disalin.' }))">⧉ Salin</button>
+                            @endif
+                        </div>
                         @if ($inspecting === $key)
-                            <pre>{{ json_encode($connection->last_payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) }}</pre>
+                            <pre>{{ $samplePayload }}</pre>
                             <small>Kredensial disamarkan (***). Bagikan contoh ini ke developer bila format provider berubah.</small>
                         @endif
                     </div>

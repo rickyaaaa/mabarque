@@ -42,6 +42,18 @@ class SociaBuzzAdapter implements ProviderAdapter
             $candidates[] = is_scalar($payload[$field] ?? null) ? (string) $payload[$field] : '';
         }
 
+        // Nama header/field token SociaBuzz tidak terdokumentasi dan bisa berbeda antara notifikasi uji
+        // dan donasi asli: terima token di header atau field tingkat atas mana pun yang nilainya persis sama.
+        foreach ($request->headers->all() as $values) {
+            $candidates[] = (string) ($values[0] ?? '');
+        }
+
+        foreach ($payload as $value) {
+            if (is_scalar($value)) {
+                $candidates[] = (string) $value;
+            }
+        }
+
         foreach ($candidates as $candidate) {
             if ($candidate !== '' && hash_equals($credential, $candidate)) {
                 return true;

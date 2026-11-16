@@ -270,7 +270,15 @@ class DonationWebhookTest extends TestCase
             ->assertCreated();
         $this->sendSociaBuzz($sociabuzz, ['id' => 'sb-3', 'supporter' => 'X', 'amount' => 15000], 'token-salah')->assertUnauthorized();
 
-        $this->assertSame(2, $session->queueEntries()->count());
+        // Header dengan nama yang tidak dikenal, atau token di field data: tetap diterima bila nilainya persis sama.
+        $this->sendSociaBuzz($sociabuzz, ['id' => 'sb-4', 'supporter' => 'Citra', 'amount' => 15000], 'sociabuzz-token-uji', 'x-callback-token')
+            ->assertCreated();
+        $this->sendSociaBuzz($sociabuzz, ['id' => 'sb-5', 'supporter' => 'Dodi', 'amount' => 15000, 'secret_key' => 'sociabuzz-token-uji'], null)
+            ->assertCreated();
+        $this->sendSociaBuzz($sociabuzz, ['id' => 'sb-6', 'supporter' => 'Eko', 'amount' => 15000, 'note' => 'sociabuzz-token-uji-bukan'], 'x', 'x-callback-token')
+            ->assertUnauthorized(); // mirip tapi tidak persis sama → ditolak
+
+        $this->assertSame(4, $session->queueEntries()->count());
     }
 
     public function test_sociabuzz_non_idr_goes_to_review_and_sample_is_stored_masked(): void
