@@ -326,6 +326,17 @@ body.ui-v2 .provider-pill { display: inline-flex; width: fit-content; max-width:
 /* Radio di kotak pilihan (overlay: bentuk & ukuran): titiknya terlihat juga di pilihan aktif yang hitam. */
 body.ui-v2 .layout-option input { accent-color: var(--v-accent); }
 body.ui-v2 .layout-option.is-active input { outline: 2px solid #fff; outline-offset: 1px; }
+/* Notifikasi masuk (halaman Donasi): ikon SVG di tengah kotak, tidak ikut aturan teks span. */
+body.ui-v2 .activity-item .activity-icon { display: grid; place-items: center; width: 30px; height: 30px; color: var(--v-ink); background: var(--v-panel); border: 2px solid var(--v-line); }
+body.ui-v2 .activity-item .activity-icon.is-green { background: var(--v-accent); }
+body.ui-v2 .activity-item .activity-icon.is-orange { background: var(--v-warn); }
+body.ui-v2 .activity-item .activity-icon.is-red { color: #fff; background: var(--v-danger); }
+body.ui-v2 .activity-item strong { font-size: 13px; font-weight: 700; }
+body.ui-v2 .activity-item div > span { font-size: 12px; }
+body.ui-v2 .activity-time { font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
+body.ui-v2 .notification-read { display: inline-grid; place-items: center; width: 26px; height: 26px; color: var(--v-ink); background: var(--v-panel); }
+body.ui-v2 .notification-read:hover:not(:disabled) { background: var(--v-accent); }
+body.ui-v2 .notification-read .unread-dot { width: 8px; height: 8px; background: var(--v-ink); border-radius: 50%; }
 /* Tombol geser (pengaturan overlay, aturan party) */
 body.ui-v2 .switch-track { background: #e3e2db; }
 body.ui-v2 .switch-control input:checked + .switch-track { background: var(--v-accent); }

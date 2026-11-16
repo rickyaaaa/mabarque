@@ -97,15 +97,15 @@
                 @forelse ($notifications as $notification)
                     @php
                         $context = $notification->context ?? [];
-                        $icon = ['queued' => ['is-green', '✓'], 'review' => ['is-orange', '!'], 'failed' => ['is-red', '×']][$notification->type] ?? ['is-orange', '↗'];
+                        $icon = ['queued' => ['is-green', 'check'], 'review' => ['is-orange', 'alert'], 'failed' => ['is-red', 'x']][$notification->type] ?? ['is-plain', 'wallet'];
                         $label = ['queued' => 'masuk antrean otomatis', 'review' => 'perlu dicek', 'failed' => 'gagal diproses'][$notification->type] ?? 'mengirim donasi';
                     @endphp
                     <div @class(['activity-item', 'is-unread' => ! $notification->read_at]) wire:key="notif-{{ $notification->id }}">
-                        <span class="activity-icon {{ $icon[0] }}" aria-hidden="true">{{ $icon[1] }}</span>
+                        <span class="activity-icon {{ $icon[0] }}" aria-hidden="true">@include('partials.icon', ['name' => $icon[1], 'size' => 15])</span>
                         <div><strong>{{ $context['donor_name'] ?? 'Donatur' }} {{ $label }}</strong><span>{{ $providerLabels[$context['provider'] ?? ''] ?? '' }} · {{ $rupiah((int) ($context['amount'] ?? 0)) }}</span></div>
                         <span class="activity-time">{{ $notification->created_at?->format('H:i') }}</span>
                         <button class="notification-read" type="button" wire:click="markRead({{ $notification->id }})" @disabled($notification->read_at)
-                                aria-label="{{ $notification->read_at ? 'Sudah dibaca' : 'Tandai notifikasi '.($context['donor_name'] ?? '').' sudah dibaca' }}">{{ $notification->read_at ? '✓' : '•' }}</button>
+                                aria-label="{{ $notification->read_at ? 'Sudah dibaca' : 'Tandai notifikasi '.($context['donor_name'] ?? '').' sudah dibaca' }}">@if ($notification->read_at)@include('partials.icon', ['name' => 'check', 'size' => 13])@else<i class="unread-dot"></i>@endif</button>
                     </div>
                 @empty
                     <p class="session-meta">Belum ada notifikasi. Donasi baru akan muncul di sini.</p>
