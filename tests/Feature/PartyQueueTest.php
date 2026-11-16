@@ -77,6 +77,32 @@ class PartyQueueTest extends TestCase
         $board->call('clearSearch')->assertSet('search', '')->assertSee('Pemain 01');
     }
 
+    public function test_bulk_delete_resets_select_all_when_the_next_players_appear(): void
+    {
+        $players = [];
+        for ($i = 1; $i <= 16; $i++) {
+            $players[sprintf('Pemain %02d', $i)] = 2;
+        }
+        $entries = $this->players($players);
+
+        Livewire::actingAs($this->owner)->test(QueueBoard::class, ['session' => $this->session])
+            ->call('toggleSelectAll')
+            ->assertCount('selected', 10)
+            ->assertSeeHtml('wire:key="select-all-table-checked"')
+            ->assertSeeHtml('wire:key="select-all-cards-checked"')
+            ->call('bulkRemove')
+            ->assertSet('selected', [])
+            ->assertSee('1–6 dari 6 pemain')
+            ->assertSeeHtml('wire:key="select-all-table-unchecked"')
+            ->assertSeeHtml('wire:key="select-all-cards-unchecked"')
+            ->assertDontSee('6 dipilih')
+            ->call('toggleSelectAll')
+            ->assertSet('selected', array_values(array_map(fn (QueueEntry $entry) => (string) $entry->id, array_slice($entries, 10))))
+            ->assertSee('6 dipilih')
+            ->assertSeeHtml('wire:key="select-all-table-checked"')
+            ->assertSeeHtml('wire:key="select-all-cards-checked"');
+    }
+
     public function test_party_fills_with_next_four_vip_players_skipping_joki(): void
     {
         $this->players(['Dey' => 2, 'Roti' => [8, 'joki'], 'Ir.fing' => 5, 'Indira' => 1, 'Pokedok' => 3, 'Kyoto' => 2]);

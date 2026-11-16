@@ -200,9 +200,17 @@ class OverlayScoreTest extends TestCase
 
     public function test_obs_streaming_events_start_and_optionally_end_the_live_session(): void
     {
+        $standby = app(LiveSessionService::class)->queueSession($this->owner);
+        $board = Livewire::test(QueueBoard::class, ['session' => $standby])
+            ->assertSeeHtml('wire:poll.5s.keep-alive="refreshQueue"')
+            ->assertSee('Belum live');
+
         $token = app(OverlayTokenService::class)->current($this->owner);
         $this->postJson("/api/overlay/{$token}/obs", ['event' => 'started'])->assertCreated()->assertJsonPath('data.action', 'started');
         $session = $this->owner->liveSessions()->active()->sole();
+
+        $board->call('refreshQueue')->assertRedirect('/dashboard');
+        $this->get('/dashboard')->assertOk()->assertSee($session->title);
 
         // Sudah live: tidak membuat sesi baru.
         $this->postJson("/api/overlay/{$token}/obs", ['event' => 'started'])->assertOk()->assertJsonPath('data.action', 'already_live');

@@ -9,7 +9,7 @@
 @endphp
 
 {{-- Refresh otomatis dijeda selama ada popup terbuka supaya isian form tidak tertimpa. --}}
-<div class="qb" @if (! $showAddPlayer && ! $editingId && ! $showImport && ! $showRules) wire:poll.5s="refreshQueue" @endif>
+<div class="qb" @if (! $showAddPlayer && ! $editingId && ! $showImport && ! $showRules) wire:poll.5s.keep-alive="refreshQueue" @endif>
     {{-- ── Kepala halaman ──────────────────────────────────────────── --}}
     <header class="qb-head">
         <div class="qb-head-title">
@@ -178,6 +178,7 @@
                     $visibleIds = $entries->pluck('id')->map(fn ($id) => (string) $id)->all();
                     $selectedVisible = array_values(array_intersect($selected, $visibleIds));
                     $allSelected = $visibleIds !== [] && count($selectedVisible) === count($visibleIds);
+                    $selectAllState = $allSelected ? 'checked' : 'unchecked';
                 @endphp
                 @if ($selectedVisible !== [])
                     <div class="qb-bulk" role="region" aria-label="Aksi untuk pemain yang dicentang">
@@ -193,7 +194,7 @@
                         <caption class="sr-only">Daftar pemain dalam antrean mabar VIP</caption>
                         <thead>
                             <tr>
-                                <th scope="col" class="qb-col-check"><input type="checkbox" class="qb-check" wire:click="toggleSelectAll" @checked($allSelected) @disabled($visibleIds === []) aria-label="Centang semua pemain" /></th>
+                                <th scope="col" class="qb-col-check"><input type="checkbox" class="qb-check" wire:key="select-all-table-{{ $selectAllState }}" wire:click="toggleSelectAll" @checked($allSelected) @disabled($visibleIds === []) aria-label="Centang semua pemain" /></th>
                                 <th scope="col" class="qb-col-pos">#</th>
                                 <th scope="col">Pemain</th>
                                 <th scope="col">Layanan</th>
@@ -234,7 +235,7 @@
 
                 <div class="qb-cards" aria-label="Daftar kartu pemain">
                     @if ($entries->isNotEmpty())
-                        <label class="qb-select-all"><input type="checkbox" class="qb-check" wire:click="toggleSelectAll" @checked($allSelected) /> Centang semua</label>
+                        <label class="qb-select-all"><input type="checkbox" class="qb-check" wire:key="select-all-cards-{{ $selectAllState }}" wire:click="toggleSelectAll" @checked($allSelected) /> Centang semua</label>
                     @endif
                     @foreach ($entries as $entry)
                         <article wire:key="card-{{ $entry->id }}" @class(['qb-card', 'is-playing' => $entry->status === 'playing', 'is-offline' => $entry->status === 'offline'])>

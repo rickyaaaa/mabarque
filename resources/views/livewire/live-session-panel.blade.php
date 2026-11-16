@@ -3,7 +3,7 @@
     $providerLabels = ['manual' => 'Manual', 'saweria' => 'Saweria', 'sociabuzz' => 'SociaBuzz', 'trakteer' => 'Trakteer'];
 @endphp
 
-<div wire:poll.10s>
+<div wire:poll.10s.keep-alive>
     <header class="live-header">
         <div>
             <p class="eyebrow">Kelola sesi live</p>
