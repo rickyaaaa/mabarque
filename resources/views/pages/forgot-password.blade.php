@@ -7,13 +7,13 @@
     <title>MabarQueue — Lupa Password</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Agdasima:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="{{ \App\Support\Asset::url('css/styles.css') }}" />
     <link rel="stylesheet" href="{{ \App\Support\Asset::url('css/signup.css') }}" />
     <link rel="stylesheet" href="{{ \App\Support\Asset::url('css/login.css') }}" />
     <link rel="stylesheet" href="{{ \App\Support\Asset::url('css/forgot-password.css') }}" />
-  </head>
-  <body class="login-body">
+  <link rel="stylesheet" href="{{ \App\Support\Asset::url('css/auth-v2.css') }}" /></head>
+  <body class="login-body ui-v2">
     <main class="login-shell">
       <header class="signup-header">
         <a class="public-brand" href="/"><span class="brand-mark" aria-hidden="true">MQ</span><span>MabarQueue</span></a>

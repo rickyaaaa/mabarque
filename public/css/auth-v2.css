@@ -1,0 +1,86 @@
+/* ==========================================================================
+   Halaman masuk, daftar, dan lupa password — tampilan v2, senada dengan dashboard:
+   latar abu terang, kartu putih bergaris hitam tebal, bayangan keras, aksen lime, Inter.
+   Dimuat terakhir; menimpa tema gelap lama di login.css / signup.css / forgot-password.css.
+   ========================================================================== */
+body.ui-v2 {
+  --v-ground: #eeede6; --v-panel: #ffffff; --v-sunk: #f6f5ef; --v-ink: #111111; --v-muted: #57564f;
+  --v-line: #111111; --v-rule: #d9d8d0; --v-accent: #c5f02e; --v-accent-soft: #eefac4; --v-dark: #141414;
+  --v-danger: #d8341b; --v-danger-soft: #ffe2da; --v-shadow-sm: 3px 3px 0 var(--v-line);
+  color: var(--v-ink);
+  background: var(--v-ground);
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+body.ui-v2 *:not(code):not(pre) { font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif !important; }
+body.ui-v2 ::selection { color: var(--v-ink); background: var(--v-accent); }
+body.ui-v2 :focus-visible { outline: 3px solid var(--v-ink); outline-offset: 2px; box-shadow: 0 0 0 6px var(--v-accent); }
+body.ui-v2 h1, body.ui-v2 h2 { text-transform: none; letter-spacing: -.035em; }
+body.ui-v2 .eyebrow { margin: 0 0 8px; color: var(--v-muted); font-size: 11px; font-weight: 700; letter-spacing: .06em; }
+
+/* Kepala & kaki (daftar, lupa password) */
+body.ui-v2 .signup-header, body.ui-v2 .signup-footer { color: var(--v-muted); }
+body.ui-v2 .signup-header { border-bottom: 3px solid var(--v-line); }
+body.ui-v2 .signup-footer { border-top: 3px solid var(--v-line); }
+body.ui-v2 .signup-header a:not(.public-brand), body.ui-v2 .signup-footer a { color: var(--v-ink); font-weight: 800; text-underline-offset: 3px; }
+body.ui-v2 .public-brand { color: var(--v-ink); font-size: 20px; font-weight: 900; letter-spacing: -.03em; line-height: 1; text-transform: none; }
+body.ui-v2 .public-brand .brand-mark { color: var(--v-ink); background: var(--v-accent); border: 2px solid var(--v-line); box-shadow: var(--v-shadow-sm); font-weight: 900; }
+
+/* Sisi ajakan */
+body.ui-v2 .login-pitch h1, body.ui-v2 .signup-pitch h1 { color: var(--v-ink); font-size: clamp(40px, 6vw, 72px); font-weight: 900; line-height: 1; letter-spacing: -.045em; }
+body.ui-v2 .login-pitch h1 span, body.ui-v2 .signup-pitch h1 span { display: inline-block; margin-top: 6px; padding: 0 .16em; color: var(--v-ink); background: var(--v-accent); border: 3px solid var(--v-line); box-shadow: var(--v-shadow-sm); }
+body.ui-v2 .login-pitch > p:not(.eyebrow), body.ui-v2 .signup-lead { color: var(--v-muted); font-size: 15px; line-height: 1.55; }
+body.ui-v2 .login-live-card { color: var(--v-ink); background: var(--v-panel); border: 2px solid var(--v-line); box-shadow: var(--v-shadow-sm); }
+body.ui-v2 .login-live-card .status-dot { background: #2f8f2f; }
+body.ui-v2 .login-live-card small, body.ui-v2 .login-live-card small * { color: var(--v-muted); }
+body.ui-v2 .signup-benefits { color: var(--v-ink); }
+body.ui-v2 .signup-benefits i { color: var(--v-ink); background: var(--v-accent); border: 2px solid var(--v-line); }
+body.ui-v2 .signup-benefits strong { font-size: 13px; }
+body.ui-v2 .signup-benefits small { color: var(--v-muted); font-size: 12px; }
+
+/* Langkah lupa password */
+body.ui-v2 .reset-steps { color: var(--v-muted); }
+body.ui-v2 .reset-steps i { color: var(--v-ink); background: var(--v-panel); border: 2px solid var(--v-line); }
+body.ui-v2 .reset-steps li.is-current { color: var(--v-ink); }
+body.ui-v2 .reset-steps li.is-current i { background: var(--v-accent); box-shadow: var(--v-shadow-sm); }
+body.ui-v2 .reset-steps li.is-current span::after { color: var(--v-ink); }
+body.ui-v2 .reset-steps li.is-done i { background: var(--v-accent-soft); }
+
+/* Kartu form */
+body.ui-v2 .login-card, body.ui-v2 .signup-card, body.ui-v2 .reset-card { color: var(--v-ink); background: var(--v-panel); border: 3px solid var(--v-line); box-shadow: 8px 8px 0 var(--v-line); }
+body.ui-v2 .signup-card-heading { border-bottom: 3px solid var(--v-line); }
+body.ui-v2 .signup-card-heading h2, body.ui-v2 .login-card .signup-card-heading h2, body.ui-v2 .success-card h2, body.ui-v2 .reset-done h2 { font-size: clamp(28px, 3vw, 36px); font-weight: 900; line-height: 1.05; }
+body.ui-v2 .signup-card-heading p:last-child, body.ui-v2 .login-card .signup-card-heading p:last-child { color: var(--v-muted); font-size: 13px; }
+body.ui-v2 .field-label { margin: 15px 0 6px; font-size: 12px; font-weight: 700; }
+body.ui-v2 .field-label span { color: var(--v-muted); font-weight: 500; }
+body.ui-v2 .field-input, body.ui-v2 .handle-input { min-height: 44px; color: var(--v-ink); background: var(--v-sunk); border: 2px solid var(--v-line); font-size: 14px; }
+body.ui-v2 .field-input::placeholder, body.ui-v2 .handle-input input::placeholder { color: #807e75; }
+body.ui-v2 .field-input:focus, body.ui-v2 .handle-input:focus-within { background: var(--v-panel); }
+body.ui-v2 .field-input.is-invalid { border-color: var(--v-danger); background: var(--v-danger-soft); }
+body.ui-v2 .handle-input span { color: var(--v-muted); }
+body.ui-v2 .password-label button, body.ui-v2 .login-options button, body.ui-v2 .text-link { color: var(--v-ink); font-size: 12px; font-weight: 800; text-decoration: underline; text-underline-offset: 3px; }
+body.ui-v2 .login-options, body.ui-v2 .consent-row, body.ui-v2 .login-footnote, body.ui-v2 .signup-footnote { color: var(--v-muted); font-size: 12px; }
+body.ui-v2 .login-options input, body.ui-v2 .consent-row input { accent-color: var(--v-ink); }
+body.ui-v2 .login-footnote a, body.ui-v2 .signup-footnote a, body.ui-v2 .consent-row a { color: var(--v-ink); font-weight: 700; }
+body.ui-v2 .form-error { color: #6c140a; background: var(--v-danger-soft); border: 2px solid var(--v-danger); }
+body.ui-v2 .button { min-height: 46px; color: var(--v-ink); background: var(--v-panel); border: 2px solid var(--v-line); box-shadow: var(--v-shadow-sm); font-size: 14px; font-weight: 800; transition: transform 120ms ease, box-shadow 120ms ease; }
+body.ui-v2 .button:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--v-line); }
+body.ui-v2 .button:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--v-line); }
+body.ui-v2 .button-primary { color: var(--v-ink); background: var(--v-accent); }
+body.ui-v2 .success-icon { color: var(--v-ink); background: var(--v-accent); border: 3px solid var(--v-line); }
+body.ui-v2 .success-card p:not(.eyebrow), body.ui-v2 .reset-done p:not(.eyebrow) { color: var(--v-muted); font-size: 13px; }
+
+/* Lupa password: kotak masuk contoh, kekuatan & syarat password */
+body.ui-v2 .mock-inbox { background: var(--v-sunk); border: 2px solid var(--v-line); box-shadow: var(--v-shadow-sm); }
+body.ui-v2 .mock-inbox-badge { color: #fff; background: var(--v-dark); }
+body.ui-v2 .strength span { border-color: var(--v-line); }
+body.ui-v2 .strength[data-score="1"] span.is-on { background: var(--v-danger); }
+body.ui-v2 .strength[data-score="2"] span.is-on { background: #ffd23f; }
+body.ui-v2 .strength[data-score="3"] span.is-on, body.ui-v2 .strength[data-score="4"] span.is-on { background: var(--v-accent); }
+body.ui-v2 .password-rules i { color: var(--v-muted); }
+body.ui-v2 .password-rules li.is-met i { color: var(--v-ink); background: var(--v-accent); border-color: var(--v-line); }
+body.ui-v2 .toast { color: #fff; background: var(--v-dark); border: 2px solid var(--v-line); box-shadow: 4px 4px 0 var(--v-accent); }
+
+@media (max-width: 760px) {
+  body.ui-v2 .login-pitch h1, body.ui-v2 .signup-pitch h1 { font-size: clamp(36px, 10vw, 48px); }
+  body.ui-v2 .login-card, body.ui-v2 .signup-card, body.ui-v2 .reset-card { box-shadow: 5px 5px 0 var(--v-line); }
+}
