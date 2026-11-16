@@ -120,6 +120,10 @@ class DonationInbox extends Component
             'todayCount' => $recent->filter(fn (Donation $d) => $d->received_at?->isToday())->count(),
             'needsCheck' => $recent->whereIn('status', ['received', 'review'])->count(),
             'session' => $session,
+            // Semua uang donasi yang masuk (termasuk "Perlu cek"/"Diabaikan"): selama sesi live, atau hari ini.
+            'donationValue' => (int) ($session
+                ? $session->donations()->where('donations.status', '!=', 'refunded')->sum('amount')
+                : $user->donations()->whereDate('received_at', today())->where('donations.status', '!=', 'refunded')->sum('amount')),
             'activeProviders' => $connections->where('status', 'active')->count(),
             'connectedProviders' => $connections->count(),
             'packages' => $this->activePackages(),

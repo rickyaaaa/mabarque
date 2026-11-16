@@ -41,7 +41,7 @@
 
         <section class="live-stat-grid" aria-label="Statistik sesi berjalan">
             <article class="live-stat live-stat-red"><span>Pemain di antrean</span><strong>{{ $queue->count() }}</strong><small>{{ $readyCount }} siap bermain</small></article>
-            <article class="live-stat live-stat-orange"><span>Nilai donasi</span><strong>Rp {{ number_format($session->total_donation, 0, ',', '.') }}</strong><small>{{ $donationCount }} donasi sesi ini</small></article>
+            <article class="live-stat live-stat-orange"><span>Nilai donasi</span><strong>Rp {{ number_format($donationValue, 0, ',', '.') }}</strong><small>{{ $donationCount }} donasi sesi ini</small></article>
             <article class="live-stat live-stat-purple"><span>Match selesai</span><strong>{{ $session->total_matches }}</strong><small>sejak sesi dimulai</small></article>
             <article class="live-stat live-stat-cream"><span>Durasi live</span><strong>{{ $session->started_at ? $session->started_at->diff(now())->format('%hj %Im') : '—' }}</strong><small>dimulai {{ $session->started_at?->format('H:i') }} WIB</small></article>
         </section>
@@ -129,7 +129,7 @@
                         <span class="session-history-icon">✓</span>
                         <div>
                             <strong>{{ $archive->title }}</strong>
-                            <small>{{ $archive->started_at?->translatedFormat('j M Y') }} · {{ $archive->started_at?->format('H:i') }}–{{ $archive->ended_at?->format('H:i') }} · {{ $archive->total_players }} pemain · Rp {{ number_format($archive->total_donation, 0, ',', '.') }}</small>
+                            <small>{{ $archive->started_at?->translatedFormat('j M Y') }} · {{ $archive->started_at?->format('H:i') }}–{{ $archive->ended_at?->format('H:i') }} · {{ $archive->total_players }} pemain · Rp {{ number_format((int) $archive->donation_value, 0, ',', '.') }}</small>
                         </div>
                         <span class="session-history-value">{{ $archive->total_matches }} match<span class="archive-open">Lihat →</span></span>
                     </a>

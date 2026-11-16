@@ -28,7 +28,7 @@
     <section class="donation-summary" aria-label="Ringkasan donasi">
         <article class="donation-stat donation-stat-red"><span>Donasi hari ini</span><strong>{{ $todayCount }}</strong><small>transaksi masuk</small></article>
         <article class="donation-stat donation-stat-orange"><span>Perlu dicek</span><strong>{{ $needsCheck }}</strong><small>belum masuk antrean</small></article>
-        <article class="donation-stat donation-stat-purple"><span>Nilai donasi</span><strong>{{ $rupiah($session?->total_donation ?? 0) }}</strong><small>{{ $session ? 'sejak sesi dimulai' : 'belum ada sesi live' }}</small></article>
+        <article class="donation-stat donation-stat-purple"><span>Nilai donasi</span><strong>{{ $rupiah($donationValue) }}</strong><small>{{ $session ? 'semua donasi sejak sesi dimulai' : 'semua donasi hari ini' }}</small></article>
         <article class="donation-stat donation-stat-cream"><span>Provider aktif</span><strong>{{ $activeProviders }}/3</strong><small>{{ $connectedProviders }} terhubung</small></article>
     </section>
 

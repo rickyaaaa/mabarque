@@ -549,6 +549,7 @@ class QueueBoard extends Component
             'played' => $queue->playedThisSession($this->session),
             'cap' => $queue->sessionCap($this->session),
             'isLive' => $this->session->status === 'active',
+            'donationValue' => (int) $this->session->donations()->where('donations.status', '!=', 'refunded')->sum('amount'),
             'mvpEnabled' => $queue->mvpFreeGame($this->session),
             'donationMode' => $this->session->user?->donation_queue_mode ?: 'smart',
             'matches' => app(MatchService::class),

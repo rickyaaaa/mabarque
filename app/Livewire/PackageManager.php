@@ -122,7 +122,7 @@ class PackageManager extends Component
         return view('livewire.package-manager', [
             'packages' => $packages,
             'activePackages' => $packages->where('is_active', true)->values(),
-            'donationsToday' => (int) $user->donations()->whereDate('received_at', today())->whereIn('donations.status', ['queued', 'received', 'review'])->sum('amount'),
+            'donationsToday' => (int) $user->donations()->whereDate('received_at', today())->where('donations.status', '!=', 'refunded')->sum('amount'),
             'publicUrl' => url('/'.$user->slug),
         ]);
     }

@@ -78,6 +78,25 @@ class StageCPagesTest extends TestCase
         $this->get('/andra')->assertSee('Streamer belum memasang link donasi')->assertSee('Lihat cara donasi');
     }
 
+    public function test_donation_value_counts_all_money_received(): void
+    {
+        $connection = $this->connection();
+        $this->streamer->vipPackages()->create(['name' => 'VIP 1', 'price' => 15000, 'match_count' => 1]);
+
+        // Belum live: nilai donasi = semua donasi hari ini (termasuk yang di bawah harga paket).
+        $this->sendWebhook($connection, ['id' => 'a', 'donor_name' => 'Raka', 'amount' => 15000, 'message' => 'mabar 1185010926'])->assertCreated();
+        $this->sendWebhook($connection, ['id' => 'b', 'donor_name' => 'Nadia', 'amount' => 10000])->assertCreated(); // diabaikan
+        Livewire::test(DonationInbox::class)->assertSee('Rp 25.000')->assertSee('semua donasi hari ini');
+
+        // Saat live: semua donasi sejak sesi dimulai, termasuk yang perlu dicek.
+        $session = app(\App\Services\LiveSessionService::class)->start($this->streamer, 'Live');
+        $this->sendWebhook($connection, ['id' => 'c', 'donor_name' => 'Citra', 'amount' => 20000])->assertCreated(); // perlu dicek
+        $this->sendWebhook($connection, ['id' => 'd', 'donor_name' => 'Dodi', 'amount' => 15000, 'message' => 'mabar'])->assertCreated();
+        Livewire::test(DonationInbox::class)->assertSee('Rp 35.000')->assertSee('semua donasi sejak sesi dimulai');
+        Livewire::test(\App\Livewire\LiveSessionPanel::class)->assertSee('Rp 35.000');
+        Livewire::test(\App\Livewire\QueueBoard::class, ['session' => $session])->assertSeeHtml('<span>Donasi masuk</span><strong>Rp 35.000</strong>');
+    }
+
     public function test_package_manager_create_edit_toggle_and_duplicate_price_guard(): void
     {
         $manager = Livewire::test(PackageManager::class)

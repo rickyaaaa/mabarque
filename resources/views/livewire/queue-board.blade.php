@@ -27,7 +27,7 @@
                 <div class="session-stat"><span>Di antrean</span><strong>{{ $counts['all'] }}</strong></div>
                 <div class="session-stat"><span>Win – Lose</span><strong>{{ $session->wins }}–{{ $session->losses }}</strong></div>
                 <div class="session-stat"><span>Match selesai</span><strong>{{ $session->total_matches }}</strong></div>
-                <div class="session-stat"><span>Donasi masuk</span><strong>Rp {{ number_format($session->total_donation, 0, ',', '.') }}</strong></div>
+                <div class="session-stat"><span>Donasi masuk</span><strong>Rp {{ number_format($donationValue, 0, ',', '.') }}</strong></div>
             </div>
             <button class="button button-outline" type="button"
                     wire:click="endSession"
