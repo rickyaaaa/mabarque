@@ -2,9 +2,12 @@
 
 namespace App\Services;
 
+use App\Models\Donation;
+use App\Models\QueueEntry;
 use App\Models\User;
 use App\Models\VipPackage;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class VipPackageService
 {
@@ -47,5 +50,22 @@ class VipPackageService
         $package->update(['is_active' => $active]);
 
         return $package->refresh();
+    }
+
+    /**
+     * Hapus paket. Riwayat antrean & donasi yang pernah memakai paket ini tetap ada,
+     * hanya tautan ke paketnya dilepas (jumlah game yang sudah tercatat tidak berubah).
+     */
+    public function delete(User $user, VipPackage $package): void
+    {
+        if ((int) $package->user_id !== (int) $user->id) {
+            abort(404);
+        }
+
+        DB::transaction(function () use ($package): void {
+            QueueEntry::where('vip_package_id', $package->id)->update(['vip_package_id' => null]);
+            Donation::where('vip_package_id', $package->id)->update(['vip_package_id' => null]);
+            $package->delete();
+        });
     }
 }

@@ -42,7 +42,10 @@
                             <input type="checkbox" @checked($package->is_active) wire:click="toggle({{ $package->id }})" />
                             <span class="package-status-label">{{ $package->is_active ? 'Aktif' : 'Nonaktif' }}</span>
                         </label>
-                        <button type="button" wire:click="edit({{ $package->id }})">Edit paket</button>
+                        <button type="button" wire:click="edit({{ $package->id }})">@include('partials.icon', ['name' => 'pencil', 'size' => 14]) Edit paket</button>
+                        <button class="package-delete" type="button" wire:click="delete({{ $package->id }})"
+                                wire:confirm="Hapus paket {{ $package->name }}? Paket hilang dari halaman penonton. Sisa game pemain yang sudah tercatat tidak berubah."
+                                aria-label="Hapus paket {{ $package->name }}" title="Hapus paket">@include('partials.icon', ['name' => 'trash', 'size' => 14])</button>
                     </div>
                 </article>
             @endforeach

@@ -19,6 +19,9 @@
 .package-actions { display:flex; gap:7px; margin-top:auto; }
 .package-actions button { flex:1; min-height:35px; padding:5px 8px; border:2px solid var(--line); background:transparent; font-size:11px; font-weight:800; }
 .package-actions button:hover { color:var(--cream); background:var(--red); }
+.package-actions button { display:inline-flex; align-items:center; justify-content:center; gap:6px; }
+.package-actions .package-delete { flex:0 0 38px; padding:5px; }
+.package-actions .package-delete:hover { color:#fff; background:#d8341b; }
 .package-toggle { display:flex; align-items:center; gap:7px; color:var(--muted); font-size:11px; font-weight:700; }
 .package-status-label { color:var(--ink); }
 .package-toggle input { accent-color:var(--green); }

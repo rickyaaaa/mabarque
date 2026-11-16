@@ -8,7 +8,7 @@ use App\Services\VipPackageService;
 use InvalidArgumentException;
 use Livewire\Component;
 
-/** Paket VIP (/vip-packages): buat, ubah, aktif/nonaktifkan paket, dan pratinjau untuk penonton. */
+/** Paket VIP (/vip-packages): buat, ubah, aktif/nonaktifkan, dan hapus paket, plus link donasi untuk penonton. */
 class PackageManager extends Component
 {
     public bool $showForm = false;
@@ -112,6 +112,19 @@ class PackageManager extends Component
 
         $package = $service->setActive(auth()->user(), $package, ! $package->is_active);
         $this->dispatch('notify', message: $package->is_active ? "Paket {$package->name} ditampilkan ke penonton." : "Paket {$package->name} disembunyikan.");
+    }
+
+    public function delete(int $packageId, VipPackageService $service): void
+    {
+        $package = $this->package($packageId);
+        $service->delete(auth()->user(), $package);
+
+        if ($this->editingId === $package->id) {
+            $this->showForm = false;
+            $this->editingId = null;
+        }
+
+        $this->dispatch('notify', message: "Paket {$package->name} dihapus.");
     }
 
     public function render(VipPackageService $service)
