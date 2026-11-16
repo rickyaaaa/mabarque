@@ -109,6 +109,23 @@
                     @endif
                 </div>
 
+                {{-- Skor sesi di kotak yang sama dengan party: catat Menang/Kalah tanpa pindah panel. --}}
+                @if ($isLive)
+                    <div class="qb-score qb-turn-score" role="group" aria-labelledby="qb-score-title">
+                        <span class="qb-turn-score-label" id="qb-score-title">Skor sesi <small>hanya skor, sisa game tidak berkurang</small></span>
+                        <div class="qb-score-grid">
+                            <div class="qb-score-cell is-win">
+                                <button class="qb-score-add" type="button" wire:click="addScore('win')" title="Tambah menang (tidak mengurangi sisa game)">@include('partials.icon', ['name' => 'trophy']) Menang <strong>{{ $session->wins }}</strong></button>
+                                <button class="qb-icon-btn" type="button" wire:click="undoScore('win')" @disabled($session->wins < 1) aria-label="Koreksi: kurangi menang">@include('partials.icon', ['name' => 'minus', 'size' => 14])</button>
+                            </div>
+                            <div class="qb-score-cell is-lose">
+                                <button class="qb-score-add" type="button" wire:click="addScore('lose')" title="Tambah kalah (tidak mengurangi sisa game)">@include('partials.icon', ['name' => 'x']) Kalah <strong>{{ $session->losses }}</strong></button>
+                                <button class="qb-icon-btn" type="button" wire:click="undoScore('lose')" @disabled($session->losses < 1) aria-label="Koreksi: kurangi kalah">@include('partials.icon', ['name' => 'minus', 'size' => 14])</button>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 <div class="qb-next">
                     <h3>Next game</h3>
                     <ol class="qb-next-list">
@@ -283,24 +300,6 @@
                     @endforelse
                 </ul>
             </section>
-
-            {{-- ── Skor sesi ──────────────────────────────────────── --}}
-            @if ($isLive)
-                <section class="qb-panel qb-score" aria-labelledby="qb-score-title">
-                    <div class="qb-panel-head"><h2 id="qb-score-title">Skor sesi</h2></div>
-                    <div class="qb-score-grid">
-                        <div class="qb-score-cell is-win">
-                            <button class="qb-score-add" type="button" wire:click="addScore('win')" title="Tambah menang (tidak mengurangi sisa game)">@include('partials.icon', ['name' => 'trophy']) Menang <strong>{{ $session->wins }}</strong></button>
-                            <button class="qb-icon-btn" type="button" wire:click="undoScore('win')" @disabled($session->wins < 1) aria-label="Koreksi: kurangi menang">@include('partials.icon', ['name' => 'minus', 'size' => 14])</button>
-                        </div>
-                        <div class="qb-score-cell is-lose">
-                            <button class="qb-score-add" type="button" wire:click="addScore('lose')" title="Tambah kalah (tidak mengurangi sisa game)">@include('partials.icon', ['name' => 'x']) Kalah <strong>{{ $session->losses }}</strong></button>
-                            <button class="qb-icon-btn" type="button" wire:click="undoScore('lose')" @disabled($session->losses < 1) aria-label="Koreksi: kurangi kalah">@include('partials.icon', ['name' => 'minus', 'size' => 14])</button>
-                        </div>
-                    </div>
-                    <p class="qb-hint">Hanya skor — sisa game tidak berkurang.</p>
-                </section>
-            @endif
 
             {{-- ── Aksi cepat ─────────────────────────────────────── --}}
             <section class="qb-panel qb-quick" aria-labelledby="qb-quick-title">
