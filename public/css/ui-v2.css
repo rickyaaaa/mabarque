@@ -419,3 +419,26 @@ body.ui-v2 .admin-status.is-pending { background: var(--v-warn); }
 body.ui-v2 .admin-status.is-active { color: var(--v-ink); background: var(--v-accent); }
 body.ui-v2 .admin-status.is-inactive { background: var(--v-sunk); }
 body.ui-v2 .admin-pagination { color: var(--v-muted); }
+
+/* ── Daftar antrean: cari pemain & pembagian halaman ── */
+.ui-v2 .qb-queue-tools { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 18px; border-bottom: 2px solid var(--v-line); }
+.ui-v2 .qb-search { position: relative; display: flex; flex: 1 1 260px; max-width: 380px; align-items: center; }
+.ui-v2 .qb-search > .icon { position: absolute; left: 12px; color: var(--v-muted); pointer-events: none; }
+.ui-v2 .qb-search input { width: 100%; min-height: 40px; padding: 8px 38px 8px 38px; color: var(--v-ink); background: var(--v-sunk); border: 2px solid var(--v-line); border-radius: 0; font: 600 14px "Inter", sans-serif; }
+.ui-v2 .qb-search input:focus { background: var(--v-panel); outline: none; box-shadow: var(--v-shadow-sm); }
+.ui-v2 .qb-search input::placeholder { color: #807e75; font-weight: 500; }
+.ui-v2 .qb-search input::-webkit-search-cancel-button { display: none; }
+.ui-v2 .qb-search button { position: absolute; right: 6px; display: grid; width: 28px; height: 28px; place-items: center; padding: 0; color: var(--v-ink); background: transparent; border: 0; cursor: pointer; }
+.ui-v2 .qb-search button:hover { background: var(--v-accent); }
+.ui-v2 .qb-range { color: var(--v-muted); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.ui-v2 .qb-pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; padding: 14px 18px; border-top: 2px solid var(--v-line); }
+.ui-v2 .qb-page { display: inline-grid; min-width: 36px; height: 36px; place-items: center; padding: 0 8px; color: var(--v-ink); background: var(--v-panel); border: 2px solid var(--v-line); font: 700 13px "Inter", sans-serif; font-variant-numeric: tabular-nums; cursor: pointer; transition: transform 120ms ease, box-shadow 120ms ease; }
+.ui-v2 .qb-page:hover:not(:disabled) { transform: translate(-1px, -1px); box-shadow: var(--v-shadow-sm); }
+.ui-v2 .qb-page.is-active { background: var(--v-accent); box-shadow: var(--v-shadow-sm); }
+.ui-v2 .qb-page:disabled { color: #a5a39a; border-color: #c9c8bf; cursor: not-allowed; }
+.ui-v2 .qb-page .qb-flip { display: inline-flex; transform: scaleX(-1); }
+.ui-v2 .qb-page-gap { padding: 0 2px; color: var(--v-muted); font-weight: 700; }
+@media (max-width: 640px) {
+  .ui-v2 .qb-queue-tools { padding: 10px 12px; }
+  .ui-v2 .qb-search { max-width: none; }
+}

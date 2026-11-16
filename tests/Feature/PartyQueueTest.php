@@ -56,6 +56,27 @@ class PartyQueueTest extends TestCase
         return $this->queue->party($this->session)->pluck('player_name')->all();
     }
 
+    public function test_queue_list_is_paged_by_ten_and_searchable(): void
+    {
+        $names = [];
+        for ($i = 1; $i <= 23; $i++) {
+            $names[sprintf('Pemain %02d', $i)] = 2;
+        }
+        $this->players($names);
+        $this->session->queueEntries()->where('player_name', 'Pemain 17')->sole()->update(['mlbb_id' => '987654321']);
+        $this->actingAs($this->owner);
+
+        $board = Livewire::test(QueueBoard::class, ['session' => $this->session])
+            ->assertSee('Pemain 10')->assertDontSee('Pemain 11')->assertSee('1–10 dari 23 pemain')
+            ->call('goToPage', 3)->assertSee('Pemain 23')->assertDontSee('Pemain 10')->assertSee('21–23 dari 23 pemain')
+            ->call('goToPage', 99)->assertSet('queuePage', 3)
+            ->set('search', 'pemain 2')->assertSet('queuePage', 1)->assertSee('Pemain 20')->assertDontSee('Pemain 05')->assertSee('1–4 dari 4 hasil')
+            ->set('search', '98765')->assertSee('Pemain 17')->assertDontSee('Pemain 16')
+            ->set('search', 'tidak ada')->assertSee('Tidak ada pemain yang cocok');
+
+        $board->call('clearSearch')->assertSet('search', '')->assertSee('Pemain 01');
+    }
+
     public function test_party_fills_with_next_four_vip_players_skipping_joki(): void
     {
         $this->players(['Dey' => 2, 'Roti' => [8, 'joki'], 'Ir.fing' => 5, 'Indira' => 1, 'Pokedok' => 3, 'Kyoto' => 2]);

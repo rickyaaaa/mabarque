@@ -28,9 +28,18 @@ class QueueBoard extends Component
     /** Batas game per orang per sesi yang bisa dipilih streamer (0 = tanpa batas). */
     public const MAX_SESSION_CAP = 20;
 
+    /** Jumlah baris per halaman di daftar antrean. */
+    public const PER_PAGE = 10;
+
     public LiveSession $session;
 
     public string $filter = 'all';
+
+    /** Cari pemain berdasarkan nama atau ID MLBB. */
+    public string $search = '';
+
+    /** Halaman daftar antrean yang sedang dibuka (mulai dari 1). */
+    public int $queuePage = 1;
 
     public string $playerName = '';
 
@@ -102,9 +111,29 @@ class QueueBoard extends Component
     {
         $this->filter = in_array($filter, self::FILTERS, true) ? $filter : 'all';
         $this->selected = [];
+        $this->queuePage = 1;
     }
 
-    /** Centang semua pemain yang terlihat di filter sekarang, atau kosongkan bila semuanya sudah dicentang. */
+    public function updatedSearch(): void
+    {
+        $this->search = mb_substr($this->search, 0, 60);
+        $this->selected = [];
+        $this->queuePage = 1;
+    }
+
+    public function clearSearch(): void
+    {
+        $this->search = '';
+        $this->updatedSearch();
+    }
+
+    public function goToPage(int $page): void
+    {
+        $this->queuePage = max(1, $page);
+        $this->selected = [];
+    }
+
+    /** Centang semua pemain di halaman yang sedang terlihat, atau kosongkan bila semuanya sudah dicentang. */
     public function toggleSelectAll(): void
     {
         $visible = $this->visibleEntries()->pluck('id')->map(fn ($id) => (string) $id)->all();
@@ -130,7 +159,7 @@ class QueueBoard extends Component
     /** @return array<int> */
     private function selectedIds(): array
     {
-        // Hanya yang terlihat di filter sekarang — pemain yang tersembunyi tidak ikut terhapus diam-diam.
+        // Hanya yang terlihat di halaman sekarang — pemain yang tersembunyi tidak ikut terhapus diam-diam.
         $ids = array_values(array_intersect(
             array_unique(array_map('intval', $this->selected)),
             $this->visibleEntries()->pluck('id')->all(),
@@ -143,20 +172,50 @@ class QueueBoard extends Component
         return $ids;
     }
 
+    /** Pemain di halaman daftar yang sedang terlihat (sesudah filter, pencarian, dan pembagian halaman). */
     private function visibleEntries()
     {
-        $all = $this->session->queueEntries()->with('donation')->whereIn('status', self::VISIBLE)->get()
+        return $this->pageOf($this->filtered($this->allEntries()));
+    }
+
+    /** Semua pemain aktif: anggota party dipin di paling atas, sisanya mengikuti urutan antrean. */
+    private function allEntries()
+    {
+        return $this->session->queueEntries()->with('donation')->whereIn('status', self::VISIBLE)->get()
             ->sortBy(fn (QueueEntry $entry) => [$entry->status === 'playing' ? 0 : 1, $entry->position])
             ->values();
+    }
 
-        return match ($this->filter) {
-            'all' => $all,
-            'joki' => $all->where('service_type', 'joki')->values(),
-            'vip' => $all->where('service_type', '!=', 'joki')->values(),
-            'auto' => $all->where('provider', '!=', 'manual')->values(),
-            'manual' => $all->where('provider', 'manual')->values(),
+    private function filtered($all)
+    {
+        $entries = match ($this->filter) {
+            'joki' => $all->where('service_type', 'joki'),
+            'vip' => $all->where('service_type', '!=', 'joki'),
+            'auto' => $all->where('provider', '!=', 'manual'),
+            'manual' => $all->where('provider', 'manual'),
             default => $all,
         };
+
+        $term = mb_strtolower(trim($this->search));
+
+        if ($term !== '') {
+            $entries = $entries->filter(fn (QueueEntry $entry) => str_contains(mb_strtolower((string) $entry->player_name), $term)
+                || str_contains(mb_strtolower((string) $entry->mlbb_id), $term));
+        }
+
+        return $entries->values();
+    }
+
+    private function lastPage(int $total): int
+    {
+        return max(1, (int) ceil($total / self::PER_PAGE));
+    }
+
+    private function pageOf($entries)
+    {
+        $page = min(max(1, $this->queuePage), $this->lastPage($entries->count()));
+
+        return $entries->forPage($page, self::PER_PAGE)->values();
     }
 
     public function openAddPlayer(): void
@@ -192,6 +251,8 @@ class QueueBoard extends Component
             $this->matchesTotal = 1;
             $this->serviceType = 'vip';
             $this->filter = 'all';
+            $this->search = '';
+            $this->queuePage = 1;
 
             return "{$entry->display_name} masuk ke antrean.";
         });
@@ -255,6 +316,8 @@ class QueueBoard extends Component
             $count = $queueService->importPlayers($this->session, $this->importText);
             $this->reset(['importText', 'showImport']);
             $this->filter = 'all';
+            $this->search = '';
+            $this->queuePage = 1;
 
             return "{$count} pemain masuk ke antrean.";
         });
@@ -521,23 +584,19 @@ class QueueBoard extends Component
     public function render()
     {
         $this->session->loadMissing('user');
-        // Anggota party dipin di paling atas, sisanya mengikuti urutan antrean.
-        $all = $this->session->queueEntries()->with('donation')->whereIn('status', self::VISIBLE)->get()
-            ->sortBy(fn (QueueEntry $entry) => [$entry->status === 'playing' ? 0 : 1, $entry->position])
-            ->values();
+        $all = $this->allEntries();
+        $filtered = $this->filtered($all);
+        // Halaman dijaga tetap valid saat pemain berkurang (mis. halaman terakhir jadi kosong).
+        $this->queuePage = min(max(1, $this->queuePage), $this->lastPage($filtered->count()));
         $queue = app(QueueService::class);
         $party = $all->filter(fn (QueueEntry $entry) => $entry->status === 'playing' && $entry->service_type !== 'joki')->values();
         $size = $queue->partySize($this->session);
 
         return view('livewire.queue-board', [
-            'entries' => match ($this->filter) {
-                'all' => $all,
-                'joki' => $all->where('service_type', 'joki')->values(),
-                'vip' => $all->where('service_type', '!=', 'joki')->values(),
-                'auto' => $all->where('provider', '!=', 'manual')->values(),
-                'manual' => $all->where('provider', 'manual')->values(),
-                default => $all,
-            },
+            'entries' => $this->pageOf($filtered),
+            'filteredCount' => $filtered->count(),
+            'lastPage' => $this->lastPage($filtered->count()),
+            'perPage' => self::PER_PAGE,
             'counts' => [
                 'all' => $all->count(),
                 'auto' => $all->where('provider', '!=', 'manual')->count(),

@@ -27,6 +27,7 @@
         'tag' => '<path d="M12 2H4a2 2 0 0 0-2 2v8l10 10 10-10Z"/><circle cx="7.5" cy="7.5" r="1.5"/>',
         'monitor' => '<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>',
         'user' => '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+        'search' => '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
         'alert' => '<path d="M12 8v5M12 16.5h.01"/><path d="M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/>',
     ];
 @endphp

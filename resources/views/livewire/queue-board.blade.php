@@ -143,6 +143,20 @@
                     </div>
                 </div>
 
+                <div class="qb-queue-tools">
+                    <label class="qb-search">
+                        @include('partials.icon', ['name' => 'search', 'size' => 16])
+                        <span class="sr-only">Cari pemain</span>
+                        <input type="search" wire:model.live.debounce.300ms="search" placeholder="Cari nama atau ID MLBB" maxlength="60" autocomplete="off" />
+                        @if ($search !== '')
+                            <button type="button" wire:click="clearSearch" aria-label="Hapus pencarian">@include('partials.icon', ['name' => 'x', 'size' => 14])</button>
+                        @endif
+                    </label>
+                    @if ($filteredCount > 0)
+                        <span class="qb-range">{{ ($queuePage - 1) * $perPage + 1 }}–{{ min($queuePage * $perPage, $filteredCount) }} dari {{ $filteredCount }}{{ $search !== '' ? ' hasil' : ' pemain' }}</span>
+                    @endif
+                </div>
+
                 @php
                     $visibleIds = $entries->pluck('id')->map(fn ($id) => (string) $id)->all();
                     $selectedVisible = array_values(array_intersect($selected, $visibleIds));
@@ -187,8 +201,16 @@
                     </table>
                     @if ($entries->isEmpty())
                         <div class="qb-empty">
-                            <strong>{{ $counts['all'] === 0 ? 'Antrean masih kosong' : 'Tidak ada pemain di filter ini' }}</strong>
-                            <p>{{ $counts['all'] === 0 ? 'Donasi VIP yang cocok dengan paket akan masuk otomatis, atau tambahkan pemain manual.' : 'Pilih filter lain untuk melihat pemain.' }}</p>
+                            @if ($counts['all'] === 0)
+                                <strong>Antrean masih kosong</strong>
+                                <p>Donasi VIP yang cocok dengan paket akan masuk otomatis, atau tambahkan pemain manual.</p>
+                            @elseif ($search !== '')
+                                <strong>Tidak ada pemain yang cocok dengan “{{ $search }}”</strong>
+                                <p>Cek ejaan nama atau ID, atau pilih filter Semua.</p>
+                            @else
+                                <strong>Tidak ada pemain di filter ini</strong>
+                                <p>Pilih filter lain untuk melihat pemain.</p>
+                            @endif
                         </div>
                     @endif
                 </div>
@@ -216,6 +238,21 @@
                         </article>
                     @endforeach
                 </div>
+
+                @if ($lastPage > 1)
+                    @php
+                        $pages = collect([1, $lastPage, $queuePage - 1, $queuePage, $queuePage + 1])
+                            ->filter(fn ($p) => $p >= 1 && $p <= $lastPage)->unique()->sort()->values();
+                    @endphp
+                    <nav class="qb-pager" aria-label="Halaman daftar antrean">
+                        <button type="button" class="qb-page" wire:click="goToPage({{ $queuePage - 1 }})" @disabled($queuePage <= 1) aria-label="Halaman sebelumnya"><span class="qb-flip">@include('partials.icon', ['name' => 'arrow-right', 'size' => 14])</span></button>
+                        @foreach ($pages as $i => $p)
+                            @if ($i > 0 && $p - $pages[$i - 1] > 1)<span class="qb-page-gap" aria-hidden="true">…</span>@endif
+                            <button type="button" @class(['qb-page', 'is-active' => $p === $queuePage]) wire:click="goToPage({{ $p }})" aria-label="Halaman {{ $p }}" @if ($p === $queuePage) aria-current="page" @endif>{{ $p }}</button>
+                        @endforeach
+                        <button type="button" class="qb-page" wire:click="goToPage({{ $queuePage + 1 }})" @disabled($queuePage >= $lastPage) aria-label="Halaman berikutnya">@include('partials.icon', ['name' => 'arrow-right', 'size' => 14])</button>
+                    </nav>
+                @endif
             </section>
         </div>
 
