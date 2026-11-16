@@ -146,6 +146,7 @@ class OverlayController extends Controller
                     'name' => $package->name,
                     'price' => self::compactPrice((int) $package->price),
                     'games' => (int) $package->match_count,
+                    'gets' => $package->getsLabel(),
                 ])->values()->all(),
             'queue' => [
                 'status' => $queue['status'],

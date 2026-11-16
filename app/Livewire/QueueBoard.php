@@ -218,6 +218,17 @@ class QueueBoard extends Component
         return $entries->forPage($page, self::PER_PAGE)->values();
     }
 
+    /** Reward donasi (mis. Follback IG) sudah diberikan → hilang dari daftar. */
+    public function finishReward(int $donationId, DonationQueueService $service): void
+    {
+        $this->attempt(function () use ($donationId, $service): string {
+            $donation = auth()->user()->donations()->where('donations.id', $donationId)->firstOrFail();
+            $service->setRewardDone($donation);
+
+            return "Reward {$donation->donor_name} ditandai selesai.";
+        });
+    }
+
     public function openAddPlayer(): void
     {
         $this->resetValidation();
@@ -613,6 +624,9 @@ class QueueBoard extends Component
             'donationValue' => (int) $this->session->donations()->where('donations.status', '!=', 'refunded')->sum('amount'),
             // Kolom kanan papan: donasi terbaru (semua status) supaya streamer tidak perlu pindah halaman saat live.
             'recentDonations' => auth()->user()->donations()->latest('received_at')->latest('donations.id')->limit(5)->get(),
+            // Reward (mis. Follback IG) yang belum diberikan streamer.
+            'pendingRewards' => auth()->user()->donations()->with('vipPackage:id,name,kind,reward_label,match_count')
+                ->where('donations.status', 'reward')->whereNull('reward_done_at')->oldest('received_at')->limit(20)->get(),
             'readyCount' => $all->where('status', 'ready')->where('service_type', '!=', 'joki')->count(),
             'remainingTotal' => (int) $all->where('service_type', '!=', 'joki')->sum(fn (QueueEntry $entry) => $entry->matches_remaining),
             'publicUrl' => url('/'.auth()->user()->slug),

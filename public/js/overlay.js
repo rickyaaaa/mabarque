@@ -91,7 +91,7 @@
     packageList.hidden = !(settings.show_packages !== false && packages.length);
     packageList.replaceChildren(...packages.map((pkg) => {
       const item = el("li", "overlay-package");
-      item.append(el("strong", null, pkg.price), el("span", null, `${pkg.games} game`));
+      item.append(el("strong", null, pkg.price), el("span", null, pkg.gets || `${pkg.games} game`));
       return item;
     }));
 

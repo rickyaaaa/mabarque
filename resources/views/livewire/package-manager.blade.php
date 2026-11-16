@@ -5,7 +5,7 @@
         <div>
             <p class="eyebrow">Harga fleksibel untuk komunitas</p>
             <h1>Paket VIP</h1>
-            <p class="session-meta">Nominal donasi menentukan jumlah game: paket termahal yang muat dihitung dulu, lalu kelipatannya (mis. 75rb = 50rb + 25rb). Donasi di bawah harga termurah tidak dihitung.</p>
+            <p class="session-meta">Nominal donasi menentukan jumlah game: paket termahal yang muat dihitung dulu, lalu kelipatannya (mis. 75rb = 50rb + 25rb). Donasi di bawah harga termurah tidak dihitung. Paket <strong>Reward lain</strong> (mis. Follback IG) tidak menjadi game — donasinya masuk daftar reward.</p>
         </div>
         <div class="packages-header-actions">
             <a class="button button-outline" href="{{ $publicUrl }}" target="_blank" rel="noopener">@include('partials.icon', ['name' => 'link', 'size' => 16]) Lihat halaman publik</a>
@@ -28,15 +28,23 @@
     @else
         <section class="package-grid" aria-label="Daftar paket VIP">
             @foreach ($packages as $package)
-                <article wire:key="package-{{ $package->id }}" @class(['package-card', 'is-inactive' => ! $package->is_active])>
+                <article wire:key="package-{{ $package->id }}" @class(['package-card', 'is-inactive' => ! $package->is_active, 'is-reward' => $package->isReward()])>
                     <span class="package-ribbon">{{ $package->is_active ? 'Tampil' : 'Disembunyikan' }}</span>
                     <h2>{{ $package->name }}</h2>
                     <div class="package-price">{{ $rupiah($package->price) }}</div>
-                    <div class="package-matches">{{ $package->match_count }} match per donasi</div>
-                    <ul class="package-features">
-                        <li>Donasi {{ $rupiah($package->price) }} (atau kelipatannya) → {{ $package->match_count }} game per {{ $rupiah($package->price) }}</li>
-                        <li>{{ $package->queue_entries_count }} pemain pernah memakai paket ini</li>
-                    </ul>
+                    @if ($package->isReward())
+                        <div class="package-matches"><span class="package-kind">Reward</span> {{ $package->getsLabel() }}</div>
+                        <ul class="package-features">
+                            <li>Donasi {{ $rupiah($package->price) }} atau lebih → {{ $package->getsLabel() }} (tidak masuk antrean mabar)</li>
+                            <li>{{ $package->reward_count }} donatur pernah dapat reward ini</li>
+                        </ul>
+                    @else
+                        <div class="package-matches">{{ $package->match_count }} match per donasi</div>
+                        <ul class="package-features">
+                            <li>Donasi {{ $rupiah($package->price) }} (atau kelipatannya) → {{ $package->match_count }} game per {{ $rupiah($package->price) }}</li>
+                            <li>{{ $package->queue_entries_count }} pemain pernah memakai paket ini</li>
+                        </ul>
+                    @endif
                     <div class="package-actions">
                         <label class="package-toggle">
                             <input type="checkbox" @checked($package->is_active) wire:click="toggle({{ $package->id }})" />
@@ -78,6 +86,10 @@
                     <div><p class="eyebrow">Paket donasi</p><h2 id="package-modal-title">{{ $editingId ? 'Edit paket VIP' : 'Buat paket VIP' }}</h2></div>
                     <button class="icon-button" type="button" wire:click="closeForm" aria-label="Tutup">×</button>
                 </div>
+                <div class="layout-toggle package-kind-toggle" role="radiogroup" aria-label="Jenis paket">
+                    <label @class(['layout-option', 'is-active' => $kind === 'mabar'])><input type="radio" value="mabar" wire:model.live="kind" /> Mabar VIP <small>harga → jumlah game</small></label>
+                    <label @class(['layout-option', 'is-active' => $kind === 'reward'])><input type="radio" value="reward" wire:model.live="kind" /> Reward lain <small>mis. Follback IG, shoutout</small></label>
+                </div>
                 <label class="field-label" for="package-name">Nama paket</label>
                 <input class="field-input @error('name') is-invalid @enderror" id="package-name" wire:model="name" placeholder="Contoh: VIP 3 Match" maxlength="80" />
                 @error('name') <p class="form-error" role="alert">{{ $message }}</p> @enderror
@@ -86,13 +98,24 @@
                         <label class="field-label" for="package-price">Harga donasi (Rp)</label>
                         <input class="field-input @error('price') is-invalid @enderror" id="package-price" type="number" min="1000" step="1000" wire:model="price" />
                     </div>
-                    <div>
-                        <label class="field-label" for="package-matches">Jatah match</label>
-                        <input class="field-input @error('matchCount') is-invalid @enderror" id="package-matches" type="number" min="1" max="99" wire:model="matchCount" />
-                    </div>
+                    @if ($kind === 'reward')
+                        <div>
+                            <label class="field-label" for="package-reward">Yang didapat donatur</label>
+                            <input class="field-input @error('rewardLabel') is-invalid @enderror" id="package-reward" wire:model="rewardLabel" placeholder="Contoh: Follback IG" maxlength="80" />
+                        </div>
+                    @else
+                        <div>
+                            <label class="field-label" for="package-matches">Jatah match</label>
+                            <input class="field-input @error('matchCount') is-invalid @enderror" id="package-matches" type="number" min="1" max="99" wire:model="matchCount" />
+                        </div>
+                    @endif
                 </div>
+                @if ($kind === 'reward')
+                    <p class="modal-help">Donasi senilai harga ini atau lebih masuk daftar <strong>Reward donasi</strong> di papan antrean (tidak jadi game). Kelebihan nominal tidak dihitung.</p>
+                @endif
                 @error('price') <p class="form-error" role="alert">{{ $message }}</p> @enderror
                 @error('matchCount') <p class="form-error" role="alert">{{ $message }}</p> @enderror
+                @error('rewardLabel') <p class="form-error" role="alert">{{ $message }}</p> @enderror
                 <div class="modal-actions">
                     <button class="button button-outline" type="button" wire:click="closeForm">Batal</button>
                     <button class="button button-primary" type="submit" wire:loading.attr="disabled">Simpan paket</button>

@@ -112,9 +112,9 @@
         <div class="public-package-list">
           @forelse ($packages as $package)
             <button type="button" @class(['public-package-card', 'is-featured' => $loop->index === 1])
-                    data-package-name="{{ $package->name }}" data-package-price="{{ $package->price }}" data-package-price-label="{{ $rupiah($package->price) }}" data-package-games="{{ $package->match_count }}"
+                    data-package-name="{{ $package->name }}" data-package-price="{{ $package->price }}" data-package-price-label="{{ $rupiah($package->price) }}" data-package-games="{{ $package->getsLabel() }}"
                     aria-haspopup="dialog">
-              <strong>{{ $package->name }}</strong><span>{{ $rupiah($package->price) }}</span><small>{{ $package->match_count }} game</small>
+              <strong>{{ $package->name }}</strong><span>{{ $rupiah($package->price) }}</span><small>{{ $package->getsLabel() }}</small>
               <em class="public-package-cta">{{ $donationLinks ? 'Donasi sekarang →' : 'Lihat cara donasi →' }}</em>
             </button>
           @empty

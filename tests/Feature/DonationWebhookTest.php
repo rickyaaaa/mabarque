@@ -10,6 +10,7 @@ use App\Services\PlatformConnectionHealthService;
 use App\Services\Webhooks\SaweriaAdapter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Livewire\Livewire;
 use Tests\Concerns\SendsProviderWebhooks;
 use Tests\TestCase;
 
@@ -54,6 +55,62 @@ class DonationWebhookTest extends TestCase
     private function openLiveSession(): LiveSession
     {
         return LiveSession::create(['user_id' => $this->streamer->id, 'title' => 'Mabar', 'status' => 'active', 'started_at' => now()]);
+    }
+
+    /** Kasus 2026-11-17: streamer pasang "Follback IG 600rb" — tidak boleh jadi game. */
+    public function test_reward_package_donation_is_recorded_as_reward_not_games(): void
+    {
+        $session = $this->openLiveSession();
+        $follback = app(\App\Services\VipPackageService::class)->add($this->streamer, ['name' => 'Follback IG', 'kind' => 'reward', 'reward_label' => 'Follback IG', 'price' => 600000, 'match_count' => 7]);
+        $this->assertSame(0, $follback->match_count);
+
+        // 625rb: paket termahal yang muat = reward → reward saja, sisa 25rb tidak dihitung (opsi A).
+        $this->sendSaweria($this->saweria, $this->saweriaPayload('sw-r1', 'Raka', 625000, ['message' => 'ig: @raka.ml']), self::KEY)
+            ->assertCreated()->assertJsonPath('data.status', 'reward');
+        $donation = Donation::where('external_id', 'sw-r1')->sole();
+        $this->assertSame([$follback->id, null], [$donation->vip_package_id, $donation->queue_entry_id]);
+        $this->assertSame(0, $session->queueEntries()->count());
+        $this->assertSame('reward', $donation->notifications()->sole()->type);
+        $this->assertSame('Follback IG', $donation->notifications()->sole()->context['reward']);
+
+        // Di bawah harga reward: dihitung paket mabar seperti biasa (35rb×15 + 15rb = 46 game), tanpa reward.
+        $this->sendSaweria($this->saweria, $this->saweriaPayload('sw-r2', 'Dey', 540000), self::KEY)
+            ->assertCreated()->assertJsonPath('data.status', 'queued');
+        $this->assertSame(46, $session->queueEntries()->sole()->matches_total);
+
+        // Papan antrean menampilkan reward yang belum diberikan; selesai → hilang.
+        $this->actingAs($this->streamer);
+        Livewire::test(\App\Livewire\QueueBoard::class, ['session' => $session])
+            ->assertSee('Reward donasi')->assertSee('ig: @raka.ml')
+            ->call('finishReward', $donation->id)
+            ->assertDontSee('Reward donasi');
+        $this->assertNotNull($donation->refresh()->reward_done_at);
+
+        // Overlay & halaman viewer menulis rewardnya, bukan "1 game".
+        $token = app(\App\Services\OverlayTokenService::class)->current($this->streamer);
+        $this->assertContains('Follback IG', collect($this->getJson("/api/overlay/{$token}")->json('data.packages'))->pluck('gets')->all());
+    }
+
+    public function test_review_donation_can_be_recorded_as_reward_from_the_inbox(): void
+    {
+        $this->streamer->forceFill(['donation_queue_mode' => 'manual'])->save();
+        $this->openLiveSession();
+        $follback = $this->streamer->vipPackages()->create(['name' => 'Follback IG', 'kind' => 'reward', 'reward_label' => 'Follback IG', 'price' => 600000, 'match_count' => 0]);
+
+        $this->sendSaweria($this->saweria, $this->saweriaPayload('sw-r3', 'Nadia', 600000), self::KEY)
+            ->assertCreated()->assertJsonPath('data.status', 'review');
+        $donation = Donation::where('external_id', 'sw-r3')->sole();
+
+        $this->actingAs($this->streamer);
+        Livewire::test(\App\Livewire\DonationInbox::class)
+            ->call('startQueue', $donation->id)
+            ->assertSet('queueRewardId', $follback->id)
+            ->call('confirmReward', $follback->id)
+            ->assertDispatched('notify', message: 'Nadia dicatat dapat reward: Follback IG.')
+            ->call('toggleRewardDone', $donation->id);
+
+        $this->assertSame('reward', $donation->refresh()->status);
+        $this->assertNotNull($donation->reward_done_at);
     }
 
     // ── Saweria ──────────────────────────────────────────────────────────

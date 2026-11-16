@@ -21,6 +21,11 @@ class PackageManager extends Component
 
     public int|string $matchCount = 1;
 
+    /** mabar = harga → jumlah game; reward = harga → hadiah lain (mis. Follback IG). */
+    public string $kind = 'mabar';
+
+    public string $rewardLabel = '';
+
     /** Link halaman donasi per platform (kosong = tidak dipakai) dan platform tombol utama. */
     public array $links = ['sociabuzz' => '', 'saweria' => '', 'trakteer' => ''];
 
@@ -55,14 +60,14 @@ class PackageManager extends Component
     public function create(): void
     {
         $this->resetValidation();
-        $this->fill(['editingId' => null, 'name' => '', 'price' => 25000, 'matchCount' => 1, 'showForm' => true]);
+        $this->fill(['editingId' => null, 'name' => '', 'price' => 25000, 'matchCount' => 1, 'kind' => 'mabar', 'rewardLabel' => '', 'showForm' => true]);
     }
 
     public function edit(int $packageId): void
     {
         $package = $this->package($packageId);
         $this->resetValidation();
-        $this->fill(['editingId' => $package->id, 'name' => $package->name, 'price' => $package->price, 'matchCount' => $package->match_count, 'showForm' => true]);
+        $this->fill(['editingId' => $package->id, 'name' => $package->name, 'price' => $package->price, 'matchCount' => $package->match_count ?: 1, 'kind' => $package->isReward() ? 'reward' : 'mabar', 'rewardLabel' => (string) $package->reward_label, 'showForm' => true]);
     }
 
     public function closeForm(): void
@@ -72,15 +77,25 @@ class PackageManager extends Component
 
     public function save(VipPackageService $service): void
     {
+        $this->kind = $this->kind === 'reward' ? 'reward' : 'mabar';
+        $reward = $this->kind === 'reward';
+
         $validated = $this->validate([
             'name' => ['required', 'string', 'min:2', 'max:80'],
             'price' => ['required', 'integer', 'min:1000', 'max:100000000'],
-            'matchCount' => ['required', 'integer', 'between:1,99'],
+            'matchCount' => $reward ? ['nullable'] : ['required', 'integer', 'between:1,99'],
+            'rewardLabel' => $reward ? ['required', 'string', 'min:2', 'max:80'] : ['nullable'],
         ], [
             'price.min' => 'Harga donasi minimal Rp 1.000.',
-        ], ['name' => 'nama paket', 'price' => 'harga donasi', 'matchCount' => 'jatah match']);
+        ], ['name' => 'nama paket', 'price' => 'harga donasi', 'matchCount' => 'jatah match', 'rewardLabel' => 'reward yang didapat']);
 
-        $attributes = ['name' => trim($validated['name']), 'price' => (int) $validated['price'], 'match_count' => (int) $validated['matchCount']];
+        $attributes = [
+            'name' => trim($validated['name']),
+            'kind' => $this->kind,
+            'reward_label' => $reward ? trim((string) $validated['rewardLabel']) : null,
+            'price' => (int) $validated['price'],
+            'match_count' => $reward ? 0 : (int) $validated['matchCount'],
+        ];
 
         if ($this->duplicatePrice($attributes['price'])) {
             $this->addError('price', 'Sudah ada paket aktif dengan harga yang sama — donasi tidak bisa dibedakan.');
@@ -130,7 +145,7 @@ class PackageManager extends Component
     public function render(VipPackageService $service)
     {
         $user = auth()->user();
-        $packages = $user->vipPackages()->withCount('queueEntries')->orderBy('sort_order')->orderBy('id')->get();
+        $packages = $user->vipPackages()->withCount(['queueEntries', 'donations as reward_count' => fn ($q) => $q->where('donations.status', 'reward')])->orderBy('sort_order')->orderBy('id')->get();
 
         return view('livewire.package-manager', [
             'packages' => $packages,

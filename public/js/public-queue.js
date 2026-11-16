@@ -172,7 +172,7 @@
       selectedPrice = packagePrice || "";
       $("#package-dialog-title").textContent = packageName || "Paket VIP";
       $("#package-dialog-price").textContent = packagePriceLabel || "";
-      $("#package-dialog-games").textContent = `${packageGames} game`;
+      $("#package-dialog-games").textContent = packageGames || "";
       packageDialog.querySelectorAll("[data-price-inline]").forEach((node) => { node.textContent = packagePriceLabel || ""; });
       document.querySelectorAll(".public-package-card").forEach((other) => other.classList.toggle("is-selected", other === card));
       if (typeof packageDialog.showModal === "function") packageDialog.showModal();

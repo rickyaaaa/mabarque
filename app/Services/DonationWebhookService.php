@@ -89,8 +89,9 @@ class DonationWebhookService
                 // Notifikasi untuk panel "Notifikasi masuk" di halaman donasi streamer.
                 $processed->notifications()->create([
                     'user_id' => $connection->user_id,
-                    'type' => in_array($processed->status, ['queued', 'review'], true) ? $processed->status : 'received',
+                    'type' => in_array($processed->status, ['queued', 'review', 'reward'], true) ? $processed->status : 'received',
                     'context' => ['donor_name' => $processed->donor_name, 'amount' => $processed->amount, 'provider' => $processed->provider]
+                        + ($processed->status === 'reward' ? ['reward' => $processed->vipPackage?->getsLabel()] : [])
                         + ($processed->isForeign() ? ['currency' => $processed->currency, 'original_amount' => (float) $processed->original_amount] : []),
                 ]);
             }

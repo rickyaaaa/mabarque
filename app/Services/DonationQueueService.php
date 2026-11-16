@@ -17,6 +17,9 @@ use InvalidArgumentException;
  * Jumlah game dihitung dari kelipatan paket (paket termahal yang muat dulu, sisa nominal yang tidak cukup
  * untuk paket termurah tidak dihitung). Apakah donasi LANGSUNG masuk antrean ditentukan mode streamer
  * (users.donation_queue_mode), supaya donasi biasa/saweran tidak ikut terhitung sebagai mabar.
+ *
+ * Paket "Reward lain" (mis. Follback IG 600rb) tidak pernah menjadi game: bila paket termahal yang muat
+ * di nominal donasi adalah paket reward, donasi dicatat sebagai reward (sisa nominal tidak dihitung).
  */
 class DonationQueueService
 {
@@ -91,6 +94,21 @@ class DonationQueueService
         return self::mlbbIdFrom($message) !== null || preg_match('/\b(mabar|vip)\b/i', (string) $message) === 1;
     }
 
+    /**
+     * Paket reward untuk sebuah nominal: hanya bila paket TERMAHAL yang muat (dari semua paket aktif)
+     * adalah paket reward. Contoh mabar 25rb & 50rb + Follback IG 600rb: 625rb → Follback IG; 550rb → mabar.
+     *
+     * @param  Collection<int, VipPackage>  $packages  semua paket aktif (mabar & reward)
+     */
+    public static function rewardFor(int $amount, Collection $packages): ?VipPackage
+    {
+        $best = $packages->filter(fn (VipPackage $p) => (int) $p->price > 0 && (int) $p->price <= $amount)
+            ->sortBy([['price', 'desc'], ['kind', 'desc']])
+            ->first();
+
+        return $best?->isReward() ? $best : null;
+    }
+
     /** Usulan untuk donasi yang dimasukkan manual: jumlah game dari kelipatan paket + ID dari pesan. */
     public function suggestion(Donation $donation, User $owner): array
     {
@@ -100,7 +118,42 @@ class DonationQueueService
             'matches' => $plan['matches'] ?? 1,
             'description' => self::describe($plan),
             'mlbb_id' => self::mlbbIdFrom($donation->message),
+            'reward' => self::rewardFor((int) $donation->amount, $this->allActivePackages($owner)),
         ];
+    }
+
+    /**
+     * Catat donasi sebagai reward (mis. Follback IG) — dipanggil otomatis atau oleh streamer dari "Perlu cek".
+     *
+     * @throws InvalidArgumentException donasi sudah diproses atau paket bukan reward milik streamer
+     */
+    public function markReward(Donation $donation, VipPackage $package): Donation
+    {
+        return DB::transaction(function () use ($donation, $package): Donation {
+            $donation = Donation::query()->with('platformConnection')->lockForUpdate()->findOrFail($donation->id);
+
+            if (! in_array($donation->status, ['received', 'review'], true) || $donation->queue_entry_id !== null) {
+                throw new InvalidArgumentException('Donasi ini sudah diproses.');
+            }
+
+            if (! $package->isReward() || (int) $package->user_id !== (int) $donation->platformConnection?->user_id) {
+                throw new InvalidArgumentException('Paket reward tidak valid.');
+            }
+
+            return $this->applyReward($donation, $package);
+        });
+    }
+
+    /** Tandai reward sudah diberikan (atau batalkan tanda itu). */
+    public function setRewardDone(Donation $donation, bool $done = true): Donation
+    {
+        if ($donation->status !== 'reward') {
+            throw new InvalidArgumentException('Donasi ini bukan reward.');
+        }
+
+        $donation->forceFill(['reward_done_at' => $done ? now() : null])->save();
+
+        return $donation->fresh();
     }
 
     /**
@@ -172,6 +225,13 @@ class DonationQueueService
             }
 
             $packages = $this->activePackages($session->user);
+            $mode = array_key_exists((string) $session->user?->donation_queue_mode, self::MODES) ? $session->user->donation_queue_mode : 'smart';
+
+            // Paket reward (mis. Follback IG) cocok: dicatat sebagai reward, tidak pernah jadi game.
+            // Mode manual tetap minta streamer mengecek dulu.
+            if ($reward = self::rewardFor((int) $donation->amount, $this->allActivePackages($session->user))) {
+                return $mode === 'manual' ? $this->markReview($donation) : $this->applyReward($donation, $reward);
+            }
 
             // Belum ada paket aktif: tidak bisa dihitung → streamer yang memutuskan.
             if ($packages->isEmpty()) {
@@ -186,8 +246,6 @@ class DonationQueueService
 
                 return $donation->fresh();
             }
-
-            $mode = array_key_exists((string) $session->user?->donation_queue_mode, self::MODES) ? $session->user->donation_queue_mode : 'smart';
 
             if ($mode === 'manual' || ($mode === 'smart' && ! self::wantsMabar($donation->message))) {
                 return $this->markReview($donation);
@@ -228,6 +286,13 @@ class DonationQueueService
         return $donation->fresh();
     }
 
+    private function applyReward(Donation $donation, VipPackage $package): Donation
+    {
+        $donation->forceFill(['status' => 'reward', 'vip_package_id' => $package->id, 'processed_at' => now(), 'reward_done_at' => null])->save();
+
+        return $donation->fresh();
+    }
+
     private function markReview(Donation $donation): Donation
     {
         $donation->forceFill(['status' => 'review'])->save();
@@ -235,8 +300,14 @@ class DonationQueueService
         return $donation->fresh();
     }
 
-    /** @return Collection<int, VipPackage> */
+    /** Paket mabar aktif (dasar hitungan game). @return Collection<int, VipPackage> */
     private function activePackages(?User $owner): Collection
+    {
+        return $this->allActivePackages($owner)->reject(fn (VipPackage $p) => $p->isReward())->values();
+    }
+
+    /** Semua paket aktif, termasuk reward. @return Collection<int, VipPackage> */
+    private function allActivePackages(?User $owner): Collection
     {
         return $owner === null ? collect() : $owner->vipPackages()->where('is_active', true)->where('price', '>', 0)->get();
     }

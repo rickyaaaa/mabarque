@@ -27,7 +27,7 @@ class VipPackageService
         $attributes['sort_order'] ??= ((int) $user->vipPackages()->max('sort_order')) + 1;
         $attributes['is_active'] ??= true;
 
-        return $user->vipPackages()->create($attributes);
+        return $user->vipPackages()->create(self::normalize($attributes));
     }
 
     public function update(User $user, VipPackage $package, array $attributes): VipPackage
@@ -36,9 +36,24 @@ class VipPackageService
             abort(404);
         }
 
-        $package->update($attributes);
+        $package->update(self::normalize($attributes + ['kind' => $package->kind]));
 
         return $package->refresh();
+    }
+
+    /** Paket reward tidak punya jumlah game; paket mabar tidak punya keterangan reward. */
+    private static function normalize(array $attributes): array
+    {
+        $attributes['kind'] = ($attributes['kind'] ?? 'mabar') === 'reward' ? 'reward' : 'mabar';
+
+        if ($attributes['kind'] === 'reward') {
+            $attributes['match_count'] = 0;
+            $attributes['reward_label'] = trim((string) ($attributes['reward_label'] ?? '')) ?: null;
+        } else {
+            $attributes['reward_label'] = null;
+        }
+
+        return $attributes;
     }
 
     public function setActive(User $user, VipPackage $package, bool $active): VipPackage

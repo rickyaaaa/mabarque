@@ -29,6 +29,7 @@ class Donation extends Model
         'payload',
         'received_at',
         'processed_at',
+        'reward_done_at',
     ];
 
     protected $casts = [
@@ -37,6 +38,7 @@ class Donation extends Model
         'payload' => 'array',
         'received_at' => 'datetime',
         'processed_at' => 'datetime',
+        'reward_done_at' => 'datetime',
     ];
 
     public function platformConnection(): BelongsTo

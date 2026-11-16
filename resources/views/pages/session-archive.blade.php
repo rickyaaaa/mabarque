@@ -3,7 +3,7 @@
 @php
     $rupiah = fn (int $value) => 'Rp '.number_format($value, 0, ',', '.');
     $providerLabels = ['manual' => 'Manual', 'saweria' => 'Saweria', 'sociabuzz' => 'SociaBuzz', 'trakteer' => 'Trakteer'];
-    $donationStatus = ['received' => 'Baru', 'review' => 'Perlu cek', 'queued' => 'Masuk antrean', 'ignored' => 'Diabaikan', 'refunded' => 'Refund'];
+    $donationStatus = ['received' => 'Baru', 'review' => 'Perlu cek', 'queued' => 'Masuk antrean', 'reward' => 'Reward', 'ignored' => 'Diabaikan', 'refunded' => 'Refund'];
     $duration = $summary['duration'];
 @endphp
 

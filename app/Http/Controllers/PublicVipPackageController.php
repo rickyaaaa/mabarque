@@ -17,7 +17,9 @@ class PublicVipPackageController extends Controller
             'data' => $packageService->listForUser($user, true)->map(fn ($package) => [
                 'name' => $package->name,
                 'price' => $package->price,
+                'kind' => $package->kind,
                 'match_count' => $package->match_count,
+                'reward_label' => $package->reward_label,
             ])->values(),
         ]);
     }

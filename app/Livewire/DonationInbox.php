@@ -15,7 +15,7 @@ use Livewire\Component;
  */
 class DonationInbox extends Component
 {
-    private const STATUSES = ['all', 'received', 'review', 'queued', 'ignored'];
+    private const STATUSES = ['all', 'received', 'review', 'queued', 'reward', 'ignored'];
 
     private const PROVIDERS = ['all', 'saweria', 'sociabuzz', 'trakteer'];
 
@@ -31,6 +31,9 @@ class DonationInbox extends Component
     public string $queueMlbbId = '';
 
     public string $queuePlan = '';
+
+    /** Paket reward yang cocok dengan nominal donasi yang sedang dicek (diusulkan di modal). */
+    public ?int $queueRewardId = null;
 
     public function setStatus(string $status): void
     {
@@ -52,6 +55,7 @@ class DonationInbox extends Component
         $this->queueMatches = $suggestion['matches'];
         $this->queueMlbbId = (string) $suggestion['mlbb_id'];
         $this->queuePlan = $suggestion['description'];
+        $this->queueRewardId = $suggestion['reward']?->id;
         $this->resetValidation();
     }
 
@@ -75,6 +79,30 @@ class DonationInbox extends Component
             $this->dispatch('notify', message: "{$donation->donor_name} masuk antrean dengan {$this->queueMatches} game.");
         } catch (InvalidArgumentException $exception) {
             $this->addError('queueMatches', $exception->getMessage());
+        }
+    }
+
+    /** Catat donasi yang sedang dicek sebagai reward (mis. Follback IG), bukan game. */
+    public function confirmReward(int $packageId, DonationQueueService $service): void
+    {
+        try {
+            $package = auth()->user()->vipPackages()->whereKey($packageId)->firstOrFail();
+            $donation = $service->markReward($this->donation($this->queueingId), $package);
+            $this->queueingId = null;
+            $this->dispatch('notify', message: "{$donation->donor_name} dicatat dapat reward: {$package->getsLabel()}.");
+        } catch (InvalidArgumentException $exception) {
+            $this->addError('queueMatches', $exception->getMessage());
+        }
+    }
+
+    public function toggleRewardDone(int $donationId, DonationQueueService $service): void
+    {
+        try {
+            $donation = $this->donation($donationId);
+            $donation = $service->setRewardDone($donation, $donation->reward_done_at === null);
+            $this->dispatch('notify', message: $donation->reward_done_at ? "Reward {$donation->donor_name} ditandai selesai." : "Reward {$donation->donor_name} dibuka lagi.");
+        } catch (InvalidArgumentException $exception) {
+            $this->dispatch('notify', message: $exception->getMessage());
         }
     }
 
@@ -102,7 +130,7 @@ class DonationInbox extends Component
     public function render()
     {
         $user = auth()->user();
-        $base = $user->donations()->with(['vipPackage:id,name', 'queueEntry:id,position,status']);
+        $base = $user->donations()->with(['vipPackage:id,name,kind,reward_label,match_count', 'queueEntry:id,position,status']);
         $recent = (clone $base)->latest('received_at')->limit(200)->get();
 
         $visible = $recent
@@ -127,6 +155,7 @@ class DonationInbox extends Component
             'activeProviders' => $connections->where('status', 'active')->count(),
             'connectedProviders' => $connections->count(),
             'packages' => $this->activePackages(),
+            'rewardPackages' => $this->activePackages()->filter(fn ($p) => $p->isReward())->values(),
             'queueing' => $this->queueingId ? $recent->firstWhere('id', $this->queueingId) : null,
             'notifications' => $user->donationNotifications()->latest()->limit(6)->get(),
             'unread' => $user->donationNotifications()->whereNull('read_at')->count(),

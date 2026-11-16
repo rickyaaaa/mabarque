@@ -136,14 +136,14 @@ class StageCPagesTest extends TestCase
     public function test_package_manager_deletes_package_and_keeps_player_history(): void
     {
         $session = LiveSession::create(['user_id' => $this->streamer->id, 'title' => 'Mabar', 'status' => 'active', 'started_at' => now()]);
-        $package = $this->streamer->vipPackages()->create(['name' => 'Follback IG', 'price' => 250000, 'match_count' => 1]);
+        $package = $this->streamer->vipPackages()->create(['name' => 'Paket Lama', 'price' => 250000, 'match_count' => 1]);
         $entry = \App\Models\QueueEntry::create(['live_session_id' => $session->id, 'vip_package_id' => $package->id, 'player_name' => 'Budi', 'provider' => 'manual', 'matches_total' => 3, 'status' => 'ready', 'position' => 1]);
 
         Livewire::test(PackageManager::class)
             ->assertSeeHtml('wire:click="delete('.$package->id.')"')
             ->call('delete', $package->id)
-            ->assertDispatched('notify', message: 'Paket Follback IG dihapus.')
-            ->assertDontSee('Follback IG');
+            ->assertDispatched('notify', message: 'Paket Paket Lama dihapus.')
+            ->assertDontSee('Paket Lama');
 
         $this->assertNull($package->fresh());
         $this->assertNull($entry->refresh()->vip_package_id);

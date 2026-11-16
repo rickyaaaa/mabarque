@@ -16,7 +16,9 @@ class VipPackageRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'min:2', 'max:80'],
             'price' => ['required', 'integer', 'min:1000'],
-            'match_count' => ['required', 'integer', 'between:1,99'],
+            'kind' => ['sometimes', 'in:mabar,reward'],
+            'reward_label' => ['required_if:kind,reward', 'nullable', 'string', 'min:2', 'max:80'],
+            'match_count' => ['required_unless:kind,reward', 'nullable', 'integer', 'between:1,99'],
             'is_active' => ['sometimes', 'boolean'],
             'sort_order' => ['sometimes', 'integer', 'min:0'],
         ];

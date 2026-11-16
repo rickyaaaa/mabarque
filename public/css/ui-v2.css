@@ -466,3 +466,25 @@ body.ui-v2 .bg-image-actions .button { display: inline-flex; align-items: center
 }
 
 body.ui-v2 .control-group-title { margin: 22px 0 4px; padding-top: 16px; border-top: 2px solid var(--v-rule); font-size: 15px; font-weight: 800; letter-spacing: -.01em; }
+
+/* Paket "Reward lain" & daftar reward donasi */
+.ui-v2 .qb-tag.is-reward, body.ui-v2 .donation-status.reward { color: #fff; background: #5b3fd1; }
+.ui-v2 .qb-reward-list { margin: 0; padding: 0; list-style: none; }
+.ui-v2 .qb-reward-list li { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; padding: 12px 16px; border-top: 1px solid var(--v-rule); }
+.ui-v2 .qb-reward-list li:first-child { border-top: 0; }
+.ui-v2 .qb-reward-list li > div { display: grid; gap: 4px; min-width: 0; }
+.ui-v2 .qb-reward-list strong { font-size: 14px; }
+.ui-v2 .qb-reward-list .qb-tag { justify-self: start; }
+.ui-v2 .qb-reward-list small { color: var(--v-muted); font-size: 12px; overflow-wrap: anywhere; }
+.ui-v2 .qb-reward-list .qb-icon-btn { flex: none; width: 34px; height: 34px; }
+body.ui-v2 .package-card.is-reward .package-kind { display: inline-block; margin-right: 4px; padding: 1px 6px; color: #fff; background: #5b3fd1; font-size: 11px; font-weight: 800; }
+body.ui-v2 .package-kind-toggle { margin-bottom: 4px; }
+body.ui-v2 .package-kind-toggle small { display: block; color: var(--v-muted); font-size: 11px; font-weight: 500; }
+body.ui-v2 .reward-choice { margin: 10px 0; padding: 10px 12px; background: var(--v-sunk); border: 2px dashed var(--v-line); }
+body.ui-v2 .reward-choice .modal-help { margin: 0 0 8px; }
+body.ui-v2 .reward-choice-list { display: flex; flex-wrap: wrap; gap: 8px; }
+body.ui-v2 .reward-choice-list .button { display: inline-flex; align-items: center; gap: 6px; }
+body.ui-v2 .package-kind-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+body.ui-v2 .package-kind-toggle .layout-option { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; padding: 10px 12px; color: var(--v-ink); background: var(--v-panel); border: 2px solid var(--v-line); font-size: 13px; font-weight: 800; cursor: pointer; }
+body.ui-v2 .package-kind-toggle .layout-option small { flex-basis: 100%; }
+body.ui-v2 .package-kind-toggle .layout-option.is-active { background: var(--v-accent); box-shadow: var(--v-shadow-sm); }

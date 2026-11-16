@@ -1,6 +1,6 @@
 @php
     $providerLabels = ['manual' => 'Manual', 'saweria' => 'Saweria', 'sociabuzz' => 'SociaBuzz', 'trakteer' => 'Trakteer'];
-    $donationStatus = ['received' => 'Baru', 'review' => 'Perlu cek', 'queued' => 'Masuk antrean', 'ignored' => 'Diabaikan', 'refunded' => 'Refund'];
+    $donationStatus = ['received' => 'Baru', 'review' => 'Perlu cek', 'queued' => 'Masuk antrean', 'reward' => 'Reward', 'ignored' => 'Diabaikan', 'refunded' => 'Refund'];
     $initials = fn (string $name) => mb_strtoupper(collect(preg_split('/\s+/', trim($name)))->filter()->take(2)->map(fn ($w) => mb_substr($w, 0, 1))->join('')) ?: '?';
     $serviceTypes = \App\Models\QueueEntry::SERVICE_TYPES;
     $maxMatches = \App\Services\QueueService::MAX_MATCHES;
@@ -300,6 +300,29 @@
                     @endforelse
                 </ul>
             </section>
+
+            {{-- ── Reward donasi yang belum diberikan (mis. Follback IG) ── --}}
+            @if ($pendingRewards->isNotEmpty())
+                <section class="qb-panel qb-rewards" aria-labelledby="qb-reward-title">
+                    <div class="qb-panel-head">
+                        <h2 id="qb-reward-title">Reward donasi</h2>
+                        <span class="qb-count">{{ $pendingRewards->count() }} belum</span>
+                    </div>
+                    <ul class="qb-reward-list">
+                        @foreach ($pendingRewards as $reward)
+                            <li wire:key="reward-{{ $reward->id }}">
+                                <div>
+                                    <strong>{{ $reward->donor_name }}</strong>
+                                    <span class="qb-tag is-reward">{{ $reward->vipPackage?->getsLabel() ?? 'Reward' }}</span>
+                                    @if ($reward->message)<small>“{{ \Illuminate\Support\Str::limit($reward->message, 80) }}”</small>@endif
+                                    <small>{{ $reward->amountLabel() }} · {{ $reward->received_at?->diffForHumans(short: true) }}</small>
+                                </div>
+                                <button class="qb-icon-btn" type="button" wire:click="finishReward({{ $reward->id }})" title="Tandai reward sudah diberikan" aria-label="Reward {{ $reward->donor_name }} selesai">@include('partials.icon', ['name' => 'check', 'size' => 14])</button>
+                            </li>
+                        @endforeach
+                    </ul>
+                </section>
+            @endif
 
             {{-- ── Aksi cepat ─────────────────────────────────────── --}}
             <section class="qb-panel qb-quick" aria-labelledby="qb-quick-title">

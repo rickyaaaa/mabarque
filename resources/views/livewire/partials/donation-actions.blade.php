@@ -3,6 +3,10 @@
     <button class="button button-small button-primary" type="button" wire:click="startQueue({{ $donation->id }})">Masukkan antrean</button>
     <button class="button button-small button-outline" type="button" wire:click="ignore({{ $donation->id }})"
             wire:confirm="Abaikan donasi {{ $donation->donor_name }}? Donatur tidak akan masuk antrean.">Abaikan</button>
+@elseif ($donation->status === 'reward')
+    <button @class(['button', 'button-small', 'button-primary' => ! $donation->reward_done_at, 'button-outline' => $donation->reward_done_at]) type="button" wire:click="toggleRewardDone({{ $donation->id }})">
+        {{ $donation->reward_done_at ? 'Buka lagi' : 'Reward selesai' }}
+    </button>
 @else
     <span class="session-meta">—</span>
 @endif

@@ -1,7 +1,7 @@
 @php
     $rupiah = fn (int $value) => 'Rp '.number_format($value, 0, ',', '.');
-    $statusLabels = ['received' => 'Baru', 'review' => 'Perlu cek', 'queued' => 'Masuk antrean', 'ignored' => 'Diabaikan', 'refunded' => 'Refund'];
-    $statusClass = ['received' => 'new', 'review' => 'review', 'queued' => 'queued', 'ignored' => 'ignored', 'refunded' => 'ignored'];
+    $statusLabels = ['received' => 'Baru', 'review' => 'Perlu cek', 'queued' => 'Masuk antrean', 'reward' => 'Reward', 'ignored' => 'Diabaikan', 'refunded' => 'Refund'];
+    $statusClass = ['received' => 'new', 'review' => 'review', 'queued' => 'queued', 'reward' => 'reward', 'ignored' => 'ignored', 'refunded' => 'ignored'];
     $providerLabels = ['saweria' => 'Saweria', 'sociabuzz' => 'SociaBuzz', 'trakteer' => 'Trakteer'];
     $initials = fn (string $name) => mb_strtoupper(collect(preg_split('/\s+/', trim($name)))->filter()->take(2)->map(fn ($w) => mb_substr($w, 0, 1))->join('')) ?: '?';
     $avatarColors = ['#3b1945', '#d82a1c', '#1f6faf', '#684780', '#238b39', '#a91b16'];
@@ -35,7 +35,7 @@
     <section class="donation-toolbar" aria-label="Filter donasi">
         <div><p class="eyebrow">Kotak masuk</p><h2>Donasi terbaru</h2></div>
         <div class="donation-filters" role="group" aria-label="Filter status">
-            @foreach (['all' => 'Semua', 'received' => 'Baru', 'review' => 'Perlu cek', 'queued' => 'Masuk antrean', 'ignored' => 'Diabaikan'] as $key => $label)
+            @foreach (['all' => 'Semua', 'received' => 'Baru', 'review' => 'Perlu cek', 'queued' => 'Masuk antrean', 'reward' => 'Reward', 'ignored' => 'Diabaikan'] as $key => $label)
                 <button type="button" wire:click="setStatus('{{ $key }}')" @class(['filter-button', 'is-active' => $status === $key]) aria-pressed="{{ $status === $key ? 'true' : 'false' }}">{{ $label }} <span>({{ $counts[$key] }})</span></button>
             @endforeach
         </div>
@@ -59,8 +59,8 @@
                         <td><div class="donor-cell"><span class="avatar" style="background: {{ $avatarColors[$donation->id % 6] }}">{{ $initials($donation->donor_name) }}</span><div><strong>{{ $donation->donor_name }}</strong><small>{{ $donation->queueEntry ? 'Posisi #'.$donation->queueEntry->position : ($donation->message ? '“'.\Illuminate\Support\Str::limit($donation->message, 40).'”' : '—') }}</small></div></div></td>
                         <td><span class="provider-pill {{ $donation->provider }}">{{ $providerLabels[$donation->provider] ?? $donation->provider }}</span></td>
                         <td class="donation-amount">{{ $donation->amountLabel() }}</td>
-                        <td>{{ $donation->vipPackage?->name ?? '—' }}</td>
-                        <td><span class="donation-status {{ $statusClass[$donation->status] ?? 'new' }}">{{ $statusLabels[$donation->status] ?? $donation->status }}</span></td>
+                        <td>{{ $donation->status === 'reward' ? ($donation->vipPackage?->getsLabel() ?? 'Reward') : ($donation->vipPackage?->name ?? '—') }}</td>
+                        <td><span class="donation-status {{ $statusClass[$donation->status] ?? 'new' }}">{{ $donation->status === 'reward' && $donation->reward_done_at ? 'Reward ✓' : ($statusLabels[$donation->status] ?? $donation->status) }}</span></td>
                         <td><span class="donation-actions">@include('livewire.partials.donation-actions', ['donation' => $donation])</span></td>
                     </tr>
                 @endforeach
@@ -70,8 +70,8 @@
         <div class="donation-card-list">
             @foreach ($donations as $donation)
                 <article class="donation-card" wire:key="donation-card-{{ $donation->id }}">
-                    <div class="donation-card-head"><div class="donor-cell"><span class="avatar" style="background: {{ $avatarColors[$donation->id % 6] }}">{{ $initials($donation->donor_name) }}</span><div><strong>{{ $donation->donor_name }}</strong><small>{{ $donation->received_at?->format('H:i') }} WIB</small></div></div><span class="donation-status {{ $statusClass[$donation->status] ?? 'new' }}">{{ $statusLabels[$donation->status] ?? $donation->status }}</span></div>
-                    <div class="donation-card-meta"><span class="provider-pill {{ $donation->provider }}">{{ $providerLabels[$donation->provider] ?? $donation->provider }}</span><strong>{{ $donation->amountLabel() }}</strong><span>{{ $donation->vipPackage?->name ?? 'Tanpa paket' }}</span></div>
+                    <div class="donation-card-head"><div class="donor-cell"><span class="avatar" style="background: {{ $avatarColors[$donation->id % 6] }}">{{ $initials($donation->donor_name) }}</span><div><strong>{{ $donation->donor_name }}</strong><small>{{ $donation->received_at?->format('H:i') }} WIB</small></div></div><span class="donation-status {{ $statusClass[$donation->status] ?? 'new' }}">{{ $donation->status === 'reward' && $donation->reward_done_at ? 'Reward ✓' : ($statusLabels[$donation->status] ?? $donation->status) }}</span></div>
+                    <div class="donation-card-meta"><span class="provider-pill {{ $donation->provider }}">{{ $providerLabels[$donation->provider] ?? $donation->provider }}</span><strong>{{ $donation->amountLabel() }}</strong><span>{{ $donation->status === 'reward' ? ($donation->vipPackage?->getsLabel() ?? 'Reward') : ($donation->vipPackage?->name ?? 'Tanpa paket') }}</span></div>
                     <div class="donation-card-foot">@include('livewire.partials.donation-actions', ['donation' => $donation])</div>
                 </article>
             @endforeach
@@ -97,8 +97,8 @@
                 @forelse ($notifications as $notification)
                     @php
                         $context = $notification->context ?? [];
-                        $icon = ['queued' => ['is-green', 'check'], 'review' => ['is-orange', 'alert'], 'failed' => ['is-red', 'x']][$notification->type] ?? ['is-plain', 'wallet'];
-                        $label = ['queued' => 'masuk antrean otomatis', 'review' => 'perlu dicek', 'failed' => 'gagal diproses'][$notification->type] ?? 'mengirim donasi';
+                        $icon = ['queued' => ['is-green', 'check'], 'review' => ['is-orange', 'alert'], 'failed' => ['is-red', 'x'], 'reward' => ['is-green', 'star']][$notification->type] ?? ['is-plain', 'wallet'];
+                        $label = ['queued' => 'masuk antrean otomatis', 'review' => 'perlu dicek', 'failed' => 'gagal diproses', 'reward' => 'dapat reward: '.($context['reward'] ?? 'reward')][$notification->type] ?? 'mengirim donasi';
                     @endphp
                     <div @class(['activity-item', 'is-unread' => ! $notification->read_at]) wire:key="notif-{{ $notification->id }}">
                         <span class="activity-icon {{ $icon[0] }}" aria-hidden="true">@include('partials.icon', ['name' => $icon[1], 'size' => 15])</span>
@@ -128,6 +128,22 @@
                 @endif
                 @if ($queueing->message)
                     <blockquote class="donation-message">“{{ $queueing->message }}”</blockquote>
+                @endif
+                @if ($rewardPackages->isNotEmpty())
+                    <div class="reward-choice">
+                        <p class="modal-help">
+                            @if ($queueRewardId)
+                                Nominal ini cocok dengan paket reward. Catat sebagai reward (tidak masuk antrean mabar):
+                            @else
+                                Atau catat sebagai reward (tidak masuk antrean mabar):
+                            @endif
+                        </p>
+                        <div class="reward-choice-list">
+                            @foreach ($rewardPackages as $reward)
+                                <button type="button" @class(['button', 'button-small', 'button-primary' => $queueRewardId === $reward->id, 'button-outline' => $queueRewardId !== $reward->id]) wire:click="confirmReward({{ $reward->id }})">@include('partials.icon', ['name' => 'star', 'size' => 14]) {{ $reward->getsLabel() }} · {{ $rupiah($reward->price) }}</button>
+                            @endforeach
+                        </div>
+                    </div>
                 @endif
                 <p class="modal-help">Hitungan paket: <strong>{{ $queuePlan }}</strong>. Ubah jumlah game bila perlu.</p>
                 <div class="field-row">

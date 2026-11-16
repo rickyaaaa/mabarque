@@ -54,7 +54,7 @@ class OverlayScoreTest extends TestCase
         $token = app(OverlayTokenService::class)->current($this->owner);
         $this->getJson("/api/overlay/{$token}")->assertOk()
             ->assertJsonPath('data.score', ['wins' => 2, 'losses' => 1])
-            ->assertJsonPath('data.packages', [['name' => 'Mabar 2 game', 'price' => '25K', 'games' => 2], ['name' => 'Mabar 5 game', 'price' => '50K', 'games' => 5]])
+            ->assertJsonPath('data.packages', [['name' => 'Mabar 2 game', 'price' => '25K', 'games' => 2, 'gets' => '2 game'], ['name' => 'Mabar 5 game', 'price' => '50K', 'games' => 5, 'gets' => '5 game']])
             ->assertJsonPath('data.overlay_settings.show_score', true)
             ->assertJsonPath('data.overlay_settings.show_packages', true);
 
