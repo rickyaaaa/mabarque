@@ -2,6 +2,7 @@
 // Semua teks dimasukkan lewat textContent (nama pemain berasal dari donatur — jangan pakai innerHTML).
 (function () {
   const POLL_MS = 3000;
+  const OBS_RETRY_MS = 30000;
   const PROVIDERS = { manual: "Manual", saweria: "Saweria", sociabuzz: "SociaBuzz", trakteer: "Trakteer" };
   const token = document.body.dataset.token;
   const card = document.querySelector("#overlay");
@@ -147,23 +148,77 @@
     }
   }
 
-  // Sinkron OBS: event ini hanya dikirim oleh OBS ke browser source (tidak ada di browser biasa / pratinjau).
-  // Server yang memutuskan (sesuai pengaturan streamer) apakah sesi live ikut dimulai/diakhiri.
-  async function sendObsEvent(event) {
-    if (params.get("preview") === "1") return;
+  let obsStreaming;
+  let obsStatusRevision = 0;
+  let pendingObsEvent;
+  let sendingObsEvent = false;
+  let obsRetryAt = 0;
+
+  async function sendPendingObsEvent() {
+    if (!pendingObsEvent || sendingObsEvent || Date.now() < obsRetryAt) return;
+
+    const event = pendingObsEvent;
+    sendingObsEvent = true;
     try {
-      await fetch(`/api/overlay/${encodeURIComponent(token)}/obs`, {
+      const response = await fetch(`/api/overlay/${encodeURIComponent(token)}/obs`, {
         method: "POST",
         headers: { Accept: "application/json", "Content-Type": "application/json" },
         body: JSON.stringify({ event }),
       });
-      poll();
+
+      if (pendingObsEvent === event) {
+        if (response.ok || (response.status < 500 && response.status !== 429 && response.status !== 408)) {
+          pendingObsEvent = undefined;
+        } else {
+          obsRetryAt = Date.now() + OBS_RETRY_MS;
+        }
+      }
+      if (response.ok) poll();
     } catch (error) {
-      // Gagal kirim (jaringan): streamer masih bisa mulai/akhiri sesi dari dashboard.
+      if (pendingObsEvent === event) obsRetryAt = Date.now() + OBS_RETRY_MS;
+    } finally {
+      sendingObsEvent = false;
+      if (pendingObsEvent && pendingObsEvent !== event) sendPendingObsEvent();
     }
   }
-  window.addEventListener("obsStreamingStarted", () => sendObsEvent("started"));
-  window.addEventListener("obsStreamingStopped", () => sendObsEvent("stopped"));
+
+  function updateObsStatus(streaming, fromEvent = false) {
+    if (streaming === obsStreaming) return;
+
+    const wasStreaming = obsStreaming;
+    obsStreaming = streaming;
+    // OBS yang sudah berhenti saat source baru dibuka jangan menutup sesi manual.
+    if (!streaming && wasStreaming === undefined && !fromEvent) return;
+
+    pendingObsEvent = streaming ? "started" : "stopped";
+    obsRetryAt = 0;
+    sendPendingObsEvent();
+  }
+
+  function readObsStatus() {
+    const revision = ++obsStatusRevision;
+    window.obsstudio?.getStatus?.((status) => {
+      if (revision === obsStatusRevision && typeof status?.streaming === "boolean") {
+        updateObsStatus(status.streaming);
+      }
+    });
+  }
+
+  if (params.get("preview") !== "1") {
+    const observeObsEvent = (streaming) => {
+      // Respons getStatus yang diminta sebelum event ini tidak boleh menimpanya.
+      obsStatusRevision++;
+      updateObsStatus(streaming, true);
+    };
+
+    window.addEventListener("obsStreamingStarted", () => observeObsEvent(true));
+    window.addEventListener("obsStreamingStopped", () => observeObsEvent(false));
+    readObsStatus();
+    window.setInterval(() => {
+      readObsStatus();
+      sendPendingObsEvent();
+    }, POLL_MS);
+  }
 
   render(window.__OVERLAY__ || {});
   window.setInterval(poll, POLL_MS);
