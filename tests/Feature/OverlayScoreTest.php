@@ -58,22 +58,23 @@ class OverlayScoreTest extends TestCase
             ->assertJsonPath('data.overlay_settings.show_score', true)
             ->assertJsonPath('data.overlay_settings.show_packages', true);
 
-        // Koreksi skor & sembunyikan dari overlay.
+        // Skor overlay langsung ikut tombol Menang/Kalah (dan koreksinya) di papan antrean.
+        Livewire::test(QueueBoard::class, ['session' => $session])
+            ->call('undoScore', 'win')
+            ->call('addScore', 'lose');
+        $this->getJson("/api/overlay/{$token}")->assertJsonPath('data.score', ['wins' => 1, 'losses' => 2]);
+
+        // Halaman pengaturan overlay hanya menampilkan skor itu, tanpa tombol skor terpisah.
         Livewire::test(OverlaySettingsPanel::class)
-            ->call('adjustScore', 'win', -1)
-            ->call('adjustScore', 'loss', 1)
-            ->assertSee('W 1')->assertSee('L 2')
+            ->assertSee('W 1')->assertSee('L 2')->assertSee('Otomatis mengikuti tombol Menang / Kalah')
+            ->assertDontSeeHtml('adjustScore')
             ->set('showScore', false)
             ->set('showPackages', false)
             ->call('save');
 
-        $this->assertSame([1, 2], [$session->refresh()->wins, $session->losses]);
         $this->getJson("/api/overlay/{$token}")
             ->assertJsonPath('data.overlay_settings.show_score', false)
             ->assertJsonPath('data.overlay_settings.show_packages', false);
-
-        Livewire::test(OverlaySettingsPanel::class)->call('resetScore');
-        $this->assertSame([0, 0], [$session->refresh()->wins, $session->losses]);
 
         // Belum live: tidak ada skor.
         app(LiveSessionService::class)->end($this->owner, $session);

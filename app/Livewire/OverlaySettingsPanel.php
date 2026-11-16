@@ -170,27 +170,6 @@ class OverlaySettingsPanel extends Component
         $this->loadSaved();
     }
 
-    /** Koreksi skor Win/Lose sesi live (mis. salah klik Menang/Kalah). */
-    public function adjustScore(string $type, int $delta): void
-    {
-        $session = auth()->user()->liveSessions()->active()->latest('started_at')->first();
-        $column = $type === 'loss' ? 'losses' : 'wins';
-
-        if ($session === null) {
-            $this->dispatch('notify', message: 'Skor hanya bisa diubah saat sesi live berjalan.');
-
-            return;
-        }
-
-        $session->forceFill([$column => max(0, (int) $session->{$column} + ($delta >= 0 ? 1 : -1))])->save();
-    }
-
-    public function resetScore(): void
-    {
-        auth()->user()->liveSessions()->active()->latest('started_at')->first()?->forceFill(['wins' => 0, 'losses' => 0])->save();
-        $this->dispatch('notify', message: 'Skor sesi ini direset ke 0–0.');
-    }
-
     public function regenerateLink(OverlayTokenService $tokens): void
     {
         $tokens->issue(auth()->user());

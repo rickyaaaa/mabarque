@@ -144,22 +144,15 @@
             </label>
             <p class="size-help">Syarat: overlay ini sudah dipasang sebagai Browser Source di OBS, dan opsi <strong>"Shutdown source when not visible"</strong> tidak dicentang (atau overlay ada di scene yang sedang tampil).</p>
 
+            {{-- Skor overlay = skor papan antrean (satu sumber): tidak ada tombol skor terpisah di sini. --}}
             <div class="score-control">
                 <div>
                     <strong>Skor sesi ini</strong>
-                    <small>{{ $session ? 'Koreksi bila salah klik.' : 'Tersedia saat sesi live berjalan.' }}</small>
+                    <small>Otomatis mengikuti tombol Menang / Kalah di papan antrean — tidak perlu dicatat dua kali.</small>
                 </div>
-                <div class="score-adjust" aria-label="Koreksi menang">
-                    <button type="button" wire:click="adjustScore('win', -1)" @disabled(! $session) aria-label="Kurangi menang">−</button>
-                    <span class="score-pill win">W {{ $session?->wins ?? 0 }}</span>
-                    <button type="button" wire:click="adjustScore('win', 1)" @disabled(! $session) aria-label="Tambah menang">+</button>
-                </div>
-                <div class="score-adjust" aria-label="Koreksi kalah">
-                    <button type="button" wire:click="adjustScore('loss', -1)" @disabled(! $session) aria-label="Kurangi kalah">−</button>
-                    <span class="score-pill loss">L {{ $session?->losses ?? 0 }}</span>
-                    <button type="button" wire:click="adjustScore('loss', 1)" @disabled(! $session) aria-label="Tambah kalah">+</button>
-                </div>
-                <button class="overlay-link" type="button" wire:click="resetScore" @disabled(! $session) wire:confirm="Reset skor sesi ini ke 0–0?">Reset</button>
+                <span class="score-pill win">W {{ $session?->wins ?? 0 }}</span>
+                <span class="score-pill loss">L {{ $session?->losses ?? 0 }}</span>
+                <a class="overlay-link" href="/dashboard">Buka papan antrean</a>
             </div>
 
             <div class="control-actions">
