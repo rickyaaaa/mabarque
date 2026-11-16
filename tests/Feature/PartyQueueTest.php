@@ -381,7 +381,7 @@ class PartyQueueTest extends TestCase
             ->assertDispatched('notify', message: 'Menang dicatat. Skor 1–0.')
             ->call('addScore', 'win')
             ->call('addScore', 'lose')
-            ->assertSeeHtml('<span>Win – Lose</span><strong>2–1</strong>')
+            ->assertSeeHtml('<span>Win – Lose</span><strong>2 – 1</strong>')
             ->call('undoScore', 'win')
             ->assertDispatched('notify', message: 'Skor dikoreksi: 1–1.');
         $this->assertSame([1, 1, 1], [$this->session->refresh()->wins, $this->session->losses, $this->session->total_matches]);

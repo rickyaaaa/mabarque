@@ -47,7 +47,7 @@
     <section class="qb-stats" aria-label="Ringkasan">
         <article class="qb-stat is-dark"><span>Di antrean</span><strong>{{ $counts['all'] }}</strong><small>{{ $readyCount }} siap main</small></article>
         @if ($isLive)
-            <article class="qb-stat"><span>Win – Lose</span><strong>{{ $session->wins }}–{{ $session->losses }}</strong><small>skor sesi ini</small></article>
+            <article class="qb-stat"><span>Win – Lose</span><strong>{{ $session->wins }} – {{ $session->losses }}</strong><small>skor sesi ini</small></article>
             <article class="qb-stat"><span>Match selesai</span><strong>{{ $session->total_matches }}</strong><small>sejak live dimulai</small></article>
             <article class="qb-stat is-accent"><span>Donasi masuk</span><strong>Rp {{ number_format($donationValue, 0, ',', '.') }}</strong><small>semua donasi sesi ini</small></article>
         @else
