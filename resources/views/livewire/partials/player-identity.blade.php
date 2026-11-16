@@ -9,6 +9,6 @@
         <small class="player-donation" title="{{ $entry->donation?->message }}">Donasi Rp {{ number_format((int) $entry->donation_amount, 0, ',', '.') }}{{ $entry->donation?->message ? ' · “'.\Illuminate\Support\Str::limit($entry->donation->message, 50).'”' : ' · tanpa pesan' }}</small>
     @endif
     @if ($entry->note)
-        <small class="player-note" title="{{ $entry->note }}">✎ {{ \Illuminate\Support\Str::limit($entry->note, 60) }}</small>
+        <small class="player-note" title="{{ $entry->note }}">@include('partials.icon', ['name' => 'pencil', 'size' => 11]) {{ \Illuminate\Support\Str::limit($entry->note, 60) }}</small>
     @endif
 </span>

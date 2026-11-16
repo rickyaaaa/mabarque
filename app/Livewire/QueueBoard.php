@@ -550,6 +550,11 @@ class QueueBoard extends Component
             'cap' => $queue->sessionCap($this->session),
             'isLive' => $this->session->status === 'active',
             'donationValue' => (int) $this->session->donations()->where('donations.status', '!=', 'refunded')->sum('amount'),
+            // Kolom kanan papan: donasi terbaru (semua status) supaya streamer tidak perlu pindah halaman saat live.
+            'recentDonations' => auth()->user()->donations()->latest('received_at')->latest('donations.id')->limit(5)->get(),
+            'readyCount' => $all->where('status', 'ready')->where('service_type', '!=', 'joki')->count(),
+            'remainingTotal' => (int) $all->where('service_type', '!=', 'joki')->sum(fn (QueueEntry $entry) => $entry->matches_remaining),
+            'publicUrl' => url('/'.auth()->user()->slug),
             'mvpEnabled' => $queue->mvpFreeGame($this->session),
             'donationMode' => $this->session->user?->donation_queue_mode ?: 'smart',
             'matches' => app(MatchService::class),

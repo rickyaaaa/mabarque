@@ -300,12 +300,12 @@ class PartyQueueTest extends TestCase
 
         // Aturan mati: tombol MVP tidak tampil dan tanda MVP diabaikan.
         $board = Livewire::actingAs($this->owner)->test(QueueBoard::class, ['session' => $this->session])
-            ->assertDontSee('⭐ MVP')
+            ->assertDontSeeHtml('wire:click="toggleMvp')
             ->call('toggleMvp', $dey->id)
             ->assertSet('mvpId', null);
 
         $board->call('openRules')->set('mvpFreeGame', true)->call('saveRules')->assertHasNoErrors()
-            ->assertSee('⭐ MVP')
+            ->assertSeeHtml('wire:click="toggleMvp')
             ->call('toggleMvp', $dey->id)
             ->assertSet('mvpId', $dey->id)
             ->call('finishGame')

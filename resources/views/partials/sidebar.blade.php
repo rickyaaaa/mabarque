@@ -6,12 +6,12 @@
         ? $sidebarSession->queueEntries()->reorder()->whereIn('status', ['ready', 'offline', 'playing'])->count()
         : 0;
     $links = [
-        'live-session' => ['/live-session', '⌂', 'Dashboard'],
-        'dashboard' => ['/dashboard', '☷', 'Antrean'],
-        'vip-packages' => ['/vip-packages', '♟', 'Paket VIP'],
-        'donations' => ['/donations', '★', 'VIP &amp; Donasi'],
-        'overlay-settings' => ['/overlay-settings', '▣', 'Overlay OBS'],
-        'account' => ['/account', '◎', 'Akun'],
+        'live-session' => ['/live-session', 'layout', 'Dashboard'],
+        'dashboard' => ['/dashboard', 'list', 'Antrean'],
+        'vip-packages' => ['/vip-packages', 'tag', 'Paket VIP'],
+        'donations' => ['/donations', 'wallet', 'VIP &amp; Donasi'],
+        'overlay-settings' => ['/overlay-settings', 'monitor', 'Overlay OBS'],
+        'account' => ['/account', 'user', 'Akun'],
     ];
 @endphp
 <aside class="sidebar" aria-label="Navigasi utama">
@@ -22,7 +22,7 @@
     <nav class="main-nav">
         @foreach ($links as $key => [$href, $icon, $label])
             <a @class(['nav-link', 'is-active' => ($active ?? '') === $key]) href="{{ $href }}" @if (($active ?? '') === $key) aria-current="page" @endif>
-                <span class="nav-icon" aria-hidden="true">{{ $icon }}</span><span>{!! $label !!}</span>
+                <span class="nav-icon" aria-hidden="true">@include('partials.icon', ['name' => $icon, 'size' => 19])</span><span>{!! $label !!}</span>
             </a>
         @endforeach
     </nav>

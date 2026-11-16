@@ -1,68 +1,80 @@
 @php
-    $statusLabels = ['ready' => 'Siap', 'offline' => 'Offline', 'playing' => 'Sedang bermain', 'skipped' => 'Dilewati', 'done' => 'Selesai'];
     $providerLabels = ['manual' => 'Manual', 'saweria' => 'Saweria', 'sociabuzz' => 'SociaBuzz', 'trakteer' => 'Trakteer'];
+    $donationStatus = ['received' => 'Baru', 'review' => 'Perlu cek', 'queued' => 'Masuk antrean', 'ignored' => 'Diabaikan', 'refunded' => 'Refund'];
     $initials = fn (string $name) => mb_strtoupper(collect(preg_split('/\s+/', trim($name)))->filter()->take(2)->map(fn ($w) => mb_substr($w, 0, 1))->join('')) ?: '?';
-    $avatarColors = ['#3b1945', '#d82a1c', '#1f6faf', '#684780', '#238b39', '#a91b16'];
     $serviceTypes = \App\Models\QueueEntry::SERVICE_TYPES;
     $maxMatches = \App\Services\QueueService::MAX_MATCHES;
     $donationModes = \App\Services\DonationQueueService::MODES;
+    $donationModeShort = ['smart' => 'Otomatis bila pesan berisi ID / “mabar”', 'manual' => 'Selalu konfirmasi manual', 'auto' => 'Otomatis semua donasi'];
 @endphp
 
 {{-- Refresh otomatis dijeda selama ada popup terbuka supaya isian form tidak tertimpa. --}}
-<div @if (! $showAddPlayer && ! $editingId && ! $showImport && ! $showRules) wire:poll.5s="refreshQueue" @endif>
-    {{-- ── Header sesi ─────────────────────────────────────────────── --}}
-    <header class="session-header region-session-header">
-        @if ($isLive)
-            <div>
+<div class="qb" @if (! $showAddPlayer && ! $editingId && ! $showImport && ! $showRules) wire:poll.5s="refreshQueue" @endif>
+    {{-- ── Kepala halaman ──────────────────────────────────────────── --}}
+    <header class="qb-head">
+        <div class="qb-head-title">
+            @if ($isLive)
+                <span class="qb-live is-live"><i aria-hidden="true"></i>Live</span>
                 <h1>{{ $session->title }}</h1>
-                <p class="session-meta"
+                <p class="qb-meta"
                    x-data="{ start: {{ $session->started_at?->getTimestamp() ?? 'null' }}, now: Date.now() / 1000 }"
                    x-init="setInterval(() => now = Date.now() / 1000, 1000)">
                     {{ $session->started_at?->translatedFormat('l, j M Y') }}
-                    <span class="meta-separator">•</span>
-                    Live <span x-text="start ? new Date(Math.max(0, now - start) * 1000).toISOString().substring(11, 19) : '—'"></span>
+                    <span aria-hidden="true">·</span>
+                    Durasi <span class="qb-num" x-text="start ? new Date(Math.max(0, now - start) * 1000).toISOString().substring(11, 19) : '—'"></span>
                 </p>
-            </div>
-            <div class="session-stats" aria-label="Ringkasan sesi">
-                <div class="session-stat"><span>Di antrean</span><strong>{{ $counts['all'] }}</strong></div>
-                <div class="session-stat"><span>Win – Lose</span><strong>{{ $session->wins }}–{{ $session->losses }}</strong></div>
-                <div class="session-stat"><span>Match selesai</span><strong>{{ $session->total_matches }}</strong></div>
-                <div class="session-stat"><span>Donasi masuk</span><strong>Rp {{ number_format($donationValue, 0, ',', '.') }}</strong></div>
-            </div>
-            <button class="button button-outline" type="button"
-                    wire:click="endSession"
-                    wire:confirm="Akhiri sesi &quot;{{ $session->title }}&quot;? Pemain yang sisa game-nya belum habis otomatis ikut ke sesi berikutnya.">
-                Akhiri sesi
-            </button>
-        @else
-            <div>
+            @else
+                <span class="qb-live"><i aria-hidden="true"></i>Belum live</span>
                 <h1>Antrean</h1>
-                <p class="session-meta">Belum live <span class="meta-separator">•</span> Sisa game tersimpan dan tampil di halaman viewer. Tambah atau edit pemain kapan saja.</p>
-            </div>
-            <div class="session-stats" aria-label="Ringkasan antrean">
-                <div class="session-stat"><span>Di antrean</span><strong>{{ $counts['all'] }}</strong></div>
-            </div>
-            <a class="button button-primary" href="/live-session">Mulai sesi live</a>
-        @endif
+                <p class="qb-meta">Sisa game tersimpan dan tampil di halaman viewer. Tambah atau edit pemain kapan saja.</p>
+            @endif
+        </div>
+        <div class="qb-head-actions">
+            <button class="qb-btn" type="button" wire:click="openImport">@include('partials.icon', ['name' => 'clipboard']) Tempel banyak pemain</button>
+            <button class="qb-btn is-accent" type="button" wire:click="openAddPlayer">@include('partials.icon', ['name' => 'plus']) Tambah pemain</button>
+            @if ($isLive)
+                <button class="qb-btn is-quiet" type="button" wire:click="endSession"
+                        wire:confirm="Akhiri sesi &quot;{{ $session->title }}&quot;? Pemain yang sisa game-nya belum habis otomatis ikut ke sesi berikutnya.">
+                    @include('partials.icon', ['name' => 'stop']) Akhiri sesi
+                </button>
+            @else
+                <a class="qb-btn is-dark" href="/live-session">@include('partials.icon', ['name' => 'radio']) Mulai sesi live</a>
+            @endif
+        </div>
     </header>
 
+    {{-- ── Angka utama ─────────────────────────────────────────────── --}}
+    <section class="qb-stats" aria-label="Ringkasan">
+        <article class="qb-stat is-dark"><span>Di antrean</span><strong>{{ $counts['all'] }}</strong><small>{{ $readyCount }} siap main</small></article>
+        @if ($isLive)
+            <article class="qb-stat"><span>Win – Lose</span><strong>{{ $session->wins }}–{{ $session->losses }}</strong><small>skor sesi ini</small></article>
+            <article class="qb-stat"><span>Match selesai</span><strong>{{ $session->total_matches }}</strong><small>sejak live dimulai</small></article>
+            <article class="qb-stat is-accent"><span>Donasi masuk</span><strong>Rp {{ number_format($donationValue, 0, ',', '.') }}</strong><small>semua donasi sesi ini</small></article>
+        @else
+            <article class="qb-stat"><span>Sisa game</span><strong>{{ $remainingTotal }}</strong><small>total Mabar VIP tersimpan</small></article>
+            <article class="qb-stat"><span>Mainin akun</span><strong>{{ $counts['joki'] }}</strong><small>pesanan aktif</small></article>
+            <article class="qb-stat is-accent"><span>Party</span><strong>{{ $partySizeLimit }}+1</strong><small>pemain + streamer per game</small></article>
+        @endif
+    </section>
+
     @error('queue')
-        <p class="form-error queue-error" role="alert">{{ $message }}</p>
+        <p class="qb-alert" role="alert">{{ $message }}</p>
     @enderror
 
-    {{-- ── Party sekarang, next game & aksi cepat ──────────────────── --}}
-    <section class="top-grid" aria-label="Kontrol sesi">
-        <article class="current-player region-current-player" aria-labelledby="current-player-title">
-            <div class="current-player-label" id="current-player-title">
-                {{ ! $isLive ? 'Belum live' : ($party->isNotEmpty() ? 'Sedang main' : 'Belum ada game berjalan') }}
-                <span class="party-count">{{ $party->count() }}/{{ $partySizeLimit }} pemain + streamer</span>
-            </div>
-            <div class="party-body">
-                <ol class="party-list" aria-label="Pemain di party">
+    <div class="qb-grid">
+        <div class="qb-main">
+            {{-- ── Sedang main (party) ─────────────────────────────── --}}
+            <section @class(['qb-panel', 'qb-turn', 'is-active' => $party->isNotEmpty()]) aria-labelledby="qb-turn-title">
+                <div class="qb-panel-head">
+                    <h2 id="qb-turn-title">{{ ! $isLive ? 'Belum live' : ($party->isNotEmpty() ? 'Sedang main' : 'Belum ada game berjalan') }}</h2>
+                    <span class="qb-count">{{ $party->count() }}/{{ $partySizeLimit }} pemain + streamer</span>
+                </div>
+
+                <ol class="qb-party" aria-label="Pemain di party">
                     @foreach ($party as $member)
-                        <li @class(['party-slot', 'is-filled', 'is-mvp' => $mvpId === $member->id]) wire:key="party-{{ $member->id }}">
-                            <span class="avatar" style="background: {{ $avatarColors[$member->id % 6] }}" aria-hidden="true">{{ $initials($member->display_name) }}</span>
-                            <span class="party-slot-text">
+                        <li @class(['qb-slot', 'is-filled', 'is-mvp' => $mvpId === $member->id]) wire:key="party-{{ $member->id }}">
+                            <span class="qb-avatar" aria-hidden="true">{{ $initials($member->display_name) }}</span>
+                            <span class="qb-slot-text">
                                 <strong>{{ $member->display_name }}</strong>
                                 <small>
                                     @if ($member->mlbb_id && trim($member->player_name) !== '')ID {{ $member->mlbb_id }} · @endif
@@ -71,165 +83,215 @@
                                 </small>
                             </span>
                             @if ($mvpEnabled && $isLive)
-                                <button type="button" @class(['mvp-toggle', 'is-active' => $mvpId === $member->id]) wire:click="toggleMvp({{ $member->id }})"
+                                <button type="button" @class(['qb-mvp', 'is-active' => $mvpId === $member->id]) wire:click="toggleMvp({{ $member->id }})"
                                         title="{{ $mvpId === $member->id ? 'Batalkan MVP' : 'Tandai MVP — main lagi, sisa tidak berkurang' }}"
-                                        aria-pressed="{{ $mvpId === $member->id ? 'true' : 'false' }}" aria-label="MVP: {{ $member->display_name }}">⭐ MVP</button>
+                                        aria-pressed="{{ $mvpId === $member->id ? 'true' : 'false' }}" aria-label="MVP: {{ $member->display_name }}">@include('partials.icon', ['name' => 'star', 'size' => 14]) MVP</button>
                             @endif
                         </li>
                     @endforeach
                     @for ($slot = $party->count(); $slot < $partySizeLimit; $slot++)
-                        <li class="party-slot is-empty"><span class="party-slot-text"><strong>{{ $isLive ? 'Slot kosong' : 'Party diisi saat live' }}</strong></span></li>
+                        <li class="qb-slot is-empty"><span class="qb-slot-text"><strong>{{ $isLive ? 'Slot kosong' : 'Party diisi saat live' }}</strong></span></li>
                     @endfor
                 </ol>
-                <div class="party-next">
-                    <p class="party-next-title">Next game</p>
-                    @forelse ($nextUp as $next)
-                        <p @class(['party-next-name', 'is-picked' => $next->isPickedForNext()]) wire:key="next-{{ $next->id }}">
-                            <span>{{ $loop->iteration }}. {{ $next->display_name }} <small>sisa {{ $matches->remaining($next) }}</small></span>
-                            @if ($isLive && $next->isPickedForNext())
-                                <button class="party-next-remove" type="button" wire:click="unpickNext({{ $next->id }})" title="Batalkan dari Next game" aria-label="Batalkan {{ $next->display_name }} dari Next game">×</button>
-                            @else
-                                <small class="party-next-auto">otomatis</small>
-                            @endif
-                        </p>
-                    @empty
-                        <p class="party-next-empty">Tidak ada yang menunggu. Tambah pemain atau tunggu donasi VIP.</p>
-                    @endforelse
-                    <p class="party-next-hint">{{ $isLive ? 'Pilih manual dengan tombol ⏭ di daftar.' : 'Perkiraan dari urutan antrean.' }}</p>
-                </div>
-            </div>
-        </article>
 
-        <article class="quick-actions region-quick-actions" aria-labelledby="quick-actions-title">
-            <h2 id="quick-actions-title">Kontrol game</h2>
-            <div class="quick-action-row">
-                @if (! $isLive)
-                    <a class="button button-small button-light" href="/live-session"><span aria-hidden="true">▶</span> Mulai sesi live</a>
-                @elseif ($party->isEmpty())
-                    <button class="button button-small button-light" type="button" wire:click="startGame" @disabled($nextUp->isEmpty())><span aria-hidden="true">▶</span> Mulai game</button>
-                @else
-                    <button class="button button-small button-light" type="button" wire:click="finishGame"
-                            title="Semua pemain di party berkurang 1 game"><span aria-hidden="true">✓</span> Selesai game</button>
-                    @if ($party->count() < $partySizeLimit && $nextUp->isNotEmpty())
-                        <button class="button button-small button-light" type="button" wire:click="startGame"><span aria-hidden="true">+</span> Isi slot kosong</button>
-                    @endif
-                    <button class="button button-small button-light" type="button" wire:click="benchAll"
-                            wire:confirm="Keluarkan semua pemain dari party? Sisa game mereka tidak berubah."><span aria-hidden="true">⏏</span> Keluarkan semua</button>
-                @endif
-                <button class="button button-small button-light" type="button" wire:click="openRules"><span aria-hidden="true">⚙</span> Aturan party</button>
-            </div>
-            @if ($isLive)
-                <div class="score-row" aria-label="Skor Win / Lose sesi ini">
-                    <span class="score-label">Skor</span>
-                    <button class="button button-small button-win" type="button" wire:click="addScore('win')" title="Tambah menang (tidak mengurangi sisa game)"><span aria-hidden="true">🏆</span> Menang <strong>{{ $session->wins }}</strong></button>
-                    <button class="score-undo" type="button" wire:click="undoScore('win')" @disabled($session->wins < 1) aria-label="Koreksi: kurangi menang">−</button>
-                    <button class="button button-small button-lose" type="button" wire:click="addScore('lose')" title="Tambah kalah (tidak mengurangi sisa game)"><span aria-hidden="true">✗</span> Kalah <strong>{{ $session->losses }}</strong></button>
-                    <button class="score-undo" type="button" wire:click="undoScore('lose')" @disabled($session->losses < 1) aria-label="Koreksi: kurangi kalah">−</button>
-                </div>
-            @endif
-            <p class="party-rules-note">
-                {{ $partySizeLimit }} pemain per game ·
-                {{ $cap > 0 ? "maks {$cap} game per orang tiap sesi" : 'tanpa batas game per sesi' }}
-                @if ($mvpEnabled)<br />⭐ MVP = main lagi @endif
-                <br />Donasi: {{ ['smart' => 'otomatis bila pesan berisi ID/“mabar”', 'manual' => 'selalu konfirmasi manual', 'auto' => 'otomatis semua donasi'][$donationMode] ?? '' }}
-            </p>
-            <button class="button button-primary button-add" type="button" wire:click="openAddPlayer"><span class="add-icon" aria-hidden="true">+</span> Tambah pemain</button>
-            <button class="button button-outline button-small button-import" type="button" wire:click="openImport">⇣ Tempel banyak pemain</button>
-        </article>
-    </section>
-
-    {{-- ── Daftar antrean ──────────────────────────────────────────── --}}
-    <section class="queue-panel" aria-labelledby="queue-title">
-        <div class="queue-heading-row">
-            <h2 class="queue-title region-queue-title" id="queue-title">Daftar antrean <span>({{ $counts['all'] }} pemain)</span></h2>
-            <div class="filter-group" role="group" aria-label="Filter asal pemain" title="Mabar VIP / Mainin akun = jenis layanan · Otomatis = masuk dari donasi · Manual = diinput sendiri">
-                @foreach (['all' => 'Semua', 'vip' => 'Mabar VIP', 'joki' => 'Mainin akun', 'auto' => 'Otomatis', 'manual' => 'Manual'] as $key => $label)
-                    <button type="button" wire:click="setFilter('{{ $key }}')" @class(['filter-button', 'is-active' => $filter === $key]) aria-pressed="{{ $filter === $key ? 'true' : 'false' }}">
-                        {{ $label }} <span>({{ $counts[$key] }})</span>
-                    </button>
-                @endforeach
-            </div>
-        </div>
-
-        @if ($party->isNotEmpty())
-            <div class="current-turn-marker" role="status" aria-live="polite">
-                <span class="current-turn-pulse" aria-hidden="true"></span>
-                <span><strong>Sedang main</strong> {{ $party->pluck('display_name')->join(', ') }}</span>
-            </div>
-        @endif
-
-        @php
-            $visibleIds = $entries->pluck('id')->map(fn ($id) => (string) $id)->all();
-            $selectedVisible = array_values(array_intersect($selected, $visibleIds));
-            $allSelected = $visibleIds !== [] && count($selectedVisible) === count($visibleIds);
-        @endphp
-        @if ($selectedVisible !== [])
-            <div class="bulk-bar" role="region" aria-label="Aksi untuk pemain yang dicentang">
-                <strong>{{ count($selectedVisible) }} dipilih</strong>
-                <button class="button button-small button-danger" type="button" wire:click="bulkRemove"
-                        wire:confirm="Hapus {{ count($selectedVisible) }} pemain dari antrean? Sisa game mereka ikut hilang.">Hapus</button>
-                <button class="button button-small button-outline" type="button" wire:click="clearSelection">Batal</button>
-            </div>
-        @endif
-
-        <div class="queue-table-wrap">
-            <table class="queue-table">
-                <caption class="sr-only">Daftar pemain dalam antrean mabar VIP</caption>
-                <thead class="region-queue-columns">
-                    <tr>
-                        <th scope="col" class="select-col"><input type="checkbox" class="row-check" wire:click="toggleSelectAll" @checked($allSelected) @disabled($visibleIds === []) aria-label="Centang semua pemain" /></th>
-                        <th scope="col">#</th>
-                        <th scope="col">Nama pemain</th>
-                        <th scope="col">Layanan</th>
-                        <th scope="col">Sesi ini</th>
-                        <th scope="col">Sisa</th>
-                        <th scope="col">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="region-queue-rows">
-                    @foreach ($entries as $entry)
-                        <tr wire:key="row-{{ $entry->id }}" @class(['is-playing' => $entry->status === 'playing', 'is-offline' => $entry->status === 'offline', 'is-selected' => in_array((string) $entry->id, $selected, true)])>
-                            <td class="select-col"><input type="checkbox" class="row-check" wire:model.live="selected" value="{{ $entry->id }}" aria-label="Centang {{ $entry->display_name }}" /></td>
-                            <td>@if ($entry->status === 'playing')<span class="party-marker" title="Sedang main (posisi antrean #{{ $entry->position }})">▶</span>@else{{ $entry->position }}@endif</td>
-                            <td><div class="player-cell"><span class="avatar" style="background: {{ $avatarColors[$entry->id % 6] }}">{{ $initials($entry->display_name) }}</span>@include('livewire.partials.player-identity', ['entry' => $entry])@include('livewire.partials.entry-status', ['entry' => $entry])</div></td>
-                            <td>@include('livewire.partials.service-badge', ['entry' => $entry])</td>
-                            <td>{{ $entry->service_type === 'joki' ? '—' : ($played[$entry->id] ?? 0).($cap > 0 ? '/'.$cap : '') }}</td>
-                            <td>@if ($entry->service_type === 'joki')<span class="quota-chip">—</span>@else @include('livewire.partials.quota', ['remaining' => $matches->remaining($entry)]) @endif</td>
-                            <td>@include('livewire.partials.row-actions', ['entry' => $entry])</td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-            @if ($entries->isEmpty())
-                <div class="empty-state">
-                    <span class="empty-icon" aria-hidden="true">⌁</span>
-                    <strong>{{ $counts['all'] === 0 ? 'Antrean masih kosong' : 'Tidak ada pemain di filter ini' }}</strong>
-                    <p>{{ $counts['all'] === 0 ? 'Donasi VIP yang cocok dengan paket akan masuk otomatis, atau tambahkan pemain manual.' : 'Pilih filter lain untuk melihat pemain.' }}</p>
-                </div>
-            @endif
-        </div>
-
-        <div class="player-card-list" aria-label="Daftar kartu pemain">
-            @if ($entries->isNotEmpty())
-                <label class="bulk-select-all"><input type="checkbox" class="row-check" wire:click="toggleSelectAll" @checked($allSelected) /> Centang semua</label>
-            @endif
-            @foreach ($entries as $entry)
-                <article wire:key="card-{{ $entry->id }}" @class(['player-card', 'is-playing' => $entry->status === 'playing', 'is-offline' => $entry->status === 'offline'])>
-                    <div class="player-card-head">
-                        <div class="player-card-name"><input type="checkbox" class="row-check" wire:model.live="selected" value="{{ $entry->id }}" aria-label="Centang {{ $entry->display_name }}" /><span class="player-card-position">#{{ $entry->position }}</span>@include('livewire.partials.player-identity', ['entry' => $entry])</div>
-                        @include('livewire.partials.entry-status', ['entry' => $entry])
-                    </div>
-                    <div class="player-card-meta">
-                        <div><span>Layanan</span><strong>@include('livewire.partials.service-badge', ['entry' => $entry])</strong></div>
-                        @if ($entry->service_type !== 'joki')
-                            <div><span>Sesi ini · sisa</span><strong>{{ $played[$entry->id] ?? 0 }}{{ $cap > 0 ? '/'.$cap : '' }} · @include('livewire.partials.quota', ['remaining' => $matches->remaining($entry)])</strong></div>
+                <div class="qb-turn-actions">
+                    @if (! $isLive)
+                        <a class="qb-btn is-dark" href="/live-session">@include('partials.icon', ['name' => 'radio']) Mulai sesi live</a>
+                    @elseif ($party->isEmpty())
+                        <button class="qb-btn is-accent is-big" type="button" wire:click="startGame" @disabled($nextUp->isEmpty())>@include('partials.icon', ['name' => 'play']) Mulai game</button>
+                    @else
+                        <button class="qb-btn is-accent is-big" type="button" wire:click="finishGame" title="Semua pemain di party berkurang 1 game">@include('partials.icon', ['name' => 'check']) Selesai game</button>
+                        @if ($party->count() < $partySizeLimit && $nextUp->isNotEmpty())
+                            <button class="qb-btn" type="button" wire:click="startGame">@include('partials.icon', ['name' => 'plus']) Isi slot kosong</button>
                         @endif
+                        <button class="qb-btn is-quiet" type="button" wire:click="benchAll"
+                                wire:confirm="Keluarkan semua pemain dari party? Sisa game mereka tidak berubah.">@include('partials.icon', ['name' => 'eject']) Keluarkan semua</button>
+                    @endif
+                </div>
+
+                <div class="qb-next">
+                    <h3>Next game</h3>
+                    <ol class="qb-next-list">
+                        @forelse ($nextUp as $next)
+                            <li @class(['qb-next-item', 'is-picked' => $next->isPickedForNext()]) wire:key="next-{{ $next->id }}">
+                                <span class="qb-next-rank">{{ $loop->iteration }}</span>
+                                <span class="qb-next-name">{{ $next->display_name }} <small>sisa {{ $matches->remaining($next) }}</small></span>
+                                @if ($isLive && $next->isPickedForNext())
+                                    <button class="qb-icon-btn" type="button" wire:click="unpickNext({{ $next->id }})" title="Batalkan dari Next game" aria-label="Batalkan {{ $next->display_name }} dari Next game">@include('partials.icon', ['name' => 'x', 'size' => 14])</button>
+                                @else
+                                    <small class="qb-next-auto">otomatis</small>
+                                @endif
+                            </li>
+                        @empty
+                            <li class="qb-next-empty">Tidak ada yang menunggu. Tambah pemain atau tunggu donasi VIP.</li>
+                        @endforelse
+                    </ol>
+                    <p class="qb-hint">{{ $isLive ? 'Pilih manual dengan tombol “Next game” di daftar antrean.' : 'Perkiraan dari urutan antrean.' }}</p>
+                </div>
+            </section>
+
+            {{-- ── Daftar antrean ─────────────────────────────────── --}}
+            <section class="qb-panel qb-queue" aria-labelledby="queue-title">
+                <div class="qb-panel-head qb-queue-head">
+                    <h2 id="queue-title">Daftar antrean <span class="qb-count">{{ $counts['all'] }} pemain</span></h2>
+                    <div class="qb-filters" role="group" aria-label="Filter pemain" title="Mabar VIP / Mainin akun = jenis layanan · Otomatis = masuk dari donasi · Manual = diinput sendiri">
+                        @foreach (['all' => 'Semua', 'vip' => 'Mabar VIP', 'joki' => 'Mainin akun', 'auto' => 'Otomatis', 'manual' => 'Manual'] as $key => $label)
+                            <button type="button" wire:click="setFilter('{{ $key }}')" @class(['qb-filter', 'is-active' => $filter === $key]) aria-pressed="{{ $filter === $key ? 'true' : 'false' }}">
+                                {{ $label }} <span>{{ $counts[$key] }}</span>
+                            </button>
+                        @endforeach
                     </div>
-                    <div class="player-card-foot"><span class="player-card-note"></span>@include('livewire.partials.row-actions', ['entry' => $entry])</div>
-                </article>
-            @endforeach
+                </div>
+
+                @php
+                    $visibleIds = $entries->pluck('id')->map(fn ($id) => (string) $id)->all();
+                    $selectedVisible = array_values(array_intersect($selected, $visibleIds));
+                    $allSelected = $visibleIds !== [] && count($selectedVisible) === count($visibleIds);
+                @endphp
+                @if ($selectedVisible !== [])
+                    <div class="qb-bulk" role="region" aria-label="Aksi untuk pemain yang dicentang">
+                        <strong>{{ count($selectedVisible) }} dipilih</strong>
+                        <button class="qb-btn is-danger" type="button" wire:click="bulkRemove"
+                                wire:confirm="Hapus {{ count($selectedVisible) }} pemain dari antrean? Sisa game mereka ikut hilang.">@include('partials.icon', ['name' => 'trash']) Hapus</button>
+                        <button class="qb-btn is-quiet" type="button" wire:click="clearSelection">Batal</button>
+                    </div>
+                @endif
+
+                <div class="qb-table-wrap">
+                    <table class="qb-table">
+                        <caption class="sr-only">Daftar pemain dalam antrean mabar VIP</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col" class="qb-col-check"><input type="checkbox" class="qb-check" wire:click="toggleSelectAll" @checked($allSelected) @disabled($visibleIds === []) aria-label="Centang semua pemain" /></th>
+                                <th scope="col" class="qb-col-pos">#</th>
+                                <th scope="col">Pemain</th>
+                                <th scope="col">Layanan</th>
+                                <th scope="col" class="qb-col-num">Sesi ini</th>
+                                <th scope="col" class="qb-col-num">Sisa</th>
+                                <th scope="col" class="qb-col-actions"><span class="sr-only">Aksi</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($entries as $entry)
+                                <tr wire:key="row-{{ $entry->id }}" @class(['is-playing' => $entry->status === 'playing', 'is-offline' => $entry->status === 'offline', 'is-selected' => in_array((string) $entry->id, $selected, true)])>
+                                    <td class="qb-col-check"><input type="checkbox" class="qb-check" wire:model.live="selected" value="{{ $entry->id }}" aria-label="Centang {{ $entry->display_name }}" /></td>
+                                    <td class="qb-col-pos">@if ($entry->status === 'playing')<span class="qb-pos is-playing" title="Sedang main (posisi antrean #{{ $entry->position }})">@include('partials.icon', ['name' => 'play', 'size' => 12])</span>@else<span class="qb-pos">{{ $entry->position }}</span>@endif</td>
+                                    <td><div class="qb-player">@include('livewire.partials.player-identity', ['entry' => $entry])@include('livewire.partials.entry-status', ['entry' => $entry])</div></td>
+                                    <td>@include('livewire.partials.service-badge', ['entry' => $entry])</td>
+                                    <td class="qb-col-num">{{ $entry->service_type === 'joki' ? '—' : ($played[$entry->id] ?? 0).($cap > 0 ? '/'.$cap : '') }}</td>
+                                    <td class="qb-col-num">@if ($entry->service_type === 'joki')<span class="quota-chip">—</span>@else @include('livewire.partials.quota', ['remaining' => $matches->remaining($entry)]) @endif</td>
+                                    <td class="qb-col-actions">@include('livewire.partials.row-actions', ['entry' => $entry])</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                    @if ($entries->isEmpty())
+                        <div class="qb-empty">
+                            <strong>{{ $counts['all'] === 0 ? 'Antrean masih kosong' : 'Tidak ada pemain di filter ini' }}</strong>
+                            <p>{{ $counts['all'] === 0 ? 'Donasi VIP yang cocok dengan paket akan masuk otomatis, atau tambahkan pemain manual.' : 'Pilih filter lain untuk melihat pemain.' }}</p>
+                        </div>
+                    @endif
+                </div>
+
+                <div class="qb-cards" aria-label="Daftar kartu pemain">
+                    @if ($entries->isNotEmpty())
+                        <label class="qb-select-all"><input type="checkbox" class="qb-check" wire:click="toggleSelectAll" @checked($allSelected) /> Centang semua</label>
+                    @endif
+                    @foreach ($entries as $entry)
+                        <article wire:key="card-{{ $entry->id }}" @class(['qb-card', 'is-playing' => $entry->status === 'playing', 'is-offline' => $entry->status === 'offline'])>
+                            <div class="qb-card-head">
+                                <input type="checkbox" class="qb-check" wire:model.live="selected" value="{{ $entry->id }}" aria-label="Centang {{ $entry->display_name }}" />
+                                <span class="qb-pos {{ $entry->status === 'playing' ? 'is-playing' : '' }}">{{ $entry->position }}</span>
+                                @include('livewire.partials.player-identity', ['entry' => $entry])
+                                @include('livewire.partials.entry-status', ['entry' => $entry])
+                            </div>
+                            <div class="qb-card-meta">
+                                @include('livewire.partials.service-badge', ['entry' => $entry])
+                                @if ($entry->service_type !== 'joki')
+                                    <span>Sesi {{ $played[$entry->id] ?? 0 }}{{ $cap > 0 ? '/'.$cap : '' }}</span>
+                                    <span>Sisa @include('livewire.partials.quota', ['remaining' => $matches->remaining($entry)])</span>
+                                @endif
+                            </div>
+                            <div class="qb-card-foot">@include('livewire.partials.row-actions', ['entry' => $entry])</div>
+                        </article>
+                    @endforeach
+                </div>
+            </section>
         </div>
-    </section>
+
+        <aside class="qb-side" aria-label="Panel samping">
+            {{-- ── Donasi masuk ───────────────────────────────────── --}}
+            <section class="qb-panel qb-donations" aria-labelledby="qb-don-title">
+                <div class="qb-panel-head">
+                    <h2 id="qb-don-title">Donasi terbaru</h2>
+                    <a class="qb-link" href="/donations">Semua @include('partials.icon', ['name' => 'arrow-right', 'size' => 14])</a>
+                </div>
+                <ul class="qb-feed">
+                    @forelse ($recentDonations as $donation)
+                        <li class="qb-feed-item" wire:key="don-{{ $donation->id }}">
+                            <div class="qb-feed-top">
+                                <strong>{{ $donation->donor_name }}</strong>
+                                <span class="qb-num">Rp {{ number_format((int) $donation->amount, 0, ',', '.') }}</span>
+                            </div>
+                            <div class="qb-feed-meta">
+                                <span class="qb-tag is-{{ $donation->status }}">{{ $donationStatus[$donation->status] ?? $donation->status }}</span>
+                                <span>{{ $providerLabels[$donation->provider] ?? $donation->provider }} · {{ $donation->received_at?->diffForHumans(short: true) }}</span>
+                            </div>
+                            @if ($donation->message)
+                                <p class="qb-feed-msg">“{{ \Illuminate\Support\Str::limit($donation->message, 70) }}”</p>
+                            @endif
+                        </li>
+                    @empty
+                        <li class="qb-feed-empty">Belum ada donasi. Donasi dari Saweria, SociaBuzz, atau Trakteer muncul di sini.</li>
+                    @endforelse
+                </ul>
+            </section>
+
+            {{-- ── Skor sesi ──────────────────────────────────────── --}}
+            @if ($isLive)
+                <section class="qb-panel qb-score" aria-labelledby="qb-score-title">
+                    <div class="qb-panel-head"><h2 id="qb-score-title">Skor sesi</h2></div>
+                    <div class="qb-score-grid">
+                        <div class="qb-score-cell is-win">
+                            <button class="qb-score-add" type="button" wire:click="addScore('win')" title="Tambah menang (tidak mengurangi sisa game)">@include('partials.icon', ['name' => 'trophy']) Menang <strong>{{ $session->wins }}</strong></button>
+                            <button class="qb-icon-btn" type="button" wire:click="undoScore('win')" @disabled($session->wins < 1) aria-label="Koreksi: kurangi menang">@include('partials.icon', ['name' => 'minus', 'size' => 14])</button>
+                        </div>
+                        <div class="qb-score-cell is-lose">
+                            <button class="qb-score-add" type="button" wire:click="addScore('lose')" title="Tambah kalah (tidak mengurangi sisa game)">@include('partials.icon', ['name' => 'x']) Kalah <strong>{{ $session->losses }}</strong></button>
+                            <button class="qb-icon-btn" type="button" wire:click="undoScore('lose')" @disabled($session->losses < 1) aria-label="Koreksi: kurangi kalah">@include('partials.icon', ['name' => 'minus', 'size' => 14])</button>
+                        </div>
+                    </div>
+                    <p class="qb-hint">Hanya skor — sisa game tidak berkurang.</p>
+                </section>
+            @endif
+
+            {{-- ── Aksi cepat ─────────────────────────────────────── --}}
+            <section class="qb-panel qb-quick" aria-labelledby="qb-quick-title">
+                <div class="qb-panel-head"><h2 id="qb-quick-title">Aksi cepat</h2></div>
+                <div class="qb-quick-list" x-data>
+                    <button class="qb-quick-item" type="button" wire:click="openAddPlayer">@include('partials.icon', ['name' => 'plus']) Catat pemain manual</button>
+                    <button class="qb-quick-item" type="button" wire:click="openImport">@include('partials.icon', ['name' => 'clipboard']) Tempel daftar dari notepad</button>
+                    <button class="qb-quick-item" type="button"
+                            x-on:click="navigator.clipboard.writeText(@js($publicUrl)).then(() => $dispatch('notify', { message: 'Link halaman viewer disalin.' }))">@include('partials.icon', ['name' => 'link']) Salin link halaman viewer</button>
+                    <a class="qb-quick-item" href="/overlay-settings">@include('partials.icon', ['name' => 'monitor']) Atur overlay OBS</a>
+                </div>
+            </section>
+
+            {{-- ── Aturan antrean ─────────────────────────────────── --}}
+            <section class="qb-panel qb-rules" aria-labelledby="qb-rules-title">
+                <div class="qb-panel-head">
+                    <h2 id="qb-rules-title">Aturan antrean</h2>
+                    <button class="qb-link" type="button" wire:click="openRules">@include('partials.icon', ['name' => 'sliders', 'size' => 14]) Ubah</button>
+                </div>
+                <dl class="qb-rule-list">
+                    <div><dt>Party</dt><dd>{{ $partySizeLimit }} pemain per game</dd></div>
+                    <div><dt>Batas sesi</dt><dd>{{ $cap > 0 ? "maks {$cap} game per orang tiap sesi" : 'tanpa batas game per sesi' }}</dd></div>
+                    <div><dt>Donasi</dt><dd>{{ $donationModeShort[$donationMode] ?? '' }}</dd></div>
+                    <div><dt>MVP</dt><dd>{{ $mvpEnabled ? 'MVP = main lagi' : 'Mati' }}</dd></div>
+                </dl>
+            </section>
+        </aside>
+    </div>
 
     {{-- ── Modal tambah pemain ─────────────────────────────────────── --}}
     @if ($showAddPlayer)
@@ -238,8 +300,8 @@
                 x-on:close="$wire.closeAddPlayer()">
             <form class="modal-card" wire:submit="addPlayer">
                 <div class="modal-header">
-                    <div><p class="eyebrow">Donasi di luar platform</p><h2 id="add-player-title">Tambah pemain</h2></div>
-                    <button class="icon-button" type="button" aria-label="Tutup" wire:click="closeAddPlayer">×</button>
+                    <h2 id="add-player-title">Tambah pemain</h2>
+                    <button class="icon-button" type="button" aria-label="Tutup" wire:click="closeAddPlayer">@include('partials.icon', ['name' => 'x', 'size' => 18])</button>
                 </div>
                 @error('playerForm') <p class="form-error" role="alert">{{ $message }}</p> @enderror
                 <label class="field-label" for="add-player-name">Nama pemain <span>(boleh kosong bila ID diisi)</span></label>
@@ -283,8 +345,8 @@
                 x-on:close="$wire.closeEdit()">
             <form class="modal-card" wire:submit="savePlayer">
                 <div class="modal-header">
-                    <div><p class="eyebrow">Ubah data pemain</p><h2 id="edit-player-title">Edit pemain</h2></div>
-                    <button class="icon-button" type="button" aria-label="Tutup" wire:click="closeEdit">×</button>
+                    <h2 id="edit-player-title">Edit pemain</h2>
+                    <button class="icon-button" type="button" aria-label="Tutup" wire:click="closeEdit">@include('partials.icon', ['name' => 'x', 'size' => 18])</button>
                 </div>
                 @error('editForm') <p class="form-error" role="alert">{{ $message }}</p> @enderror
                 <label class="field-label" for="edit-player-name">Nama pemain</label>
@@ -328,8 +390,8 @@
                 x-on:close="$wire.closeImport()">
             <form class="modal-card modal-card-wide" wire:submit="importPlayers">
                 <div class="modal-header">
-                    <div><p class="eyebrow">Pindahan dari notepad</p><h2 id="import-title">Tempel banyak pemain</h2></div>
-                    <button class="icon-button" type="button" aria-label="Tutup" wire:click="closeImport">×</button>
+                    <h2 id="import-title">Tempel banyak pemain</h2>
+                    <button class="icon-button" type="button" aria-label="Tutup" wire:click="closeImport">@include('partials.icon', ['name' => 'x', 'size' => 18])</button>
                 </div>
                 <p class="modal-help">Satu baris satu pemain, dipisah garis tegak <code>|</code>:<br /><code>nama | ID MLBB | sisa game | jenis | catatan</code><br />ID, jenis, dan catatan boleh kosong. Jenis: <code>vip</code> (Mabar VIP) atau <code>joki</code> (VIP Mainin akun — sisa game boleh kosong). Pemain masuk di akhir antrean sesuai urutan baris.</p>
                 @error('importForm') <p class="form-error" role="alert">{{ $message }}</p> @enderror
@@ -351,8 +413,8 @@
                 x-on:close="$wire.closeRules()">
             <form class="modal-card" wire:submit="saveRules">
                 <div class="modal-header">
-                    <div><p class="eyebrow">Berlaku untuk semua sesi</p><h2 id="rules-title">Aturan party</h2></div>
-                    <button class="icon-button" type="button" aria-label="Tutup" wire:click="closeRules">×</button>
+                    <h2 id="rules-title">Aturan party</h2>
+                    <button class="icon-button" type="button" aria-label="Tutup" wire:click="closeRules">@include('partials.icon', ['name' => 'x', 'size' => 18])</button>
                 </div>
                 <label class="field-label" for="rules-party-size">Pemain per game <span>(di luar streamer)</span></label>
                 <select class="field-input" id="rules-party-size" wire:model="partySize">
@@ -379,7 +441,7 @@
                 <label class="switch-control rules-switch">
                     <input type="checkbox" wire:model="mvpFreeGame" />
                     <span class="switch-track"></span>
-                    <span><strong>MVP = main lagi</strong><small>Muncul tombol ⭐ MVP di kartu party. Pemain yang MVP tidak berkurang sisa game-nya dan tidak dihitung ke batas game per sesi. Tercatat di rekap sesi.</small></span>
+                    <span><strong>MVP = main lagi</strong><small>Muncul tombol MVP di kartu party. Pemain yang MVP tidak berkurang sisa game-nya dan tidak dihitung ke batas game per sesi. Tercatat di rekap sesi.</small></span>
                 </label>
                 <label class="switch-control rules-switch">
                     <input type="checkbox" wire:model="censorNames" />
@@ -387,7 +449,7 @@
                     <span><strong>Sensor nama &amp; ID</strong><small>Separuh akhir nama dan ID disamarkan di halaman viewer &amp; overlay (sama dengan pengaturan di halaman Overlay).</small></span>
                 </label>
                 <p class="modal-help">Jumlah game dihitung dari kelipatan paket (75rb = 50rb + 25rb). Donasi yang tidak otomatis masuk tetap muncul di halaman Donasi sebagai "Perlu cek".</p>
-                <p class="modal-help">Pemain yang sudah mencapai batas tetap ada di daftar dengan sisa game-nya, tapi dilewati saat mengisi party sampai sesi live berikutnya. Kamu tetap bisa memasukkannya manual dengan tombol ▶. Pemain "Mainin akun" tidak masuk party dan tidak dibatasi.</p>
+                <p class="modal-help">Pemain yang sudah mencapai batas tetap ada di daftar dengan sisa game-nya, tapi dilewati saat mengisi party sampai sesi live berikutnya. Kamu tetap bisa memasukkannya manual dengan tombol “Masukkan ke party”. Pemain "Mainin akun" tidak masuk party dan tidak dibatasi.</p>
                 <div class="modal-actions">
                     <button class="button button-outline" type="button" wire:click="closeRules">Batal</button>
                     <button class="button button-primary" type="submit" wire:loading.attr="disabled">Simpan aturan</button>
