@@ -281,6 +281,37 @@ class DonationWebhookTest extends TestCase
         $this->assertSame(4, $session->queueEntries()->count());
     }
 
+    /** Format asli SociaBuzz (dari "Test Notifikasi" 2026-11-17): uji hanya menandai koneksi, donasi asli tercatat. */
+    public function test_sociabuzz_real_format_test_notification_and_donation(): void
+    {
+        $sociabuzz = $this->connect('sociabuzz', 'sbwhook-uji-123');
+        $session = $this->openLiveSession();
+        $real = fn (array $overrides = []) => array_merge([
+            'id' => '1664565323', 'amount' => 10000, 'currency' => 'IDR', 'amount_settled' => 10000, 'currency_settled' => 'IDR',
+            'media_type' => null, 'media_url' => null, 'supporter' => 'Jessica', 'email_supporter' => 'jessica@example.com',
+            'message' => 'Ini hanya test notifikasi', 'item' => ['name' => 'Kopi', 'qty' => 1],
+            'level' => ['title' => 'Pilihan Dukungan', 'price' => 10000, 'description' => 'Ini hanya test Pilihan Dukungan', 'answer_question' => null, 'answer_address' => null],
+            'vote' => ['title' => 'Pilih yg mana?', 'choose' => 'test'],
+            'content' => ['title' => 'test', 'link' => 'https://sociabuzz.com/example/c/01/test'],
+            'created_at' => '2026-11-17T00:22:56+07:00',
+        ], $overrides);
+
+        // Tombol "Test Notifikasi": koneksi aktif, tidak ada donasi tercatat.
+        $this->sendSociaBuzz($sociabuzz, $real(), 'sbwhook-uji-123')->assertOk()->assertJsonPath('data.status', 'test');
+        $this->assertSame(0, \App\Models\Donation::count());
+        $this->assertSame('active', $sociabuzz->refresh()->status);
+
+        // Donasi asli dengan format yang sama.
+        $this->sendSociaBuzz($sociabuzz, $real([
+            'id' => '1700000001', 'amount' => 35000, 'amount_settled' => 33250, 'supporter' => 'Kyoto',
+            'email_supporter' => 'kyoto@gmail.com', 'message' => 'mabar bang 138765201',
+        ]), 'sbwhook-uji-123')->assertCreated()->assertJsonPath('data.status', 'queued');
+
+        $donation = \App\Models\Donation::sole();
+        $this->assertSame(['Kyoto', 35000, 'kyoto@gmail.com', 'mabar bang 138765201'], [$donation->donor_name, $donation->amount, $donation->donor_email, $donation->message]);
+        $this->assertSame([3, '138765201'], [$session->queueEntries()->sole()->matches_total, $session->queueEntries()->sole()->mlbb_id]);
+    }
+
     public function test_sociabuzz_non_idr_goes_to_review_and_sample_is_stored_masked(): void
     {
         $sociabuzz = $this->connect('sociabuzz', 'sociabuzz-token-uji');

@@ -22,7 +22,7 @@ class ConnectionManager extends Component
             'steps' => 'Di dashboard Saweria buka Integrasi → Webhook, tempel URL webhook di bawah, lalu salin stream key kamu ke kolom ini.',
         ],
         'sociabuzz' => [
-            'label' => 'SociaBuzz', 'short' => 'SB', 'credential' => 'Webhook token', 'verified' => false,
+            'label' => 'SociaBuzz', 'short' => 'SB', 'credential' => 'Webhook token', 'verified' => true,
             'steps' => 'Di SociaBuzz buka pengaturan Webhook, tempel URL webhook, salin webhook token ke kolom ini, lalu tekan "Test Notification". Format SociaBuzz belum terkonfirmasi — cek contoh payload setelah tes.',
         ],
         'trakteer' => [

@@ -5,13 +5,14 @@ namespace App\Services\Webhooks;
 use Illuminate\Http\Request;
 
 /**
- * SociaBuzz — SEMENTARA, format belum terkonfirmasi (tidak ada dokumentasi publik).
+ * SociaBuzz (TRIBE → Integrations → Webhook). Format dikonfirmasi dari "Test Notifikasi" asli (2026-11-17):
  *
- * - Field yang dibaca integrasi komunitas (Streamerbot-SociaBuzz): supporter, amount, currency.
- * - Ada "webhook token" di dashboard SociaBuzz, tetapi nama headernya tidak terdokumentasi; adapter ini
- *   mencoba beberapa kandidat header/field. Contoh payload terakhir (header disamarkan) disimpan di koneksi
- *   supaya format asli bisa dicocokkan setelah streamer menekan "Test Notification".
- * - Donasi non-IDR tidak dicocokkan otomatis ke paket (masuk "Perlu cek").
+ * - Header `sb-webhook-token` = webhook token dari dashboard SociaBuzz (dibandingkan langsung).
+ * - Payload: id, amount, currency, amount_settled, currency_settled, supporter, email_supporter, message,
+ *   media_type, media_url, item{name,qty}, level{title,price,...}, vote{...}, content{...}, created_at.
+ * - Notifikasi uji selalu "Jessica" / jessica@example.com / "Ini hanya test notifikasi" dengan id tetap →
+ *   dikenali sebagai uji (hanya menandai koneksi aktif, tidak tercatat sebagai donasi).
+ * - Nominal = `amount` (yang dibayar donatur, sama dengan harga paket). Donasi non-IDR masuk "Perlu cek".
  */
 class SociaBuzzAdapter implements ProviderAdapter
 {
@@ -79,11 +80,24 @@ class SociaBuzzAdapter implements ProviderAdapter
             externalId: filled($id) ? (string) $id : 'sb-'.substr(hash('sha256', json_encode($payload)), 0, 40),
             donorName: $name,
             amount: (int) round((float) $amount),
-            donorEmail: filled($payload['email'] ?? null) ? (string) $payload['email'] : null,
+            donorEmail: ($email = $this->first($payload, ['email_supporter', 'email'])) ? (string) $email : null,
             message: ($m = $this->first($payload, ['message', 'supporter_message', 'support_message'])) ? (string) $m : null,
             currency: $currency ?: 'IDR',
-            isTest: (bool) ($payload['is_test'] ?? $payload['test'] ?? false),
+            isTest: $this->isTestNotification($payload),
         );
+    }
+
+    /** Tombol "Test Notifikasi" SociaBuzz mengirim data contoh tetap (Jessica, @example.com, "test notifikasi"). */
+    private function isTestNotification(array $payload): bool
+    {
+        if ((bool) ($payload['is_test'] ?? $payload['test'] ?? false)) {
+            return true;
+        }
+
+        $email = strtolower(trim((string) $this->first($payload, ['email_supporter', 'email'])));
+        $message = strtolower((string) $this->first($payload, ['message', 'supporter_message', 'support_message']));
+
+        return str_ends_with($email, '@example.com') || str_contains($message, 'hanya test notifikasi');
     }
 
     private function first(array $payload, array $keys): mixed
