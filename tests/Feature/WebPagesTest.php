@@ -14,10 +14,15 @@ class WebPagesTest extends TestCase
 
     private const DASHBOARD_PAGES = ['/dashboard', '/live-session', '/match-count', '/vip-packages', '/donations', '/overlay-settings'];
 
-    public function test_root_redirects_by_auth_state(): void
+    public function test_root_shows_landing_for_guests_and_redirects_signed_in_users(): void
     {
-        $this->get('/')->assertRedirect('/login');
+        $this->get('/')->assertOk()
+            ->assertSee('Kelola giliran')
+            ->assertSee('Viewer bisa cek sisa game sendiri')
+            ->assertSee('href="/signup"', false)
+            ->assertSee('href="/login"', false);
         $this->actingAs(User::factory()->create())->get('/')->assertRedirect('/live-session');
+        $this->actingAs(User::factory()->pending()->create())->get('/')->assertRedirect('/account');
     }
 
     public function test_guest_pages_render_with_csrf_and_api_helper(): void

@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Route;
  * Satu login (/login) untuk semua; setelah masuk, tiap peran diarahkan ke areanya (User::homePath()).
  */
 
-Route::get('/', fn () => redirect(Auth::user()?->homePath() ?? '/login'));
+Route::get('/', fn () => Auth::check() ? redirect(Auth::user()->homePath()) : view('pages.landing'));
 
 // ── Tamu ────────────────────────────────────────────────────────────────
 Route::middleware('guest')->group(function (): void {
