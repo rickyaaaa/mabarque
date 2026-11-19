@@ -488,27 +488,26 @@ class QueueService
      * @param  array<int>  $exclude  pemain yang baru dikeluarkan (jangan langsung dimasukkan lagi)
      * @return Collection<int, QueueEntry> pemain yang baru masuk party
      */
-    public function fillParty(LiveSession $session, array $exclude = []): Collection
+    public function fillParty(LiveSession $session, array $exclude = [], ?int $limit = null): Collection
     {
         $free = $this->partySize($session) - $this->party($session)->count();
+        $slotsToFill = min($free, $limit ?? $free);
 
-        if ($free < 1) {
+        if ($slotsToFill < 1) {
             return collect();
         }
 
-        return $this->nextUp($session, $free, $exclude)
+        return $this->nextUp($session, $slotsToFill, $exclude)
             ->each(fn (QueueEntry $entry) => $entry->update(['status' => 'playing']))
             ->map(fn (QueueEntry $entry) => $entry->refresh());
     }
 
     /**
      * Game party selesai: setiap anggota party berkurang 1 game (dihitung 1 match sesi). Yang sisanya
-     * habis → selesai; yang mencapai batas sesi → keluar party ke belakang antrean. Slot kosong lalu diisi.
+     * habis ditandai selesai. Yang mencapai batas sesi kembali ke antrean. Setiap pemain yang keluar membuka satu slot pengganti.
      *
-     * @return array{played: Collection<int, QueueEntry>, finished: Collection<int, QueueEntry>, capped: Collection<int, QueueEntry>, joined: Collection<int, QueueEntry>}
-     */
-    /**
      * @param  int|null  $mvpId  pemain party yang MVP; dengan aturan "MVP = main lagi" sisa game-nya tidak berkurang
+     * @return array{played: Collection<int, QueueEntry>, mvp: QueueEntry|null, finished: Collection<int, QueueEntry>, capped: Collection<int, QueueEntry>, joined: Collection<int, QueueEntry>}
      */
     public function finishGame(LiveSession $session, ?string $result = null, ?int $mvpId = null): array
     {
@@ -532,8 +531,6 @@ class QueueService
             }
 
             $settled = $this->settleAfterMatch($session, $party);
-            // Batas game = saat alami mengisi slot yang belum terisi (mis. donasi baru masuk selama game).
-            $settled['joined'] = $settled['joined']->merge($this->fillParty($session));
 
             return ['played' => $party, 'mvp' => $party->firstWhere('id', $mvpId)] + $settled;
         });
@@ -550,7 +547,7 @@ class QueueService
         $played = $this->playedThisSession($session);
         $finished = collect();
         $capped = collect();
-        $freedSlot = false;
+        $freedSlots = 0;
         $last = (int) $this->orderedEntries($session)->max('position');
 
         foreach ($entries as $entry) {
@@ -560,18 +557,19 @@ class QueueService
             if ($this->remaining($entry) < 1) {
                 $entry->update(['status' => 'done', 'position' => ++$last]);
                 $finished->push($entry);
-                $freedSlot = $freedSlot || $wasPlaying;
+                $freedSlots += (int) $wasPlaying;
             } elseif ($wasPlaying && $this->isCapped($session, $entry, $played)) {
                 $entry->update(['status' => 'ready', 'position' => ++$last]);
                 $capped->push($entry);
-                $freedSlot = true;
+                $freedSlots++;
             }
         }
 
         $this->normalizePositions($session);
 
-        // Slot party hanya diisi ulang bila memang ada anggota party yang keluar.
-        $joined = $freedSlot ? $this->fillParty($session, exclude: $capped->pluck('id')->all()) : collect();
+        $joined = $freedSlots > 0
+            ? $this->fillParty($session, exclude: $capped->pluck('id')->all(), limit: $freedSlots)
+            : collect();
 
         return ['finished' => $finished, 'capped' => $capped, 'joined' => $joined];
     }

@@ -130,6 +130,67 @@ class PartyQueueTest extends TestCase
         $this->assertSame(1, QueueEntry::firstWhere('player_name', 'Dey')->matches_played);
     }
 
+    public function test_finish_game_keeps_previously_empty_party_slots_open(): void
+    {
+        ['A' => $a, 'B' => $b, 'C' => $c, 'D' => $d, 'E' => $e] = $this->players(['A' => 3, 'B' => 2, 'C' => 4, 'D' => 5, 'E' => 6]);
+        $board = Livewire::actingAs($this->owner)->test(QueueBoard::class, ['session' => $this->session])
+            ->call('markPlaying', $a->id)
+            ->call('markPlaying', $b->id)
+            ->call('finishGame')
+            ->assertDispatched('notify', message: 'Game selesai — dicatat untuk 2 pemain.')
+            ->assertSee('Isi slot kosong');
+
+        $this->assertSame(['A', 'B'], $this->partyNames());
+        $this->assertSame([$a->id, $b->id], $this->session->matches()->orderBy('id')->pluck('queue_entry_id')->all());
+        $this->assertSame([2, 1, 4, 5, 6], array_map(
+            fn (QueueEntry $entry) => $entry->refresh()->matches_remaining, [$a, $b, $c, $d, $e],
+        ));
+
+        $board->call('markPlaying', $c->id)->call('startGame')->assertHasNoErrors();
+        $this->assertSame(['A', 'B', 'C', 'D'], $this->partyNames());
+    }
+
+    public function test_finish_game_only_replaces_the_finished_player_and_prioritizes_next_game(): void
+    {
+        ['A' => $a, 'B' => $b, 'C' => $c, 'D' => $d, 'E' => $e] = $this->players(['A' => 1, 'B' => 3, 'C' => 4, 'D' => 5, 'E' => 6]);
+        $this->queue->markPlaying($this->session, $a);
+        $this->queue->markPlaying($this->session, $b);
+        $this->queue->pickForNext($this->session, $d);
+        $this->queue->pickForNext($this->session, $e);
+
+        $result = $this->queue->finishGame($this->session);
+
+        $this->assertSame(['B', 'D'], $this->partyNames());
+        $this->assertSame([$d->id], $result['joined']->pluck('id')->all());
+        $this->assertSame([$a->id, $b->id], $this->session->matches()->orderBy('id')->pluck('queue_entry_id')->all());
+        $this->assertSame('done', $a->refresh()->status);
+        $this->assertSame([0, 2, 4, 5, 6], array_map(
+            fn (QueueEntry $entry) => $entry->refresh()->matches_remaining, [$a, $b, $c, $d, $e],
+        ));
+        $this->assertNull($d->next_order);
+        $this->assertNotNull($e->next_order);
+    }
+
+    public function test_finish_game_only_replaces_the_player_who_reaches_the_session_cap(): void
+    {
+        $this->cap(2);
+        ['A' => $a, 'B' => $b, 'C' => $c, 'D' => $d, 'E' => $e] = $this->players(['A' => 4, 'B' => 3, 'C' => 4, 'D' => 5, 'E' => 6]);
+        $this->queue->markPlaying($this->session, $a);
+        $this->queue->markPlaying($this->session, $b);
+        Livewire::actingAs($this->owner)->test(QueueBoard::class, ['session' => $this->session])->call('finishMatch', $a->id)->assertHasNoErrors();
+
+        $result = $this->queue->finishGame($this->session);
+
+        $this->assertSame(['B', 'C'], $this->partyNames());
+        $this->assertSame([$a->id], $result['capped']->pluck('id')->all());
+        $this->assertSame([$c->id], $result['joined']->pluck('id')->all());
+        $this->assertSame([$a->id, $a->id, $b->id], $this->session->matches()->orderBy('id')->pluck('queue_entry_id')->all());
+        $this->assertSame('ready', $a->refresh()->status);
+        $this->assertSame([2, 2, 4, 5, 6], array_map(
+            fn (QueueEntry $entry) => $entry->refresh()->matches_remaining, [$a, $b, $c, $d, $e],
+        ));
+    }
+
     public function test_session_cap_moves_player_out_of_party_and_skips_them_until_next_session(): void
     {
         $this->owner->forceFill(['party_size' => 2])->save();

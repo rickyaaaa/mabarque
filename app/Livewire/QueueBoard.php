@@ -345,7 +345,7 @@ class QueueBoard extends Component
 
     /**
      * Catat 1 game untuk SATU pemain (mis. jasa mainin akun, atau koreksi party). Jatah habis → selesai;
-     * kena batas sesi → keluar party. Slot kosong diisi pemain berikutnya.
+     * kena batas sesi → keluar party. Pemain berikutnya bisa mengisi slot yang baru kosong.
      */
     public function finishMatch(int $entryId, MatchService $matches, QueueService $queueService): void
     {

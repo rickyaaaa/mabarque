@@ -122,6 +122,7 @@ class LiveDashboardTest extends TestCase
         $session = $this->liveSession();
         $raka = $this->player($session, 'Raka ML', 2, 'playing', 1);
         $nadia = $this->player($session, 'Nadia', 3, 'ready', 2);
+        $ida = $this->player($session, 'Ida', 4, 'ready', 3);
 
         $board = Livewire::test(QueueBoard::class, ['session' => $session])
             ->call('finishMatch', $raka->id)
@@ -137,6 +138,10 @@ class LiveDashboardTest extends TestCase
 
         $this->assertSame('done', $raka->refresh()->status);
         $this->assertSame('playing', $nadia->refresh()->status);
+        $this->assertSame(3, $nadia->matches_remaining);
+        $this->assertSame('ready', $ida->refresh()->status);
+        $this->assertSame(4, $ida->matches_remaining);
+        $this->assertSame([$raka->id, $raka->id], $session->matches()->orderBy('id')->pluck('queue_entry_id')->all());
         $this->assertSame(2, $session->refresh()->total_matches);
     }
 
