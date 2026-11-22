@@ -168,6 +168,19 @@ class PlayerBalanceTest extends TestCase
         $board->call('openImport')->set('importText', 'Rusak | | x')->call('importPlayers')->assertHasErrors(['importForm']);
     }
 
+    public function test_queue_board_shows_player_initials_instead_of_positions(): void
+    {
+        $playing = $this->queue->addManual($this->session, 'Bang Roti', 3);
+        $this->queue->addManual($this->session, 'Vampire', 2);
+        $this->queue->markPlaying($this->session, $playing);
+
+        Livewire::actingAs($this->owner)->test(QueueBoard::class, ['session' => $this->session])
+            ->assertSee('Inisial')
+            ->assertSeeHtml('<span class="qb-pos is-playing"')
+            ->assertSeeHtml('>BR</span>')
+            ->assertSeeHtml('>V</span>');
+    }
+
     public function test_censor_hides_second_half_of_names_and_ids_everywhere_public(): void
     {
         $this->assertSame('WangSu*******', PublicQueueService::censor('WangSukiJomok'));

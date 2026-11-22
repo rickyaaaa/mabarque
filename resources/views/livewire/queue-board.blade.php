@@ -195,7 +195,7 @@
                         <thead>
                             <tr>
                                 <th scope="col" class="qb-col-check"><input type="checkbox" class="qb-check" wire:key="select-all-table-{{ $selectAllState }}" wire:click="toggleSelectAll" @checked($allSelected) @disabled($visibleIds === []) aria-label="Centang semua pemain" /></th>
-                                <th scope="col" class="qb-col-pos">#</th>
+                                <th scope="col" class="qb-col-pos">Inisial</th>
                                 <th scope="col">Pemain</th>
                                 <th scope="col">Layanan</th>
                                 <th scope="col" class="qb-col-num">Sesi ini</th>
@@ -207,7 +207,7 @@
                             @foreach ($entries as $entry)
                                 <tr wire:key="row-{{ $entry->id }}" @class(['is-playing' => $entry->status === 'playing', 'is-offline' => $entry->status === 'offline', 'is-selected' => in_array((string) $entry->id, $selected, true)])>
                                     <td class="qb-col-check"><input type="checkbox" class="qb-check" wire:model.live="selected" value="{{ $entry->id }}" aria-label="Centang {{ $entry->display_name }}" /></td>
-                                    <td class="qb-col-pos">@if ($entry->status === 'playing')<span class="qb-pos is-playing" title="Sedang main (posisi antrean #{{ $entry->position }})">@include('partials.icon', ['name' => 'play', 'size' => 12])</span>@else<span class="qb-pos">{{ $entry->position }}</span>@endif</td>
+                                    <td class="qb-col-pos"><span class="qb-pos {{ $entry->status === 'playing' ? 'is-playing' : '' }}" @if ($entry->status === 'playing') title="Sedang main" @endif>{{ $initials($entry->display_name) }}</span></td>
                                     <td><div class="qb-player">@include('livewire.partials.player-identity', ['entry' => $entry])@include('livewire.partials.entry-status', ['entry' => $entry])</div></td>
                                     <td>@include('livewire.partials.service-badge', ['entry' => $entry])</td>
                                     <td class="qb-col-num">{{ $entry->service_type === 'joki' ? '—' : ($played[$entry->id] ?? 0).($cap > 0 ? '/'.$cap : '') }}</td>
@@ -241,7 +241,7 @@
                         <article wire:key="card-{{ $entry->id }}" @class(['qb-card', 'is-playing' => $entry->status === 'playing', 'is-offline' => $entry->status === 'offline'])>
                             <div class="qb-card-head">
                                 <input type="checkbox" class="qb-check" wire:model.live="selected" value="{{ $entry->id }}" aria-label="Centang {{ $entry->display_name }}" />
-                                <span class="qb-pos {{ $entry->status === 'playing' ? 'is-playing' : '' }}">{{ $entry->position }}</span>
+                                <span class="qb-pos {{ $entry->status === 'playing' ? 'is-playing' : '' }}">{{ $initials($entry->display_name) }}</span>
                                 @include('livewire.partials.player-identity', ['entry' => $entry])
                                 @include('livewire.partials.entry-status', ['entry' => $entry])
                             </div>
