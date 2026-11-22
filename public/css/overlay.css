@@ -47,6 +47,8 @@ body.overlay-body.is-transparent { background: transparent; }
 .overlay-package strong { font-size: 1.15em; font-weight: 900; }
 .overlay-package.is-mabar { background: var(--accent); }
 .overlay-package.is-service { background: var(--panel); }
+.overlay-package.is-service .overlay-package-price { font-weight: 900; }
+.overlay-package.is-service .overlay-package-detail { flex-basis: 100%; color: var(--muted); font-size: .85em; font-weight: 700; }
 
 /* Bentuk horizontal: bar memanjang (cocok di bawah/atas layar) */
 .overlay-card.is-horizontal { display: flex; align-items: stretch; gap: .8em; }

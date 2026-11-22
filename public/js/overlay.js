@@ -117,10 +117,19 @@
       section.append(el("strong", "overlay-package-heading", group.label));
       const items = el("div", "overlay-package-list");
       items.append(...group.entries.map((pkg) => {
-        const item = el("div", `overlay-package${Number(pkg.games) > 0 ? " is-mabar" : " is-service"}`);
-        const label = Number(pkg.games) > 0 ? (pkg.gets || `${pkg.games} game`) : (pkg.gets || pkg.name);
-        item.title = pkg.name && pkg.name !== label ? pkg.name : "";
-        item.append(el("strong", null, Number(pkg.games) > 0 ? pkg.price : label), el("span", null, Number(pkg.games) > 0 ? label : pkg.price));
+        const isMabar = Number(pkg.games) > 0;
+        const item = el("div", `overlay-package${isMabar ? " is-mabar" : " is-service"}`);
+
+        if (isMabar) {
+          item.append(el("strong", null, pkg.price), el("span", null, pkg.gets || `${pkg.games} game`));
+        } else {
+          const name = pkg.name || pkg.gets || "Layanan";
+          const detail = pkg.gets && pkg.gets !== name ? `(${pkg.gets})` : "";
+          item.title = detail;
+          item.append(el("strong", null, name), el("strong", "overlay-package-price", pkg.price));
+          if (detail) item.append(el("small", "overlay-package-detail", detail));
+        }
+
         return item;
       }));
       section.append(items);
