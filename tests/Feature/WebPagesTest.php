@@ -25,6 +25,16 @@ class WebPagesTest extends TestCase
         $this->actingAs(User::factory()->pending()->create())->get('/')->assertRedirect('/account');
     }
 
+    public function test_landing_shows_coldw_social_proof(): void
+    {
+        $this->get('/')->assertOk()
+            ->assertSee('Sudah dipakai di live streamer')
+            ->assertSee('ColdW menggunakan MabarQueue')
+            ->assertSee('href="https://www.youtube.com/@ColdW6"', false)
+            ->assertSee('images/coldw-profile.png', false)
+            ->assertSee('images/coldw-live-example.png', false);
+    }
+
     public function test_guest_pages_render_with_csrf_and_api_helper(): void
     {
         foreach (['/login', '/signup', '/forgot-password'] as $page) {
@@ -67,6 +77,16 @@ class WebPagesTest extends TestCase
         foreach ([...self::DASHBOARD_PAGES, '/account', '/profile'] as $page) {
             $this->get($page)->assertOk();
         }
+    }
+
+    public function test_dashboard_exposes_persistent_theme_toggle(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        $this->get('/dashboard')->assertOk()
+            ->assertSee('data-theme-toggle', false)
+            ->assertSee('mabarqueue-theme', false)
+            ->assertSee('Mode gelap');
     }
 
     public function test_account_page_shows_real_workspace_data(): void

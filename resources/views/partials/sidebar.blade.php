@@ -39,4 +39,10 @@
             <p><a href="/live-session">Mulai sesi live →</a></p>
         @endif
     </section>
+
+    <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false">
+        <span class="theme-toggle-icon" data-theme-icon="moon" aria-hidden="true">@include('partials.icon', ['name' => 'moon', 'size' => 16])</span>
+        <span class="theme-toggle-icon" data-theme-icon="sun" aria-hidden="true">@include('partials.icon', ['name' => 'sun', 'size' => 16])</span>
+        <span data-theme-label>Mode gelap</span>
+    </button>
 </aside>

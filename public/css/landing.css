@@ -157,6 +157,19 @@
 .lp-board-table :is(th, td):last-child { text-align: right; }
 .lp-quota { display: inline-grid; min-width: 2.25rem; min-height: 1.6rem; place-items: center; border: 1px solid var(--lp-ink); font-size: 1.03rem; font-weight: 880; line-height: 1; }
 
+.lp-social-proof { border-block: 2px solid var(--lp-ink); background: var(--lp-white); }
+.lp-social-proof-inner { display: grid; grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr); align-items: center; gap: clamp(1.6rem, 5vw, 5rem); }
+.lp-social-proof-copy > p { max-width: 43ch; margin-top: 1rem; color: var(--lp-muted); }
+.lp-coldw-card { display: flex; align-items: center; gap: 1rem; margin-top: 1.6rem; padding: 1rem; border: 3px solid var(--lp-ink); background: var(--lp-ground); box-shadow: 4px 4px 0 var(--lp-ink); }
+.lp-coldw-card img { width: 5.4rem; height: 5.4rem; flex: none; border: 3px solid var(--lp-ink); border-radius: 50%; background: var(--lp-accent); box-shadow: 3px 3px 0 var(--lp-accent); object-fit: cover; object-position: center top; }
+.lp-coldw-card > div { display: grid; gap: .2rem; min-width: 0; }
+.lp-coldw-card strong { font-size: 1.35rem; font-weight: 880; line-height: 1.1; }
+.lp-coldw-card span { color: var(--lp-muted); font-size: .8rem; font-weight: 650; }
+.lp-coldw-card .lp-button { width: fit-content; min-height: 2.55rem; margin-top: .55rem; padding: .45rem .7rem; font-size: .78rem; }
+.lp-coldw-example { min-width: 0; overflow: hidden; }
+.lp-coldw-example > img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; object-position: center; }
+.lp-coldw-example > p { padding: .75rem .95rem .85rem; color: var(--lp-muted); font-size: .82rem; }
+
 .lp-process { color: var(--lp-white); background: var(--lp-ink); }
 .lp-process-grid, .lp-showcase, .lp-faq, .lp-close-panel { display: grid; align-items: center; gap: clamp(1.65rem, 6vw, 6rem); }
 .lp-process-grid { grid-template-columns: minmax(0, 1.22fr) minmax(0, 1fr); }
@@ -225,7 +238,7 @@
 .lp-footer .lp-nav { flex-wrap: wrap; }
 
 @media (max-width: 55rem) {
-  .lp-hero, .lp-process-grid, .lp-showcase, .lp-faq { grid-template-columns: minmax(0, 1fr); }
+  .lp-hero, .lp-process-grid, .lp-showcase, .lp-faq, .lp-social-proof-inner { grid-template-columns: minmax(0, 1fr); }
   .lp-obs { grid-column: auto; grid-row: auto; }
   .lp-hero h1 { max-width: 18ch; font-size: clamp(2.5rem, 7.2vw, 4.1rem); }
   .lp-hero, .lp-process-grid, .lp-showcase { gap: 2rem; }

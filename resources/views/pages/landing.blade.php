@@ -85,6 +85,28 @@
             </figure>
         </section>
 
+        <section class="lp-social-proof" aria-labelledby="social-proof-title">
+            <div class="lp-shell lp-social-proof-inner lp-section">
+                <div class="lp-social-proof-copy">
+                    <h2 id="social-proof-title">Sudah dipakai di live streamer</h2>
+                    <p>ColdW menggunakan MabarQueue untuk mengatur party, sisa game pemain, paket VIP, dan overlay OBS saat live Mobile Legends.</p>
+                    <article class="lp-coldw-card">
+                        <img src="{{ \App\Support\Asset::url('images/coldw-profile.png') }}" width="170" height="145" alt="Profil ColdW" loading="lazy" decoding="async" />
+                        <div>
+                            <strong>ColdW</strong>
+                            <span>@ColdW6 · Streamer Mobile Legends</span>
+                            <a class="lp-button lp-primary" href="https://www.youtube.com/@ColdW6" target="_blank" rel="noopener">Lihat channel YouTube @include('partials.icon', ['name' => 'arrow-right', 'size' => 16])</a>
+                        </div>
+                    </article>
+                </div>
+                <figure class="lp-preview lp-coldw-example">
+                    <figcaption class="lp-preview-bar"><span>Contoh penggunaan di live</span><span>Contoh tampilan</span></figcaption>
+                    <img src="{{ \App\Support\Asset::url('images/coldw-live-example.png') }}" width="1920" height="1080" alt="Cuplikan live ColdW yang menampilkan party, skor Win dan Lose, paket Mabar VIP, serta layanan lain di overlay OBS" loading="lazy" decoding="async" />
+                    <p>Party, skor Win / Lose, paket Mabar VIP, dan layanan lain tampil di overlay OBS.</p>
+                </figure>
+            </div>
+        </section>
+
         <section class="lp-process lp-section" id="cara-kerja" aria-labelledby="process-title">
             <div class="lp-shell lp-process-grid">
                 <div>

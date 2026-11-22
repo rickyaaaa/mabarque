@@ -31,6 +31,37 @@ body.ui-v2 {
   line-height: 1.4;
 }
 
+html[data-theme="dark"] body.ui-v2 {
+  color-scheme: dark;
+  --v-ground: #111311;
+  --v-panel: #1a1d1a;
+  --v-sunk: #232723;
+  --v-ink: #f1f4e9;
+  --v-muted: #aeb6a8;
+  --v-line: #050605;
+  --v-rule: #3a4239;
+  --v-accent: #c5f02e;
+  --v-accent-soft: #2b390f;
+  --v-dark: #070907;
+  --v-danger: #ed5b42;
+  --v-danger-soft: #4b241d;
+  --v-warn: #f4c83e;
+  --v-warn-soft: #4b3d14;
+  --green: #69c56b;
+}
+
+html[data-theme="dark"] body.ui-v2 .sidebar,
+html[data-theme="dark"] body.ui-v2 .main-content { color-scheme: dark; }
+
+html[data-theme="dark"] body.ui-v2 .field-input::placeholder { color: #899487; }
+html[data-theme="dark"] body.ui-v2 .field-input:autofill,
+html[data-theme="dark"] body.ui-v2 .field-input:-webkit-autofill {
+  -webkit-text-fill-color: var(--v-ink);
+  box-shadow: 0 0 0 1000px var(--v-sunk) inset;
+}
+html[data-theme="dark"] body.ui-v2 .theme-toggle-icon[data-theme-icon="moon"] { display: none; }
+html[data-theme="dark"] body.ui-v2 .theme-toggle-icon[data-theme-icon="sun"] { display: inline-grid; }
+
 /* ── Jembatan ke gaya lama ─────────────────────────────────────────────
    CSS tiap halaman (live-session, donations, vip-packages, overlay-settings, account, …)
    memakai token lama. Dipetakan ulang ke palet v2: merah → hitam, oranye → lime,
@@ -88,6 +119,15 @@ body.ui-v2 .stream-status a { color: var(--v-ink); font-weight: 700; text-underl
 body.ui-v2 .sidebar-footer span { color: var(--v-muted); }
 body.ui-v2 .main-content { padding: 26px 28px 40px; background: var(--v-ground); }
 body.ui-v2 .main-content::before, body.ui-v2 .main-content::after { display: none; }
+body.ui-v2 .theme-toggle {
+  display: flex; align-items: center; gap: 9px; width: 100%; min-height: 38px; margin-top: 16px; padding: 8px 10px;
+  color: var(--v-ink); background: var(--v-sunk); border: 2px solid var(--v-line); font: 700 12px "Inter", sans-serif; text-align: left; cursor: pointer;
+  transition: background-color 120ms var(--v-ease), transform 120ms var(--v-ease), box-shadow 120ms var(--v-ease);
+}
+body.ui-v2 .theme-toggle:hover { background: var(--v-accent); box-shadow: var(--v-shadow-sm); transform: translate(-1px, -1px); }
+body.ui-v2 .theme-toggle:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--v-line); }
+body.ui-v2 .theme-toggle-icon { display: inline-grid; place-items: center; }
+body.ui-v2 .theme-toggle-icon[data-theme-icon="sun"] { display: none; }
 
 /* ── Tombol ────────────────────────────────────────────────────────── */
 .ui-v2 .qb-btn {
@@ -502,3 +542,32 @@ body.ui-v2 .widget-stage .overlay-frame-wrap { position: relative; overflow: hid
 body.ui-v2 .widget-stage iframe { position: absolute; top: 0; left: 0; border: 0; transform-origin: 0 0; background: transparent; }
 body.ui-v2 .widget-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 body.ui-v2 .widget-actions .button { display: inline-flex; align-items: center; gap: 6px; }
+
+/* ── Tema gelap ────────────────────────────────────────────────────── */
+html[data-theme="dark"] body.ui-v2 .quick-actions,
+html[data-theme="dark"] body.ui-v2 .queue-table-wrap,
+html[data-theme="dark"] body.ui-v2 .account-panel,
+html[data-theme="dark"] body.ui-v2 .provider-panel,
+html[data-theme="dark"] body.ui-v2 .recent-panel,
+html[data-theme="dark"] body.ui-v2 .live-queue-panel,
+html[data-theme="dark"] body.ui-v2 .session-control-panel,
+html[data-theme="dark"] body.ui-v2 .recent-sessions-panel,
+html[data-theme="dark"] body.ui-v2 .overlay-controls,
+html[data-theme="dark"] body.ui-v2 .overlay-preview-panel,
+html[data-theme="dark"] body.ui-v2 .match-list-panel,
+html[data-theme="dark"] body.ui-v2 .admin-panel,
+html[data-theme="dark"] body.ui-v2 .donation-table-wrap { background: var(--v-panel); }
+
+html[data-theme="dark"] body.ui-v2 .account-stat-list > div,
+html[data-theme="dark"] body.ui-v2 .account-activity > div { border-color: var(--v-rule); }
+html[data-theme="dark"] body.ui-v2 .donation-table tbody tr:hover,
+html[data-theme="dark"] body.ui-v2 .control-row:hover,
+html[data-theme="dark"] body.ui-v2 .session-history-row:hover,
+html[data-theme="dark"] body.ui-v2 .queue-table tbody tr:hover { background: var(--v-sunk); }
+html[data-theme="dark"] body.ui-v2 .field-input,
+html[data-theme="dark"] body.ui-v2 select,
+html[data-theme="dark"] body.ui-v2 textarea { color: var(--v-ink); background-color: var(--v-sunk); }
+html[data-theme="dark"] body.ui-v2 .switch-track { background: #454d43; }
+html[data-theme="dark"] body.ui-v2 .qb-page:disabled { color: #687166; border-color: #4b5449; }
+html[data-theme="dark"] body.ui-v2 .provider-error,
+html[data-theme="dark"] body.ui-v2 .form-error { color: #ffd6cb; background: var(--v-danger-soft); }
