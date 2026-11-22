@@ -102,10 +102,16 @@
     // Paket dipisah menjadi Mabar VIP dan Layanan lain. Paket reward/VIP akun punya games = 0.
     const packages = data.packages || [];
     packageList.hidden = widget === "packages" ? !packages.length : !(settings.show_packages !== false && packages.length);
+    const mabarWidget = widget === "packages";
+    const serviceWidget = widget === "service-packages";
     const packageGroups = [
-      { label: "MABAR VIP", entries: packages.filter((pkg) => Number(pkg.games) > 0) },
-      { label: "LAYANAN LAIN", entries: packages.filter((pkg) => Number(pkg.games) < 1) },
+      { label: "MABAR VIP", entries: packages.filter((pkg) => Number(pkg.games) > 0 && (!serviceWidget)) },
+      { label: "LAYANAN LAIN", entries: packages.filter((pkg) => Number(pkg.games) < 1 && (!mabarWidget)) },
     ];
+    const visiblePackageCount = packageGroups.reduce((total, group) => total + group.entries.length, 0);
+    packageList.hidden = (mabarWidget || serviceWidget)
+      ? settings.show_packages === false || visiblePackageCount === 0
+      : !(settings.show_packages !== false && packages.length);
     packageList.replaceChildren(...packageGroups.filter((group) => group.entries.length).map((group) => {
       const section = el("section", "overlay-package-group");
       section.append(el("strong", "overlay-package-heading", group.label));
@@ -121,9 +127,9 @@
       return section;
     }));
 
-    empty.hidden = upcoming.length > 0 || (widget !== "" && widget !== "queue" && widget !== "packages");
-    empty.textContent = widget === "packages"
-      ? "Belum ada paket aktif"
+    empty.hidden = upcoming.length > 0 || (widget !== "" && widget !== "queue" && widget !== "packages" && widget !== "service-packages");
+    empty.textContent = widget === "packages" || widget === "service-packages"
+      ? "Belum ada paket aktif di widget ini"
       : (queue.status === "live" ? "Antrean VIP masih kosong" : "Sesi mabar belum dimulai");
     card.classList.toggle("is-offline", queue.status !== "live");
   }

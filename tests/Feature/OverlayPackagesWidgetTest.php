@@ -15,6 +15,7 @@ class OverlayPackagesWidgetTest extends TestCase
         $this->assertIsString($css);
         $this->assertStringContainsString('label: "MABAR VIP"', $script);
         $this->assertStringContainsString('label: "LAYANAN LAIN"', $script);
+        $this->assertStringContainsString('widget === "service-packages"', $script);
         $this->assertStringContainsString('Number(pkg.games) > 0', $script);
         $this->assertStringContainsString('Belum ada paket aktif', $script);
         $this->assertStringContainsString('overlay-package-group', $css);

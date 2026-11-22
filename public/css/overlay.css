@@ -68,7 +68,8 @@ body.is-widget .overlay-card { width: 100%; max-width: none; }
 body.widget-score .overlay-brand, body.widget-score .overlay-now, body.widget-score .overlay-queue, body.widget-score .overlay-empty, body.widget-score .overlay-packages,
 body.widget-party .overlay-head, body.widget-party .overlay-queue, body.widget-party .overlay-empty, body.widget-party .overlay-packages,
 body.widget-queue .overlay-score, body.widget-queue .overlay-now, body.widget-queue .overlay-packages,
-body.widget-packages .overlay-head, body.widget-packages .overlay-now, body.widget-packages .overlay-queue { display: none !important; }
+body.widget-packages .overlay-head, body.widget-packages .overlay-now, body.widget-packages .overlay-queue,
+body.widget-service-packages .overlay-head, body.widget-service-packages .overlay-now, body.widget-service-packages .overlay-queue { display: none !important; }
 
 /* Skor: dua kotak besar mengisi lebar */
 body.widget-score .overlay-card { padding: .6em; }
@@ -91,3 +92,6 @@ body.widget-party .overlay-party { display: flex; min-height: 0; margin-top: .45
 body.widget-packages .overlay-card { padding: .6em; }
 body.widget-packages .overlay-packages { margin: 0; padding: 0; border-top: 0; }
 body.widget-packages .overlay-package { font-size: .95em; }
+body.widget-service-packages .overlay-card { padding: .6em; }
+body.widget-service-packages .overlay-packages { margin: 0; padding: 0; border-top: 0; }
+body.widget-service-packages .overlay-package { font-size: .95em; }

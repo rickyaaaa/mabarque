@@ -50,7 +50,7 @@ Route::middleware(['auth', RedirectSuperAdminToPanel::class, EnsureActiveBeta::c
 // ── Overlay OBS (browser source, akses lewat token) ─────────────────────
 Route::get('/o/{token}', [OverlayController::class, 'page'])->where('token', '[A-Za-z0-9]{20,100}')->name('overlay');
 Route::get('/o/{token}/w/{widget}', [OverlayController::class, 'widget'])
-    ->where(['token' => '[A-Za-z0-9]{20,100}', 'widget' => 'score|party|queue|packages'])->name('overlay.widget');
+    ->where(['token' => '[A-Za-z0-9]{20,100}', 'widget' => 'score|party|queue|packages|service-packages'])->name('overlay.widget');
 Route::get('/o/{token}/bg/{file}', [OverlayController::class, 'background'])
     ->where(['token' => '[A-Za-z0-9]{20,100}', 'file' => '[A-Za-z0-9-]{1,80}\.(jpg|jpeg|png|webp|gif)'])->name('overlay.background');
 

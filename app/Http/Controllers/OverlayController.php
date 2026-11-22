@@ -48,7 +48,8 @@ class OverlayController extends Controller
         'score' => ['label' => 'Skor Win / Lose', 'hint' => 'Skor sesi live dari tombol Menang / Kalah.', 'size' => [360, 110]],
         'party' => ['label' => 'Sedang main', 'hint' => 'Nama pemain di party + sisa game.', 'size' => [460, 260]],
         'queue' => ['label' => 'Antrean berikutnya', 'hint' => 'Daftar pemain yang menunggu giliran.', 'size' => [400, 340]],
-        'packages' => ['label' => 'Harga paket', 'hint' => 'Paket aktif, mis. 25K · 2 game.', 'size' => [640, 90]],
+        'packages' => ['label' => 'Mabar VIP', 'hint' => 'Paket Mabar VIP, mis. 25K · 2 game.', 'size' => [640, 90]],
+        'service-packages' => ['label' => 'Layanan lain', 'hint' => 'VIP Mainin akun dan reward lain.', 'size' => [640, 140]],
     ];
 
     public function widget(string $token, string $widget, OverlayTokenService $tokenService, PublicQueueService $publicQueueService): View
