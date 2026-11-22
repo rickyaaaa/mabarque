@@ -127,7 +127,9 @@
       return section;
     }));
 
-    empty.hidden = upcoming.length > 0 || (widget !== "" && widget !== "queue" && widget !== "packages" && widget !== "service-packages");
+    empty.hidden = (mabarWidget || serviceWidget)
+      ? visiblePackageCount > 0
+      : upcoming.length > 0 || (widget !== "" && widget !== "queue");
     empty.textContent = widget === "packages" || widget === "service-packages"
       ? "Belum ada paket aktif di widget ini"
       : (queue.status === "live" ? "Antrean VIP masih kosong" : "Sesi mabar belum dimulai");
