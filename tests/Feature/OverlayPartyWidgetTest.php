@@ -13,6 +13,11 @@ class OverlayPartyWidgetTest extends TestCase
         $this->assertIsString($css);
         $this->assertStringContainsString('body.overlay-body.is-widget { min-height: 0; height: 100vh;', $css);
         $this->assertStringContainsString('body.widget-party .overlay-card { display: flex; height: 100%;', $css);
-        $this->assertStringContainsString('body.widget-party .overlay-party { display: flex; min-height: 0; margin-top: auto; flex-direction: column-reverse;', $css);
+        $this->assertStringContainsString('body.widget-party .overlay-party { display: flex; min-height: 0; margin-top: .45em; flex-direction: column;', $css);
+
+        $script = file_get_contents(public_path('js/overlay.js'));
+
+        $this->assertIsString($script);
+        $this->assertStringContainsString('partyList.replaceChildren(...party.map((entry) => {', $script);
     }
 }
