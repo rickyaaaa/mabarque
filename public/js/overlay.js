@@ -99,17 +99,32 @@
     document.querySelector("#overlay-wins").textContent = String(score ? score.wins : 0);
     document.querySelector("#overlay-losses").textContent = String(score ? score.losses : 0);
 
-    // Harga paket VIP, mis. "25K · 2 game".
+    // Paket dipisah menjadi Mabar VIP dan Layanan lain. Paket reward/VIP akun punya games = 0.
     const packages = data.packages || [];
     packageList.hidden = widget === "packages" ? !packages.length : !(settings.show_packages !== false && packages.length);
-    packageList.replaceChildren(...packages.map((pkg) => {
-      const item = el("li", "overlay-package");
-      item.append(el("strong", null, pkg.price), el("span", null, pkg.gets || `${pkg.games} game`));
-      return item;
+    const packageGroups = [
+      { label: "MABAR VIP", entries: packages.filter((pkg) => Number(pkg.games) > 0) },
+      { label: "LAYANAN LAIN", entries: packages.filter((pkg) => Number(pkg.games) < 1) },
+    ];
+    packageList.replaceChildren(...packageGroups.filter((group) => group.entries.length).map((group) => {
+      const section = el("section", "overlay-package-group");
+      section.append(el("strong", "overlay-package-heading", group.label));
+      const items = el("div", "overlay-package-list");
+      items.append(...group.entries.map((pkg) => {
+        const item = el("div", `overlay-package${Number(pkg.games) > 0 ? " is-mabar" : " is-service"}`);
+        const label = Number(pkg.games) > 0 ? (pkg.gets || `${pkg.games} game`) : (pkg.gets || pkg.name);
+        item.title = pkg.name && pkg.name !== label ? pkg.name : "";
+        item.append(el("strong", null, Number(pkg.games) > 0 ? pkg.price : label), el("span", null, Number(pkg.games) > 0 ? label : pkg.price));
+        return item;
+      }));
+      section.append(items);
+      return section;
     }));
 
-    empty.hidden = upcoming.length > 0 || (widget !== "" && widget !== "queue");
-    empty.textContent = queue.status === "live" ? "Antrean VIP masih kosong" : "Sesi mabar belum dimulai";
+    empty.hidden = upcoming.length > 0 || (widget !== "" && widget !== "queue" && widget !== "packages");
+    empty.textContent = widget === "packages"
+      ? "Belum ada paket aktif"
+      : (queue.status === "live" ? "Antrean VIP masih kosong" : "Sesi mabar belum dimulai");
     card.classList.toggle("is-offline", queue.status !== "live");
   }
 

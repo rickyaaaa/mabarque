@@ -39,9 +39,14 @@ body.overlay-body.is-transparent { background: transparent; }
 .overlay-score strong { font-size: 1.15em; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; }
 .overlay-score-win { color: var(--ink); background: var(--accent); }
 .overlay-score-lose { color: #fff; background: var(--dark); }
-.overlay-packages { display: flex; flex-wrap: wrap; gap: .35em; margin: .7em 0 0; padding: .6em 0 0; list-style: none; border-top: 2px solid var(--rule); }
+.overlay-packages { display: grid; gap: .55em; margin: .7em 0 0; padding: .6em 0 0; border-top: 2px solid var(--rule); }
+.overlay-package-group { display: grid; gap: .25em; }
+.overlay-package-heading { color: var(--muted); font-size: .62em; font-weight: 900; letter-spacing: .1em; }
+.overlay-package-list { display: flex; flex-wrap: wrap; gap: .35em; }
 .overlay-package { display: flex; align-items: baseline; gap: .3em; padding: .22em .5em; color: var(--ink); background: var(--sunk); border: 2px solid var(--ink); font-size: .76em; font-weight: 700; }
 .overlay-package strong { font-size: 1.15em; font-weight: 900; }
+.overlay-package.is-mabar { background: var(--accent); }
+.overlay-package.is-service { background: var(--panel); }
 
 /* Bentuk horizontal: bar memanjang (cocok di bawah/atas layar) */
 .overlay-card.is-horizontal { display: flex; align-items: stretch; gap: .8em; }
@@ -50,7 +55,7 @@ body.overlay-body.is-transparent { background: transparent; }
 .overlay-card.is-horizontal .overlay-queue { display: flex; flex: 1; flex-wrap: wrap; align-content: center; gap: .35em; min-width: 0; margin: 0; overflow: hidden; }
 .overlay-card.is-horizontal .overlay-entry { flex: 0 1 auto; min-width: 0; }
 .overlay-card.is-horizontal .overlay-empty { align-self: center; margin: 0; }
-.overlay-card.is-horizontal .overlay-packages { flex: none; flex-direction: column; flex-wrap: nowrap; justify-content: center; margin: 0; padding: 0 0 0 .7em; border-top: 0; border-left: 2px solid var(--rule); }
+.overlay-card.is-horizontal .overlay-packages { flex: none; flex-direction: column; justify-content: center; margin: 0; padding: 0 0 0 .7em; border-top: 0; border-left: 2px solid var(--rule); }
 
 /* Mode "Ikuti ukuran Browser Source": kartu mengisi penuh viewport browser source OBS (sisa ruang untuk bayangan). */
 body.overlay-body.is-fit { min-height: 0; height: 100vh; padding: 5px 12px 12px 5px; overflow: hidden; }
@@ -63,7 +68,7 @@ body.is-widget .overlay-card { width: 100%; max-width: none; }
 body.widget-score .overlay-brand, body.widget-score .overlay-now, body.widget-score .overlay-queue, body.widget-score .overlay-empty, body.widget-score .overlay-packages,
 body.widget-party .overlay-head, body.widget-party .overlay-queue, body.widget-party .overlay-empty, body.widget-party .overlay-packages,
 body.widget-queue .overlay-score, body.widget-queue .overlay-now, body.widget-queue .overlay-packages,
-body.widget-packages .overlay-head, body.widget-packages .overlay-now, body.widget-packages .overlay-queue, body.widget-packages .overlay-empty { display: none !important; }
+body.widget-packages .overlay-head, body.widget-packages .overlay-now, body.widget-packages .overlay-queue { display: none !important; }
 
 /* Skor: dua kotak besar mengisi lebar */
 body.widget-score .overlay-card { padding: .6em; }

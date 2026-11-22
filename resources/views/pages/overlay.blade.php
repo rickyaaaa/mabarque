@@ -28,7 +28,7 @@
       </section>
       <ol class="overlay-queue" id="overlay-queue"></ol>
       <p class="overlay-empty" id="overlay-empty" hidden></p>
-      <ul class="overlay-packages" id="overlay-packages" hidden aria-label="Harga paket VIP"></ul>
+      <div class="overlay-packages" id="overlay-packages" hidden aria-label="Harga paket VIP"></div>
     </main>
     <script>window.__OVERLAY__ = @json($initial);</script>
     <script src="{{ \App\Support\Asset::url('js/overlay.js') }}" defer></script>
