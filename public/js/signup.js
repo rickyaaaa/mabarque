@@ -1,5 +1,5 @@
-// Halaman daftar: POST /api/auth/register { name, email, handle, password, password_confirmation, consent }.
-// Validasi ringan di browser untuk umpan balik cepat; aturan final (email unik, slug) dari server.
+// Halaman daftar: POST /api/auth/register { name, email, password, password_confirmation, consent }.
+// Server membuat alamat publik dari nama streamer.
 const signupForm = document.querySelector("#signup-form");
 const signupError = document.querySelector("#signup-error");
 const successModal = document.querySelector("#signup-success");
@@ -7,7 +7,6 @@ const signupButton = signupForm.querySelector('button[type="submit"]');
 const fieldFor = {
   name: "#signup-name",
   email: "#signup-email",
-  handle: "#signup-handle",
   password: "#signup-password",
   password_confirmation: "#signup-password-confirm",
 };
@@ -24,7 +23,6 @@ signupForm.addEventListener("submit", async (event) => {
   const payload = {
     name: document.querySelector(fieldFor.name).value.trim(),
     email: document.querySelector(fieldFor.email).value.trim(),
-    handle: document.querySelector(fieldFor.handle).value.trim(),
     password: document.querySelector(fieldFor.password).value,
     password_confirmation: document.querySelector(fieldFor.password_confirmation).value,
     consent: document.querySelector("#signup-consent").checked,

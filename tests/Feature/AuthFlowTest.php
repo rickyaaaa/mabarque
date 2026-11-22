@@ -52,6 +52,21 @@ class AuthFlowTest extends TestCase
             ->assertJsonValidationErrors(['email']);
     }
 
+    public function test_registration_generates_a_unique_public_slug_from_streamer_name(): void
+    {
+        User::factory()->create(['slug' => 'andra-rizky']);
+
+        $payload = $this->registerPayload([
+            'name' => 'Andra Rizky',
+            'email' => 'andra@example.com',
+        ]);
+        unset($payload['handle']);
+
+        $this->postJson('/api/auth/register', $payload)
+            ->assertCreated()
+            ->assertJsonPath('data.slug', 'andra-rizky-2');
+    }
+
     public function test_registration_rejects_reserved_or_taken_handles_and_role_injection(): void
     {
         User::factory()->create(['slug' => 'rrq']);

@@ -52,6 +52,7 @@ body.ui-v2 .signup-card-heading h2, body.ui-v2 .login-card .signup-card-heading 
 body.ui-v2 .signup-card-heading p:last-child, body.ui-v2 .login-card .signup-card-heading p:last-child { color: var(--v-muted); font-size: 13px; }
 body.ui-v2 .field-label { margin: 15px 0 6px; font-size: 12px; font-weight: 700; }
 body.ui-v2 .field-label span { color: var(--v-muted); font-weight: 500; }
+body.ui-v2 .field-help { margin: 6px 0 0; color: var(--v-muted); font-size: 11px; }
 body.ui-v2 .field-input, body.ui-v2 .handle-input { min-height: 44px; color: var(--v-ink); background: var(--v-sunk); border: 2px solid var(--v-line); font-size: 14px; }
 body.ui-v2 .field-input::placeholder, body.ui-v2 .handle-input input::placeholder { color: #807e75; }
 body.ui-v2 .field-input:focus, body.ui-v2 .handle-input:focus-within { background: var(--v-panel); }

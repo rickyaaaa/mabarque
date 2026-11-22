@@ -6,10 +6,10 @@ use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Support\Str;
 
 /**
- * Validasi pendaftaran streamer. Kontrak sama dengan form signup.html:
- * name, email, handle (username → slug publik), password + password_confirmation, consent.
+ * Validasi pendaftaran streamer. Handle publik dibuat otomatis dari nama bila tidak dikirim klien.
  */
 class RegisterStreamerRequest extends FormRequest
 {
@@ -21,13 +21,34 @@ class RegisterStreamerRequest extends FormRequest
     /** Normalisasi sebelum validasi supaya cek unik tidak bisa diakali lewat huruf besar/spasi. */
     protected function prepareForValidation(): void
     {
+        $name = trim((string) $this->input('name'));
         $handle = strtolower(ltrim(trim((string) $this->input('handle')), '@'));
 
+        if ($handle === '') {
+            $handle = $this->uniqueGeneratedHandle($name);
+        }
+
         $this->merge([
-            'name' => trim((string) $this->input('name')),
+            'name' => $name,
             'email' => strtolower(trim((string) $this->input('email'))),
             'handle' => str_replace('_', '-', $handle),
         ]);
+    }
+
+    private function uniqueGeneratedHandle(string $name): string
+    {
+        $base = Str::slug($name) ?: 'streamer';
+        $base = rtrim(Str::limit($base, 24, ''), '-');
+        $candidate = $base;
+        $number = 2;
+
+        while (in_array($candidate, User::RESERVED_SLUGS, true) || User::query()->where('slug', $candidate)->exists()) {
+            $suffix = '-'.$number;
+            $candidate = rtrim(Str::limit($base, 24 - strlen($suffix), ''), '-').$suffix;
+            $number++;
+        }
+
+        return $candidate;
     }
 
     public function rules(): array
