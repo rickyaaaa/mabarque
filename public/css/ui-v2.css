@@ -23,6 +23,15 @@ body.ui-v2 {
   --v-shadow-sm: 3px 3px 0 var(--v-line);
   --v-shadow: 5px 5px 0 var(--v-line);
   --v-ease: cubic-bezier(.16, 1, .3, 1);
+  /* Token semantik: warna teks menurut PERMUKAAN tempatnya, supaya tema gelap tidak membalik semuanya
+     sekaligus (bug lama: teks di atas lime ikut terang, teks di atas kartu hitam ikut gelap). */
+  --v-on-accent: #111111;       /* teks di atas lime/kuning — selalu gelap */
+  --v-on-accent-muted: #3d4810; /* teks sekunder di atas lime: olive, bukan abu-abu */
+  --v-on-dark: #ffffff;         /* teks di atas permukaan inverse (--v-dark) */
+  --v-on-dark-muted: #c9c8bf;
+  --v-raised: var(--v-dark);    /* blok besar (hero sesi, hero profil, pratinjau overlay) */
+  --v-placeholder: #6b6a62;     /* placeholder & keterangan "kosong" — tetap ≥ 4.5:1 */
+  --v-donation-ink: #44530f;
 
   color: var(--v-ink);
   background: var(--v-ground);
@@ -31,29 +40,36 @@ body.ui-v2 {
   line-height: 1.4;
 }
 
+/* Tema gelap = cermin neo-brutalism: permukaan gelap, garis & bayangan keras tetap terlihat (abu-olive
+   terang), permukaan inverse dibalik jadi terang seperti kartu hitam di tema terang, lime tetap aksen. */
 html[data-theme="dark"] body.ui-v2 {
   color-scheme: dark;
-  --v-ground: #111311;
-  --v-panel: #1a1d1a;
-  --v-sunk: #232723;
-  --v-ink: #f1f4e9;
-  --v-muted: #aeb6a8;
-  --v-line: #050605;
-  --v-rule: #3a4239;
+  --v-ground: #121411;
+  --v-panel: #1b1e1a;
+  --v-sunk: #252922;
+  --v-ink: #eef1e6;
+  --v-muted: #b2baa7;
+  --v-line: #7f8873;
+  --v-rule: #343a30;
   --v-accent: #c5f02e;
-  --v-accent-soft: #2b390f;
-  --v-dark: #070907;
-  --v-danger: #ed5b42;
+  --v-accent-soft: #2c3a0f;
+  --v-dark: #e9ecdf;
+  --v-raised: #262b23;
+  --v-on-dark: #111111;
+  --v-on-dark-muted: #4f584a;
+  --v-placeholder: #9aa38e;
+  --v-donation-ink: #c5f02e;
+  --v-danger: #d8341b;
   --v-danger-soft: #4b241d;
   --v-warn: #f4c83e;
-  --v-warn-soft: #4b3d14;
-  --green: #69c56b;
+  --v-warn-soft: #3d3313;
+  --green: #5fbf61;
 }
 
 html[data-theme="dark"] body.ui-v2 .sidebar,
 html[data-theme="dark"] body.ui-v2 .main-content { color-scheme: dark; }
 
-html[data-theme="dark"] body.ui-v2 .field-input::placeholder { color: #899487; }
+html[data-theme="dark"] body.ui-v2 .field-input::placeholder { color: var(--v-placeholder); }
 html[data-theme="dark"] body.ui-v2 .field-input:autofill,
 html[data-theme="dark"] body.ui-v2 .field-input:-webkit-autofill {
   -webkit-text-fill-color: var(--v-ink);
@@ -75,7 +91,7 @@ body.ui-v2 {
   --red: var(--v-dark);
   --red-dark: var(--v-ink);
   --orange: var(--v-accent);
-  --green: #2f8f2f;
+  --green: #287a28; /* 5.4:1 dengan teks putih (sebelumnya 4.1:1) */
   --muted: var(--v-muted);
   --line: var(--v-line);
   --shadow: 5px 5px 0 var(--v-line);
@@ -90,11 +106,11 @@ body.ui-v2 .eyebrow { display: none; }
 body.ui-v2 .session-meta { color: var(--v-muted); }
 body.ui-v2 a { text-underline-offset: 3px; }
 body.ui-v2 .filter-button { border-width: 2px; font-weight: 700; }
-body.ui-v2 .filter-button.is-active { color: #fff; background: var(--v-dark); }
+body.ui-v2 .filter-button.is-active { color: var(--v-on-dark); background: var(--v-dark); }
 body.ui-v2 .button-danger { color: #fff; background: var(--v-danger); }
 body.ui-v2 .button-light { background: var(--v-panel); }
 
-body.ui-v2 ::selection { color: var(--v-ink); background: var(--v-accent); }
+body.ui-v2 ::selection { color: var(--v-on-accent); background: var(--v-accent); }
 body.ui-v2 * { scrollbar-width: thin; scrollbar-color: var(--v-ink) transparent; }
 body.ui-v2 :focus-visible { outline: 3px solid var(--v-ink); outline-offset: 2px; box-shadow: 0 0 0 6px var(--v-accent); }
 body.ui-v2 .icon { flex: none; display: block; }
@@ -142,7 +158,7 @@ body.ui-v2 .theme-toggle-icon[data-theme-icon="sun"] { display: none; }
 .ui-v2 .qb-btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--v-line); }
 .ui-v2 .qb-btn:disabled { cursor: not-allowed; opacity: .45; transform: none; box-shadow: var(--v-shadow-sm); }
 .ui-v2 .qb-btn.is-accent { background: var(--v-accent); }
-.ui-v2 .qb-btn.is-dark { color: #fff; background: var(--v-dark); }
+.ui-v2 .qb-btn.is-dark { color: var(--v-on-dark); background: var(--v-dark); }
 .ui-v2 .qb-btn.is-danger { color: #fff; background: var(--v-danger); }
 .ui-v2 .qb-btn.is-quiet { background: transparent; box-shadow: none; }
 .ui-v2 .qb-btn.is-quiet:hover { background: var(--v-panel); box-shadow: var(--v-shadow-sm); }
@@ -162,7 +178,7 @@ body.ui-v2 .theme-toggle-icon[data-theme-icon="sun"] { display: none; }
 .ui-v2 .qb-head-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 .ui-v2 .qb-live { display: inline-flex; align-items: center; gap: 7px; padding: 5px 9px; color: var(--v-ink); background: var(--v-panel); border: 2px solid var(--v-line); font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
 .ui-v2 .qb-live i { width: 8px; height: 8px; background: #a5a39a; border-radius: 50%; }
-.ui-v2 .qb-live.is-live { color: #fff; background: var(--v-dark); }
+.ui-v2 .qb-live.is-live { color: var(--v-on-dark); background: var(--v-dark); }
 .ui-v2 .qb-live.is-live i { background: var(--v-accent); animation: qb-pulse 1.6s var(--v-ease) infinite; }
 @keyframes qb-pulse { 0% { box-shadow: 0 0 0 0 rgba(197, 240, 46, .8); } 70% { box-shadow: 0 0 0 7px rgba(197, 240, 46, 0); } 100% { box-shadow: 0 0 0 0 rgba(197, 240, 46, 0); } }
 
@@ -172,8 +188,8 @@ body.ui-v2 .theme-toggle-icon[data-theme-icon="sun"] { display: none; }
 .ui-v2 .qb-stat span { color: var(--v-muted); font-size: 12px; font-weight: 700; }
 .ui-v2 .qb-stat strong { font-size: clamp(26px, 2.5vw, 36px); font-weight: 900; line-height: 1; letter-spacing: -.03em; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ui-v2 .qb-stat small { color: var(--v-muted); font-size: 12px; font-weight: 500; }
-.ui-v2 .qb-stat.is-dark { color: #fff; background: var(--v-dark); }
-.ui-v2 .qb-stat.is-dark span, .ui-v2 .qb-stat.is-dark small { color: #c9c8bf; }
+.ui-v2 .qb-stat.is-dark { color: var(--v-on-dark); background: var(--v-dark); }
+.ui-v2 .qb-stat.is-dark span, .ui-v2 .qb-stat.is-dark small { color: var(--v-on-dark-muted); }
 .ui-v2 .qb-stat.is-dark strong { color: var(--v-accent); }
 .ui-v2 .qb-stat.is-accent { background: var(--v-accent); }
 .ui-v2 .qb-stat.is-accent span, .ui-v2 .qb-stat.is-accent small { color: #2e3a07; }
@@ -209,7 +225,7 @@ body.ui-v2 .theme-toggle-icon[data-theme-icon="sun"] { display: none; }
 .ui-v2 .qb-next-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
 .ui-v2 .qb-next-item { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 6px 8px; background: var(--v-panel); border: 2px solid var(--v-rule); }
 .ui-v2 .qb-next-item.is-picked { border-color: var(--v-line); box-shadow: 2px 2px 0 var(--v-line); }
-.ui-v2 .qb-next-rank { display: grid; place-items: center; width: 22px; height: 22px; flex: none; color: #fff; background: var(--v-dark); font-size: 11px; font-weight: 800; }
+.ui-v2 .qb-next-rank { display: grid; place-items: center; width: 22px; height: 22px; flex: none; color: var(--v-on-dark); background: var(--v-dark); font-size: 11px; font-weight: 800; }
 .ui-v2 .qb-next-item.is-picked .qb-next-rank { color: var(--v-ink); background: var(--v-accent); }
 .ui-v2 .qb-next-name { flex: 1; min-width: 0; overflow: hidden; font-size: 13px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
 .ui-v2 .qb-next-name small { color: var(--v-muted); font-weight: 500; }
@@ -222,11 +238,11 @@ body.ui-v2 .theme-toggle-icon[data-theme-icon="sun"] { display: none; }
 .ui-v2 .qb-filter { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 10px; color: var(--v-ink); background: var(--v-panel); border: 2px solid var(--v-line); font: 700 12px "Inter", sans-serif; cursor: pointer; transition: background-color 120ms var(--v-ease); }
 .ui-v2 .qb-filter span { color: var(--v-muted); font-weight: 600; font-variant-numeric: tabular-nums; }
 .ui-v2 .qb-filter:hover { background: var(--v-sunk); }
-.ui-v2 .qb-filter.is-active { color: #fff; background: var(--v-dark); }
+.ui-v2 .qb-filter.is-active { color: var(--v-on-dark); background: var(--v-dark); }
 .ui-v2 .qb-filter.is-active span { color: var(--v-accent); }
-.ui-v2 .qb-bulk { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 16px; color: #fff; background: var(--v-dark); border-bottom: 3px solid var(--v-line); }
+.ui-v2 .qb-bulk { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 16px; color: var(--v-on-dark); background: var(--v-raised); border-bottom: 3px solid var(--v-line); }
 .ui-v2 .qb-bulk strong { margin-right: auto; font-size: 13px; }
-.ui-v2 .qb-bulk .qb-btn.is-quiet { color: #fff; }
+.ui-v2 .qb-bulk .qb-btn.is-quiet { color: var(--v-on-dark); }
 .ui-v2 .qb-bulk .qb-btn.is-quiet:hover { color: var(--v-ink); }
 .ui-v2 .qb-check { width: 18px; height: 18px; margin: 0; accent-color: var(--v-ink); cursor: pointer; }
 
@@ -256,8 +272,8 @@ body.ui-v2 .theme-toggle-icon[data-theme-icon="sun"] { display: none; }
 .ui-v2 .player-identity { gap: 3px; }
 .ui-v2 .player-name { font-size: 14px; font-weight: 700; }
 .ui-v2 .player-mlbb-id { color: var(--v-muted); font-size: 11px; font-weight: 600; }
-.ui-v2 .player-mlbb-id.is-missing { color: #807e75; font-style: italic; }
-.ui-v2 .player-donation { display: inline-flex; color: #44530f; font-size: 11px; font-weight: 600; }
+.ui-v2 .player-mlbb-id.is-missing { color: var(--v-placeholder); font-style: italic; }
+.ui-v2 .player-donation { display: inline-flex; color: var(--v-donation-ink); font-size: 11px; font-weight: 600; }
 .ui-v2 .player-note { display: inline-flex; align-items: center; gap: 4px; color: var(--v-muted); font-size: 11px; font-weight: 500; }
 .ui-v2 .status-pill, .ui-v2 .service-pill { min-height: 22px; padding: 2px 7px; color: var(--v-ink); background: var(--v-panel); border: 2px solid var(--v-line); font-size: 10px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
 .ui-v2 .status-pill .status-dot { width: 6px; height: 6px; border-radius: 50%; }
@@ -265,7 +281,7 @@ body.ui-v2 .theme-toggle-icon[data-theme-icon="sun"] { display: none; }
 .ui-v2 .status-pill.offline { color: var(--v-muted); border-color: #9a998f; }
 .ui-v2 .status-pill.skipped { border-style: dashed; }
 .ui-v2 .status-pill.capped { background: var(--v-warn); }
-.ui-v2 .service-pill.vip { color: #fff; background: var(--v-dark); }
+.ui-v2 .service-pill.vip { color: var(--v-on-dark); background: var(--v-dark); }
 .ui-v2 .service-pill.joki { background: var(--v-warn); }
 .ui-v2 .joki-state { font-size: 11px; font-weight: 700; color: var(--v-muted); }
 .ui-v2 .joki-state.is-playing { color: #2f7d12; }
@@ -327,7 +343,7 @@ body.ui-v2 .icon-button:hover { background: var(--v-accent); transform: none; bo
 body.ui-v2 .field-label { margin: 14px 0 6px; font-size: 12px; font-weight: 700; }
 body.ui-v2 .field-label span { color: var(--v-muted); font-weight: 500; }
 body.ui-v2 .field-input { min-height: 42px; color: var(--v-ink); background: var(--v-sunk); border: 2px solid var(--v-line); font-family: inherit; font-size: 14px; }
-body.ui-v2 .field-input::placeholder { color: #807e75; }
+body.ui-v2 .field-input::placeholder { color: var(--v-placeholder); }
 body.ui-v2 .field-input:focus { background: var(--v-panel); }
 body.ui-v2 .field-input.is-invalid { border-color: var(--v-danger); background: var(--v-danger-soft); }
 body.ui-v2 .field-hint, body.ui-v2 .modal-help { color: var(--v-muted); }
@@ -339,7 +355,7 @@ body.ui-v2 .button-primary { color: var(--v-ink); background: var(--v-accent); }
 body.ui-v2 .button-outline { background: var(--v-panel); }
 body.ui-v2 .rules-switch input:checked + .switch-track { background: var(--v-accent); }
 body.ui-v2 .rules-switch input:checked + .switch-track::after { background: var(--v-ink); }
-body.ui-v2 .toast { color: #fff; background: var(--v-dark); border: 2px solid var(--v-line); box-shadow: 4px 4px 0 var(--v-accent); font-family: inherit; }
+body.ui-v2 .toast { color: var(--v-on-dark); background: var(--v-dark); border: 2px solid var(--v-line); box-shadow: 4px 4px 0 var(--v-accent); font-family: inherit; }
 
 /* ── Halaman lain (Sesi Live, Donasi, Paket, Overlay, Akun) ─────────────
    Warna yang ditulis langsung di CSS halaman (krem, ungu, pink) diselaraskan ke palet v2. */
@@ -353,19 +369,19 @@ body.ui-v2 .donation-status.review, body.ui-v2 .queue-marker.is-waiting { backgr
 body.ui-v2 .activity-item.is-unread { background: var(--v-accent-soft); }
 body.ui-v2 .notification-pulse { background: var(--v-accent); box-shadow: 0 0 0 3px rgba(197, 240, 46, .35); }
 body.ui-v2 .connection-test, body.ui-v2 .start-session-status { color: var(--v-ink); background: var(--v-accent-soft); }
-body.ui-v2 .control-icon-purple, body.ui-v2 .activity-icon.is-purple { color: #fff; background: var(--v-dark); }
+body.ui-v2 .control-icon-purple, body.ui-v2 .activity-icon.is-purple { color: var(--v-on-dark); background: var(--v-dark); }
 body.ui-v2 .live-queue-position { display: grid; place-items: center; width: 27px; height: 27px; color: var(--v-accent); background: var(--v-dark); font-size: 12px; font-weight: 800; font-variant-numeric: tabular-nums; }
 /* Angka besar: Inter lebih lebar dari font lama → ukuran disesuaikan supaya tidak patah baris. */
 body.ui-v2 .live-stat strong, body.ui-v2 .donation-stat strong { font-size: clamp(26px, 2.4vw, 38px) !important; font-weight: 900; line-height: 1; letter-spacing: -.03em; white-space: nowrap; font-variant-numeric: tabular-nums; }
-body.ui-v2 .live-stat-red small, body.ui-v2 .live-stat-purple small, body.ui-v2 .donation-stat-purple small, body.ui-v2 .live-hero-main p { color: #c9c8bf; }
+body.ui-v2 .live-stat-red small, body.ui-v2 .live-stat-purple small, body.ui-v2 .donation-stat-red small, body.ui-v2 .donation-stat-purple small, body.ui-v2 .live-hero-main p { color: var(--v-on-dark-muted); }
 body.ui-v2 .live-hero h2, body.ui-v2 .profile-identity h2 { font-size: clamp(26px, 2.6vw, 36px); line-height: 1.05; }
 body.ui-v2 .profile-avatar { color: var(--v-ink); background: var(--v-accent); }
-body.ui-v2 .profile-identity p, body.ui-v2 .profile-identity small { color: #c9c8bf; }
+body.ui-v2 .profile-identity p, body.ui-v2 .profile-identity small { color: var(--v-on-dark-muted); }
 /* Label provider (Saweria/SociaBuzz/Trakteer) selalu teks putih selebar isinya, juga di kartu donasi HP. */
 body.ui-v2 .provider-pill { display: inline-flex; width: fit-content; max-width: 100%; color: #fff !important; }
 /* Radio di kotak pilihan (overlay: bentuk & ukuran): titiknya terlihat juga di pilihan aktif yang hitam. */
 body.ui-v2 .layout-option input { accent-color: var(--v-accent); }
-body.ui-v2 .layout-option.is-active input { outline: 2px solid #fff; outline-offset: 1px; }
+body.ui-v2 .layout-option.is-active input { outline: 2px solid var(--v-on-dark); outline-offset: 1px; }
 /* Notifikasi masuk (halaman Donasi): ikon SVG di tengah kotak, tidak ikut aturan teks span. */
 body.ui-v2 .activity-item .activity-icon { display: grid; place-items: center; width: 30px; height: 30px; color: var(--v-ink); background: var(--v-panel); border: 2px solid var(--v-line); }
 body.ui-v2 .activity-item .activity-icon.is-green { background: var(--v-accent); }
@@ -432,7 +448,7 @@ body.ui-v2.admin-body *:not(code):not(pre) { font-family: "Inter", system-ui, -a
 body.ui-v2.admin-body { background: var(--v-ground); }
 body.ui-v2 .admin-topbar { padding: 14px clamp(14px, 4vw, 40px); background: var(--v-panel); border-bottom: 3px solid var(--v-line); }
 body.ui-v2 .admin-topbar .public-brand { display: inline-flex; align-items: center; gap: 10px; color: var(--v-ink); font-size: 20px; font-weight: 900; letter-spacing: -.03em; text-decoration: none; text-transform: none; }
-body.ui-v2 .admin-topbar .public-brand em { padding: 3px 7px; color: #fff; background: var(--v-dark); font-size: 11px; font-style: normal; font-weight: 800; letter-spacing: .04em; }
+body.ui-v2 .admin-topbar .public-brand em { padding: 3px 7px; color: var(--v-on-dark); background: var(--v-dark); font-size: 11px; font-style: normal; font-weight: 800; letter-spacing: .04em; }
 body.ui-v2 .admin-header { padding-bottom: 20px; border-bottom: 3px solid var(--v-line); }
 body.ui-v2 .admin-header h1 { margin: 0 0 6px; font-size: clamp(32px, 4vw, 48px); font-weight: 900; line-height: 1.02; letter-spacing: -.04em; text-transform: none; }
 body.ui-v2 .admin-who { color: var(--v-muted); font-size: 13px; font-weight: 600; }
@@ -442,12 +458,12 @@ body.ui-v2 .admin-stat strong { margin-top: 8px; font-size: 40px; font-weight: 9
 body.ui-v2 .admin-stat.is-pending { background: var(--v-warn); }
 body.ui-v2 .admin-stat.is-active { background: var(--v-accent); }
 body.ui-v2 .admin-stat.is-inactive { background: var(--v-sunk); }
-body.ui-v2 .admin-stat:last-child { color: #fff; background: var(--v-dark); }
-body.ui-v2 .admin-stat:last-child span { color: #c9c8bf; }
+body.ui-v2 .admin-stat:last-child { color: var(--v-on-dark); background: var(--v-dark); }
+body.ui-v2 .admin-stat:last-child span { color: var(--v-on-dark-muted); }
 body.ui-v2 .admin-stat:last-child strong { color: var(--v-accent); }
 body.ui-v2 .admin-panel { padding: 16px; background: var(--v-panel); border: 3px solid var(--v-line); box-shadow: var(--v-shadow); }
 body.ui-v2 .admin-table-wrap { background: var(--v-panel); border: 2px solid var(--v-line); }
-body.ui-v2 .admin-table th { color: #fff; background: var(--v-dark); font-size: 12px; font-weight: 700; letter-spacing: 0; text-transform: none; }
+body.ui-v2 .admin-table th { color: var(--v-on-dark); background: var(--v-dark); font-size: 12px; font-weight: 700; letter-spacing: 0; text-transform: none; }
 body.ui-v2 .admin-table td { border-top: 1px solid var(--v-rule); }
 body.ui-v2 .admin-table tbody tr:hover { background: var(--v-sunk); }
 body.ui-v2 .admin-table td strong { font-weight: 800; }
@@ -466,7 +482,7 @@ body.ui-v2 .admin-pagination { color: var(--v-muted); }
 .ui-v2 .qb-search > .icon { position: absolute; left: 12px; color: var(--v-muted); pointer-events: none; }
 .ui-v2 .qb-search input { width: 100%; min-height: 40px; padding: 8px 38px 8px 38px; color: var(--v-ink); background: var(--v-sunk); border: 2px solid var(--v-line); border-radius: 0; font: 600 14px "Inter", sans-serif; }
 .ui-v2 .qb-search input:focus { background: var(--v-panel); outline: none; box-shadow: var(--v-shadow-sm); }
-.ui-v2 .qb-search input::placeholder { color: #807e75; font-weight: 500; }
+.ui-v2 .qb-search input::placeholder { color: var(--v-placeholder); font-weight: 500; }
 .ui-v2 .qb-search input::-webkit-search-cancel-button { display: none; }
 .ui-v2 .qb-search button { position: absolute; right: 6px; display: grid; width: 28px; height: 28px; place-items: center; padding: 0; color: var(--v-ink); background: transparent; border: 0; cursor: pointer; }
 .ui-v2 .qb-search button:hover { background: var(--v-accent); }
@@ -543,7 +559,21 @@ body.ui-v2 .widget-stage iframe { position: absolute; top: 0; left: 0; border: 0
 body.ui-v2 .widget-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 body.ui-v2 .widget-actions .button { display: inline-flex; align-items: center; gap: 6px; }
 
-/* ── Tema gelap ────────────────────────────────────────────────────── */
+/* Chip brand provider: sedikit lebih gelap supaya huruf putihnya lolos AA (4.5:1) di kedua tema. */
+body.ui-v2 .provider-brand-saweria { background: #c9351c; }
+body.ui-v2 .provider-brand-trakteer { background: #b5541f; }
+
+/* Panel riwayat (match-count) berlatar gelap di tema terang: keterangannya pakai warna teks-di-atas-gelap. */
+body.ui-v2 .history-panel .session-meta { color: var(--v-on-dark-muted); }
+
+/* ── Tema gelap ──────────────────────────────────────────────────────
+   Masalah lama: token dipakai untuk dua peran. --v-ink = teks biasa SEKALIGUS teks di atas lime;
+   --cream (CSS halaman lama) = permukaan SEKALIGUS teks di atas blok hitam. Saat dibalik untuk tema
+   gelap, teks di atas lime ikut terang dan teks di atas blok gelap ikut gelap (173 teks gagal AA).
+   Solusi: setiap jenis permukaan mendefinisikan ulang variabel teks untuk isinya, sehingga label,
+   angka, dan keterangan di dalamnya otomatis kontras tanpa menulis ulang CSS tiap halaman. */
+
+/* Panel biasa: permukaan gelap. */
 html[data-theme="dark"] body.ui-v2 .quick-actions,
 html[data-theme="dark"] body.ui-v2 .queue-table-wrap,
 html[data-theme="dark"] body.ui-v2 .account-panel,
@@ -553,11 +583,83 @@ html[data-theme="dark"] body.ui-v2 .live-queue-panel,
 html[data-theme="dark"] body.ui-v2 .session-control-panel,
 html[data-theme="dark"] body.ui-v2 .recent-sessions-panel,
 html[data-theme="dark"] body.ui-v2 .overlay-controls,
-html[data-theme="dark"] body.ui-v2 .overlay-preview-panel,
 html[data-theme="dark"] body.ui-v2 .match-list-panel,
 html[data-theme="dark"] body.ui-v2 .admin-panel,
 html[data-theme="dark"] body.ui-v2 .donation-table-wrap { background: var(--v-panel); }
 
+/* 1. Permukaan lime & kuning: teks selalu gelap, teks sekunder olive. */
+html[data-theme="dark"] body.ui-v2 :is(
+  .brand-mark, .nav-link.is-active, .theme-toggle:hover, .icon-button:hover, .button-primary,
+  .qb-btn.is-accent, .qb-icon-btn:hover:not(:disabled), .qb-stat.is-accent, .qb-turn.is-active .qb-panel-head,
+  .qb-mvp.is-active, .qb-next-item.is-picked .qb-next-rank, .qb-pos.is-playing, .status-pill.playing,
+  .status-pill.capped, .service-pill.joki, .row-action:hover, .row-action.is-active, .row-action-done,
+  .qb-tag.is-queued, .qb-tag.is-review, .is-win .qb-score-add,
+  .donation-status.queued, .donation-status.review, .queue-marker, .connection-badge.is-paused,
+  .activity-item .activity-icon.is-green, .activity-item .activity-icon.is-orange, .notification-read:hover:not(:disabled),
+  .live-hero-side, .live-stat-orange, .control-icon-orange, .donation-stat-orange, .auto-queue-panel,
+  .summary-note, .profile-avatar, .match-stat-orange, .score-pill.win, .qb-avatar
+) {
+  --v-ink: var(--v-on-accent);
+  --ink: var(--v-on-accent);
+  --v-muted: var(--v-on-accent-muted);
+  --muted: var(--v-on-accent-muted);
+  color: var(--v-on-accent);
+}
+/* Avatar pemain "sedang main": tema terang hitam + huruf lime → tema gelap lime + huruf gelap. */
+html[data-theme="dark"] body.ui-v2 .qb-avatar { background: var(--v-accent); }
+/* Chip hitung di kepala lime "Sedang main": tetap chip gelap berhuruf lime. */
+html[data-theme="dark"] body.ui-v2 .qb-turn.is-active .qb-panel-head .qb-count { color: var(--v-accent); background: var(--v-on-accent); border-color: var(--v-on-accent); }
+html[data-theme="dark"] body.ui-v2 .rules-switch input:checked + .switch-track::after { background: var(--v-on-accent); }
+
+/* 2. Permukaan inverse (kartu & chip yang hitam di tema terang): dibalik jadi terang, teks gelap. */
+html[data-theme="dark"] body.ui-v2 :is(
+  .filter-button.is-active, .qb-btn.is-dark, .qb-live.is-live, .qb-stat.is-dark, .qb-next-rank, .qb-filter.is-active,
+  .service-pill.vip, .toast, .control-icon-purple, .activity-icon.is-purple, .live-queue-position, .live-hero-label,
+  .live-stat-red, .live-stat-purple, .panel-count, .session-history-icon.is-live, .archive-game-number, .archive-result.lose,
+  .donation-stat-red, .donation-stat-purple, .donation-table th, .auto-queue-badge, .queue-position,
+  .package-ribbon, .package-actions button:hover, .preview-live, .score-adjust button:hover:not(:disabled), .score-pill.loss,
+  .layout-option.is-active, .plan-badge, .preview-tabs button[aria-selected="true"],
+  .match-stat-red, .match-stat-purple, .quota-badge, .match-row-action:hover, .history-date,
+  .admin-table th, .admin-stat:last-child, .admin-topbar .public-brand em
+) {
+  --v-ink: var(--v-on-dark);
+  --ink: var(--v-on-dark);
+  --v-muted: var(--v-on-dark-muted);
+  --muted: var(--v-on-dark-muted);
+  --cream: var(--v-on-dark);
+  color: var(--v-on-dark);
+}
+html[data-theme="dark"] body.ui-v2 :is(.live-stat-red, .live-stat-purple, .donation-stat-red, .donation-stat-purple, .match-stat-red, .match-stat-purple, .qb-stat.is-dark) :is(small, span) { color: var(--v-on-dark-muted); }
+/* Angka lime di atas kartu hitam → gelap di atas kartu terang. */
+html[data-theme="dark"] body.ui-v2 :is(.qb-stat.is-dark strong, .qb-filter.is-active span, .admin-stat:last-child strong, .live-queue-position) { color: var(--v-on-dark); }
+html[data-theme="dark"] body.ui-v2 .qb-live.is-live i { box-shadow: 0 0 0 2px var(--v-on-dark); }
+
+/* 3. Blok besar (hero sesi, hero profil, pratinjau overlay, bar pilihan): tetap gelap tapi terangkat
+   dari latar — membalik blok selebar ini jadi terang akan menyilaukan streamer yang live malam hari. */
+html[data-theme="dark"] body.ui-v2 :is(.live-hero, .profile-hero, .overlay-preview-panel, .history-panel, .match-focus, .admin-topbar, .qb-bulk) {
+  --cream: var(--v-ink);
+  color: var(--v-ink);
+  background: var(--v-raised);
+}
+html[data-theme="dark"] body.ui-v2 :is(.live-hero-main p, .profile-identity p, .profile-identity small, .history-panel .session-meta) { color: var(--v-muted); }
+html[data-theme="dark"] body.ui-v2 .qb-bulk .qb-btn.is-quiet { color: var(--v-ink); }
+
+/* 4. Permukaan berwarna lain: chip brand & avatar donatur selalu huruf putih (seperti tema terang). */
+html[data-theme="dark"] body.ui-v2 :is(.avatar, .provider-brand, .activity-icon, .control-icon, .session-history-icon) { color: #fff; }
+/* Hijau tema gelap lebih terang (#5fbf61) → hurufnya gelap. */
+html[data-theme="dark"] body.ui-v2 :is(.control-icon-green, .session-history-icon:not(.is-live), .activity-icon.is-green, .plan-badge.is-active) { color: var(--v-on-accent); }
+/* Pratinjau halaman publik (Profil) meniru halaman penonton yang memang gelap — sama di kedua tema. */
+html[data-theme="dark"] body.ui-v2 .mini-public { --cream: #fff; color: #fff; background: #141414; }
+
+/* 5. Warna pastel khusus tema terang → padanan gelap. */
+html[data-theme="dark"] body.ui-v2 :is(.donation-status.ignored, .session-state-badge.is-idle, .meter-track) { color: var(--v-muted); background: var(--v-sunk); }
+html[data-theme="dark"] body.ui-v2 .donation-status.new { color: var(--v-ink); background: var(--v-panel); }
+html[data-theme="dark"] body.ui-v2 .match-row.is-low { background: var(--v-danger-soft); }
+html[data-theme="dark"] body.ui-v2 .joki-state.is-playing { color: var(--v-accent); }
+html[data-theme="dark"] body.ui-v2 .meta-separator { color: var(--v-muted); }
+html[data-theme="dark"] body.ui-v2 :is(.provider-error, .form-error, .qb-alert) { color: #ffd6cb; background: var(--v-danger-soft); }
+
+/* Baris, input, kontrol. */
 html[data-theme="dark"] body.ui-v2 .account-stat-list > div,
 html[data-theme="dark"] body.ui-v2 .account-activity > div { border-color: var(--v-rule); }
 html[data-theme="dark"] body.ui-v2 .donation-table tbody tr:hover,
@@ -568,6 +670,4 @@ html[data-theme="dark"] body.ui-v2 .field-input,
 html[data-theme="dark"] body.ui-v2 select,
 html[data-theme="dark"] body.ui-v2 textarea { color: var(--v-ink); background-color: var(--v-sunk); }
 html[data-theme="dark"] body.ui-v2 .switch-track { background: #454d43; }
-html[data-theme="dark"] body.ui-v2 .qb-page:disabled { color: #687166; border-color: #4b5449; }
-html[data-theme="dark"] body.ui-v2 .provider-error,
-html[data-theme="dark"] body.ui-v2 .form-error { color: #ffd6cb; background: var(--v-danger-soft); }
+html[data-theme="dark"] body.ui-v2 .qb-page:disabled { color: #8a9380; border-color: #4b5449; }

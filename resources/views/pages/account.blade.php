@@ -1,7 +1,9 @@
 <!doctype html>
 <html lang="id">
   <head>
-    <meta charset="UTF-8" /><meta name="csrf-token" content="{{ csrf_token() }}" />
+    <meta charset="UTF-8" />
+    @include('partials.theme-head')
+    <meta name="csrf-token" content="{{ csrf_token() }}" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="MabarQueue — akun streamer dan ringkasan workspace." />
     <title>MabarQueue — Akun Streamer</title>
@@ -121,5 +123,6 @@
     </div>
     <div class="toast" id="account-toast" role="status" aria-live="polite"></div>
     <script src="{{ \App\Support\Asset::url('js/api.js') }}" defer></script><script src="{{ \App\Support\Asset::url('js/account.js') }}" defer></script>
+    @include('partials.theme-script')
   </body>
 </html>

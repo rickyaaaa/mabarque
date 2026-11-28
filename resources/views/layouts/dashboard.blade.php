@@ -10,12 +10,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@yield('title', 'Dashboard') — MabarQueue</title>
-    <script>
-      (() => {
-        const theme = localStorage.getItem('mabarqueue-theme') === 'dark' ? 'dark' : 'light';
-        document.documentElement.dataset.theme = theme;
-      })();
-    </script>
+    @include('partials.theme-head')
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Agdasima:wght@400;700&family=Inter:wght@400;500;600;700;800;900&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&display=swap" rel="stylesheet" />
@@ -32,27 +27,7 @@
       </main>
     </div>
 
-    <script>
-      (() => {
-        const root = document.documentElement;
-        const buttons = document.querySelectorAll('[data-theme-toggle]');
-        const syncThemeControls = () => {
-          const dark = root.dataset.theme === 'dark';
-          buttons.forEach((button) => {
-            button.setAttribute('aria-pressed', dark ? 'true' : 'false');
-            button.querySelector('[data-theme-label]').textContent = dark ? 'Mode terang' : 'Mode gelap';
-          });
-        };
-
-        syncThemeControls();
-        buttons.forEach((button) => button.addEventListener('click', () => {
-          const theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
-          root.dataset.theme = theme;
-          localStorage.setItem('mabarqueue-theme', theme);
-          syncThemeControls();
-        }));
-      })();
-    </script>
+    @include('partials.theme-script')
 
     <div class="toast" role="status" aria-live="polite"
          x-data="{ message: '', visible: false, timer: null }"

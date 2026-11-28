@@ -89,6 +89,25 @@ class WebPagesTest extends TestCase
             ->assertSee('Mode gelap');
     }
 
+    /**
+     * Akun & Profil adalah halaman lepas (tidak memakai layouts.dashboard). Bug 2026-11-29: script tema tidak
+     * dimuat di sana, sehingga dark mode tidak berlaku dan tombol "Mode gelap" tidak melakukan apa-apa.
+     */
+    public function test_standalone_account_and_profile_pages_apply_the_theme(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        foreach (['/account', '/profile', '/dashboard'] as $path) {
+            $html = $this->get($path)->assertOk()->getContent();
+
+            // Tema diterapkan di <head> (sebelum CSS dirender) dan tombolnya punya handler klik.
+            $head = substr($html, 0, (int) strpos($html, '</head>'));
+            $this->assertStringContainsString("document.documentElement.dataset.theme = theme", $head, "{$path}: script tema belum di <head>");
+            $this->assertStringContainsString('data-theme-toggle', $html, "{$path}: tombol tema hilang");
+            $this->assertStringContainsString("localStorage.setItem('mabarqueue-theme', theme)", $html, "{$path}: handler tombol tema belum dimuat");
+        }
+    }
+
     public function test_account_page_shows_real_workspace_data(): void
     {
         $user = User::factory()->create(['channel_name' => 'Andra Rizky', 'slug' => 'andra', 'email' => 'andra@example.com']);

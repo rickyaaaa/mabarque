@@ -4,7 +4,7 @@
     $statusClass = ['received' => 'new', 'review' => 'review', 'queued' => 'queued', 'reward' => 'reward', 'ignored' => 'ignored', 'refunded' => 'ignored'];
     $providerLabels = ['saweria' => 'Saweria', 'sociabuzz' => 'SociaBuzz', 'trakteer' => 'Trakteer'];
     $initials = fn (string $name) => mb_strtoupper(collect(preg_split('/\s+/', trim($name)))->filter()->take(2)->map(fn ($w) => mb_substr($w, 0, 1))->join('')) ?: '?';
-    $avatarColors = ['#3b1945', '#d82a1c', '#1f6faf', '#684780', '#238b39', '#a91b16'];
+    $avatarColors = ['#3b1945', '#d82a1c', '#1f6faf', '#684780', '#1e7a32', '#a91b16'];
 @endphp
 
 <div @if (! $queueing) wire:poll.10s @endif>
