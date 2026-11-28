@@ -504,10 +504,11 @@ class QueueService
 
     /**
      * Game party selesai: setiap anggota party berkurang 1 game (dihitung 1 match sesi). Yang sisanya
-     * habis ditandai selesai. Yang mencapai batas sesi kembali ke antrean. Setiap pemain yang keluar membuka satu slot pengganti.
+     * habis ditandai selesai. Yang mencapai batas sesi kembali ke antrean. Setiap pemain yang keluar membuka satu slot
+     * pengganti — kecuali party jadi kosong: game berikutnya dimulai streamer sendiri ("Mulai game").
      *
      * @param  int|null  $mvpId  pemain party yang MVP; dengan aturan "MVP = main lagi" sisa game-nya tidak berkurang
-     * @return array{played: Collection<int, QueueEntry>, mvp: QueueEntry|null, finished: Collection<int, QueueEntry>, capped: Collection<int, QueueEntry>, joined: Collection<int, QueueEntry>}
+     * @return array{played: Collection<int, QueueEntry>, mvp: QueueEntry|null, finished: Collection<int, QueueEntry>, capped: Collection<int, QueueEntry>, joined: Collection<int, QueueEntry>, party_emptied: bool}
      */
     public function finishGame(LiveSession $session, ?string $result = null, ?int $mvpId = null): array
     {
@@ -540,7 +541,7 @@ class QueueService
      * Rapikan pemain setelah match dicatat (dipakai game party maupun catat match satu pemain).
      *
      * @param  Collection<int, QueueEntry>  $entries
-     * @return array{finished: Collection<int, QueueEntry>, capped: Collection<int, QueueEntry>, joined: Collection<int, QueueEntry>}
+     * @return array{finished: Collection<int, QueueEntry>, capped: Collection<int, QueueEntry>, joined: Collection<int, QueueEntry>, party_emptied: bool}
      */
     public function settleAfterMatch(LiveSession $session, Collection $entries): array
     {
@@ -567,11 +568,16 @@ class QueueService
 
         $this->normalizePositions($session);
 
-        $joined = $freedSlots > 0
+        // Slot yang ditinggalkan diisi pemain berikutnya HANYA bila party masih berjalan (masih ada anggota).
+        // Party yang habis semua = game selesai: jangan tarik pemain berikutnya otomatis; streamer memulai
+        // game berikutnya sendiri ("Mulai game"). Kejadian 2026-11-29: party berisi 1 orang sisa 1 game,
+        // setelah "Selesai game" pemain nomor 1 antrean langsung masuk party tanpa diminta.
+        $partyEmptied = $freedSlots > 0 && $this->party($session)->isEmpty();
+        $joined = $freedSlots > 0 && ! $partyEmptied
             ? $this->fillParty($session, exclude: $capped->pluck('id')->all(), limit: $freedSlots)
             : collect();
 
-        return ['finished' => $finished, 'capped' => $capped, 'joined' => $joined];
+        return ['finished' => $finished, 'capped' => $capped, 'joined' => $joined, 'party_emptied' => $partyEmptied];
     }
 
     private function remaining(QueueEntry $entry): int

@@ -359,7 +359,7 @@ class QueueBoard extends Component
                 $result['finished']->isNotEmpty() => "Sisa game {$entry->display_name} habis.",
                 $result['capped']->isNotEmpty() => "{$entry->display_name} sudah mencapai batas game sesi ini.",
                 default => "Game dicatat. {$entry->display_name} sisa {$matches->remaining($entry->refresh())} game.",
-            }.$this->joinedMessage($result['joined']);
+            }.$this->joinedMessage($result['joined']).$this->emptiedMessage($result);
         });
     }
 
@@ -414,7 +414,7 @@ class QueueBoard extends Component
                 $message .= ' Batas sesi: '.$result['capped']->pluck('display_name')->join(', ').'.';
             }
 
-            return $message.$this->joinedMessage($result['joined']);
+            return $message.$this->joinedMessage($result['joined']).$this->emptiedMessage($result);
         });
     }
 
@@ -544,6 +544,12 @@ class QueueBoard extends Component
     private function joinedMessage($joined): string
     {
         return $joined->isNotEmpty() ? ' Masuk party: '.$joined->pluck('display_name')->join(', ').'.' : '';
+    }
+
+    /** Party habis setelah game: tidak diisi otomatis, streamer yang memulai game berikutnya. */
+    private function emptiedMessage(array $result): string
+    {
+        return ($result['party_emptied'] ?? false) ? ' Party kosong — tekan “Mulai game” untuk game berikutnya.' : '';
     }
 
     public function toggleStatus(int $entryId, QueueStatusService $statusService): void

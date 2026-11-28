@@ -203,6 +203,10 @@ class PartyQueueTest extends TestCase
 
         $result = $this->queue->finishGame($this->session);
         $this->assertSame(['SHURAA', 'ZackW'], $result['capped']->pluck('player_name')->all());
+        // Seluruh party keluar → party kosong, tidak diisi otomatis; streamer menekan "Mulai game".
+        $this->assertSame([], $this->partyNames());
+        $this->assertTrue($result['party_emptied']);
+        $this->queue->fillParty($this->session);
         $this->assertSame(['Vampire'], $this->partyNames());
         $this->assertSame('ready', $shuraa->refresh()->status);
         $this->assertSame(198, $shuraa->matches_remaining);
@@ -217,6 +221,35 @@ class PartyQueueTest extends TestCase
         $next = app(LiveSessionService::class)->start($this->owner, 'Live Senin');
         // Yang kena batas sudah pindah ke belakang → giliran adil: Vampire duluan.
         $this->assertSame(['Vampire', 'SHURAA', 'ZackW'], $this->queue->nextUp($next)->pluck('player_name')->all());
+    }
+
+    /**
+     * Kejadian 2026-11-29 (sesi ColdW): party berisi 1 orang (BANG ALEW, sisa 1 game). Setelah "Selesai game"
+     * ALEW habis, lalu pemain nomor 1 antrean (Vampire) langsung masuk party tanpa diminta. Party yang habis
+     * semua = game selesai: biarkan kosong sampai streamer menekan "Mulai game".
+     */
+    public function test_party_that_empties_after_a_game_is_not_refilled_automatically(): void
+    {
+        ['Vampire' => $vampire, 'BANG ALEW' => $alew] = $this->players(['Vampire' => 8, 'flux L' => 13, 'BANG ALEW' => 1]);
+        $this->queue->markPlaying($this->session, $alew);
+
+        $result = $this->queue->finishGame($this->session);
+
+        $this->assertSame(['BANG ALEW'], $result['finished']->pluck('player_name')->all());
+        $this->assertSame([], $result['joined']->pluck('player_name')->all());
+        $this->assertTrue($result['party_emptied']);
+        $this->assertSame([], $this->partyNames());
+        $this->assertSame('ready', $vampire->refresh()->status);
+        $this->assertSame(['Vampire', 'flux L'], $this->queue->nextUp($this->session)->pluck('player_name')->all());
+
+        // Party yang masih berisi tetap diisi: 1 dari 2 habis → slotnya diganti pemain berikutnya.
+        $this->owner->forceFill(['party_size' => 2])->save();
+        $this->queue->fillParty($this->session); // Vampire & flux L
+        $vampire->forceFill(['matches_total' => 1])->save();
+        $result = $this->queue->finishGame($this->session->refresh());
+        $this->assertFalse($result['party_emptied']);
+        $this->assertSame(['Vampire'], $result['finished']->pluck('player_name')->all());
+        $this->assertSame(['flux L'], $this->partyNames());
     }
 
     public function test_full_party_and_joki_cannot_be_added_manually(): void
@@ -277,7 +310,8 @@ class PartyQueueTest extends TestCase
         $this->assertNull($kyoto->refresh()->next_order);
 
         // Pilihan manual boleh pemain yang sudah kena batas sesi; dibatalkan → kembali ke urutan otomatis.
-        $this->queue->finishGame($this->session); // Kyoto & Pokedok kena batas 1 → Dey & Ir.fing main
+        $this->queue->finishGame($this->session); // Kyoto & Pokedok kena batas 1 → party kosong
+        $this->queue->fillParty($this->session); // "Mulai game" → Dey & Ir.fing main
         $this->queue->pickForNext($this->session, $kyoto);
         $this->assertSame(['Kyoto', 'Indira'], $this->queue->nextUp($this->session, 2)->pluck('player_name')->all());
         $this->queue->unpickForNext($this->session, $kyoto);
@@ -488,7 +522,8 @@ class PartyQueueTest extends TestCase
         $this->cap(1);
         $this->players(['Dey' => 2, 'Ir.fing' => 5, 'Indira' => 1, 'Pokedok' => 3]);
         $this->queue->fillParty($this->session);
-        $this->queue->finishGame($this->session); // Dey & Ir.fing kena batas 1 → Indira & Pokedok main
+        $this->queue->finishGame($this->session); // Dey & Ir.fing kena batas 1 → party kosong
+        $this->queue->fillParty($this->session); // "Mulai game" → Indira & Pokedok main
 
         $this->getJson("/api/channels/{$this->owner->slug}/queue")->assertOk()
             ->assertJsonPath('data.party', [['player_name' => 'Indira', 'matches_remaining' => 1], ['player_name' => 'Pokedok', 'matches_remaining' => 3]])

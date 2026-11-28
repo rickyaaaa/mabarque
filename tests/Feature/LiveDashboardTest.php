@@ -131,13 +131,14 @@ class LiveDashboardTest extends TestCase
         $this->assertSame(1, $raka->refresh()->matches_played);
         $this->assertSame('playing', $raka->status);
 
+        // Raka satu-satunya di party: setelah habis, party kosong dan TIDAK diisi otomatis (kejadian 2026-11-29).
         $board->call('finishMatch', $raka->id)
-            ->assertDispatched('notify', message: 'Sisa game Raka ML habis. Masuk party: Nadia.')
+            ->assertDispatched('notify', message: 'Sisa game Raka ML habis. Party kosong — tekan “Mulai game” untuk game berikutnya.')
             ->assertDontSee('Raka ML') // pemain selesai disembunyikan dari papan
             ->assertSeeHtml('<span>Match selesai</span><strong>2</strong>'); // header langsung ikut bertambah
 
         $this->assertSame('done', $raka->refresh()->status);
-        $this->assertSame('playing', $nadia->refresh()->status);
+        $this->assertSame('ready', $nadia->refresh()->status);
         $this->assertSame(3, $nadia->matches_remaining);
         $this->assertSame('ready', $ida->refresh()->status);
         $this->assertSame(4, $ida->matches_remaining);
