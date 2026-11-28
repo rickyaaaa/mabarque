@@ -1,7 +1,11 @@
 # CI/CD MabarQueue
 # - Setiap push & pull request: jalankan seluruh test (SQLite in-memory, lihat phpunit.xml).
-# - Push ke main dan test lolos: deploy ke Hostinger lewat SSH dengan scripts/deploy.sh.
+# - Push ke main dan test lolos: deploy ke Hostinger lewat SSH dengan scripts/deploy.sh, lalu cek
+#   bahwa commit di server sama dengan yang di-push dan situs menjawab /up.
 #   Deploy dilewati (bukan gagal) selama secret SSH belum diisi — lihat docs/DEPLOY.md.
+#
+# PENTING: matikan Git deploy otomatis di hPanel. Fitur itu meng-clone ulang folder aplikasi tanpa
+# composer/migrasi/cache (kejadian 2026-11-28 17:55 UTC: kode baru jalan dengan tabel yang belum ada).
 name: CI/CD
 
 on:
@@ -11,8 +15,9 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ci-cd-${{ github.ref }}
-  cancel-in-progress: false # jangan potong deploy yang sedang berjalan
+  group: ci-${{ github.ref }}
+  # PR yang di-push ulang: batalkan test lama. Main: jangan pernah dipotong.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -24,7 +29,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php: ['8.2', '8.3']
+        # 8.2 = minimum di composer.json, 8.4 = versi PHP production (transaction_mode SQLite aktif di 8.4+).
+        php: ['8.2', '8.4']
     steps:
       - uses: actions/checkout@v4
 
@@ -54,15 +60,24 @@ jobs:
   deploy:
     name: Deploy ke Hostinger
     needs: test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
-    environment: production
+    environment:
+      name: production
+      url: ${{ vars.APP_URL }}
+    # Satu deploy production pada satu waktu; deploy berikutnya menunggu, tidak memotong yang berjalan.
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    timeout-minutes: 15
     env:
       SSH_HOST: ${{ secrets.SSH_HOST }}
       SSH_PORT: ${{ secrets.SSH_PORT }}
       SSH_USER: ${{ secrets.SSH_USER }}
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
       DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+      APP_URL: ${{ vars.APP_URL }}
     steps:
       - name: Cek secret deploy
         id: check
@@ -84,13 +99,43 @@ jobs:
           install -m 700 -d ~/.ssh
           printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -p "${SSH_PORT:-65002}" -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          if [ -n "$SSH_KNOWN_HOSTS" ]; then
+            # Kunci host yang sudah diverifikasi (aman dari server palsu).
+            printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          else
+            echo "::warning::SSH_KNOWN_HOSTS belum diisi — memakai ssh-keyscan (kurang aman)."
+            ssh-keyscan -p "${SSH_PORT:-65002}" -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          fi
+          chmod 600 ~/.ssh/known_hosts
 
       - name: Jalankan deploy di server
         if: steps.check.outputs.ready == 'true'
         run: |
-          ssh -i ~/.ssh/deploy_key -p "${SSH_PORT:-65002}" -o BatchMode=yes "$SSH_USER@$SSH_HOST" \
-            "cd \"$DEPLOY_PATH\" && DEPLOY_BRANCH=main bash scripts/deploy.sh"
+          ssh -i ~/.ssh/deploy_key -p "${SSH_PORT:-65002}" -o BatchMode=yes -o StrictHostKeyChecking=yes \
+            "$SSH_USER@$SSH_HOST" "cd \"$DEPLOY_PATH\" && DEPLOY_BRANCH=main bash scripts/deploy.sh"
+
+      - name: Cek commit di server
+        if: steps.check.outputs.ready == 'true'
+        run: |
+          deployed=$(ssh -i ~/.ssh/deploy_key -p "${SSH_PORT:-65002}" -o BatchMode=yes -o StrictHostKeyChecking=yes \
+            "$SSH_USER@$SSH_HOST" "cd \"$DEPLOY_PATH\" && git rev-parse HEAD")
+          latest=$(git ls-remote "https://github.com/$GITHUB_REPOSITORY" refs/heads/main | cut -f1)
+          echo "Server: $deployed · workflow: $GITHUB_SHA · main terbaru: $latest"
+          # deploy.sh selalu mengambil ujung main, jadi bila ada push lebih baru, server boleh sudah di sana.
+          if [ "$deployed" != "$GITHUB_SHA" ] && [ "$deployed" != "$latest" ]; then
+            echo "::error::Commit di server ($deployed) bukan commit yang di-deploy."; exit 1
+          fi
+
+      - name: Cek situs hidup (/up)
+        if: steps.check.outputs.ready == 'true' && env.APP_URL != ''
+        run: |
+          for attempt in 1 2 3 4 5; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "$APP_URL/up" || true)
+            echo "Percobaan $attempt: HTTP $code"
+            [ "$code" = "200" ] && exit 0
+            sleep 6
+          done
+          echo "::error::$APP_URL/up tidak menjawab 200 setelah deploy."; exit 1
 
       - name: Hapus kunci SSH
         if: always()

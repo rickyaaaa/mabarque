@@ -15,7 +15,7 @@ Deploy bisa juga dipicu manual: tab **Actions → CI/CD → Run workflow**, atau
 ## Setup sekali di Hostinger
 
 ### 1. PHP & SSH
-- hPanel → **Advanced → PHP Configuration**: pilih **PHP 8.2 atau 8.3**.
+- hPanel → **Advanced → PHP Configuration**: pilih **PHP 8.4** (versi production sekarang; CI menguji 8.2 dan 8.4).
 - hPanel → **Advanced → SSH Access**: aktifkan SSH, catat **host (IP)**, **port** (biasanya `65002`), dan **username**.
 - Cek dari terminal: `ssh -p 65002 USER@HOST "php -v && composer -V"`.
   Jika `php -v` di bawah 8.2, set `PHP_BIN` (lihat bagian Masalah umum).
@@ -114,6 +114,13 @@ Repo → **Settings → Secrets and variables → Actions → New repository sec
 | `SSH_USER` | `u123456789` | username SSH |
 | `SSH_PRIVATE_KEY` | isi file `mabarqueue_deploy` | kunci privat lengkap termasuk baris BEGIN/END |
 | `DEPLOY_PATH` | `/home/u123456789/domains/DOMAINKAMU/mabarque` | folder clone aplikasi |
+| `SSH_KNOWN_HOSTS` | hasil `ssh-keygen -F "[IP]:65002"` | kunci host server yang sudah diverifikasi; tanpa ini workflow memakai `ssh-keyscan` (kurang aman) |
+
+Tambahkan juga **variable** (bukan secret) `APP_URL`, mis. `https://DOMAINKAMU` — dipakai untuk cek `/up` setelah deploy:
+`gh variable set APP_URL -R rickyaaaa/mabarque --body "https://DOMAINKAMU"`.
+
+Setelah deploy, workflow memastikan commit di server sama dengan yang di-push dan `/up` menjawab 200 — bila tidak,
+job ditandai gagal (merah) supaya kelihatan.
 
 Atau lewat terminal: `gh secret set SSH_HOST -R rickyaaaa/mabarque` (nilai diketik, tidak tersimpan di riwayat).
 
@@ -127,6 +134,7 @@ menambahkan *required reviewers* supaya setiap deploy harus disetujui dulu.
 | Gejala | Penyebab & solusi |
 |---|---|
 | Job deploy "dilewati" | Secret di tabel atas belum lengkap. |
+| Kode baru sudah di server tapi migrasi belum jalan / halaman error | Git auto-deployment hPanel masih aktif dan meng-clone ulang folder tanpa menjalankan `deploy.sh` (terjadi 2026-11-28). Matikan di hPanel → **Advanced → GIT**, lalu jalankan ulang workflow (Actions → CI/CD → Run workflow). |
 | `Permission denied (publickey)` | Kunci publik belum ditambahkan di hPanel, atau `SSH_PRIVATE_KEY` terpotong. |
 | `Butuh PHP 8.2+` | PHP CLI server lebih lama dari PHP web. Set path PHP: ubah perintah di workflow menjadi `PHP_BIN=/opt/alt/php83/usr/bin/php bash scripts/deploy.sh` (cek path dengan `ls /opt/alt/`). |
 | `.env belum ada di server` | Lakukan langkah 4. |
