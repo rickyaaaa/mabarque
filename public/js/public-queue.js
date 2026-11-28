@@ -59,6 +59,16 @@
     return parts.join(" · ");
   }
 
+  function initialsFrom(name) {
+    const letters = [...name.matchAll(/(?:^|\s)[^\s\p{L}]*(\p{L})/gu)]
+      .slice(0, 2)
+      .map((match) => match[1])
+      .join("")
+      .toUpperCase();
+
+    return [...letters].slice(0, 2).join("") || "?";
+  }
+
   // Nama/ID bisa disensor ("WangSu*******"): cocokkan ke bagian yang terlihat, dan anggap cocok bila
   // yang diketik pemilik diawali bagian itu (pemilik mengetik nama lengkapnya sendiri).
   function fieldMatches(value, q) {
@@ -80,13 +90,13 @@
     list.replaceChildren(...visible.map((entry) => {
       const item = el("article", `public-queue-item${q ? " is-match" : ""}`);
       item.setAttribute("aria-label", `Posisi ${entry.number}, ${entry.player_name}, ${entry.matches_remaining} game tersisa`);
-      const number = el("span", "public-queue-number", String(entry.number));
-      number.setAttribute("aria-hidden", "true");
+      const initials = el("span", "public-queue-initials", initialsFrom(entry.player_name));
+      initials.setAttribute("aria-hidden", "true");
       const who = el("div");
       who.append(el("strong", null, entry.player_name), el("span", null, meta(entry)));
       const left = el("span", "public-match-left");
       left.append(el("strong", null, String(entry.matches_remaining)), el("small", null, "game"));
-      item.append(number, who, left);
+      item.append(initials, who, left);
       return item;
     }));
 

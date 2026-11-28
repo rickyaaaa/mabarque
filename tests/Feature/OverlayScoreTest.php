@@ -3,8 +3,10 @@
 namespace Tests\Feature;
 
 use App\Http\Controllers\OverlayController;
+use App\Livewire\LiveSessionPanel;
 use App\Livewire\OverlaySettingsPanel;
 use App\Livewire\QueueBoard;
+use App\Livewire\SidebarSessionStatus;
 use App\Models\User;
 use App\Services\LiveSessionService;
 use App\Services\OverlayTokenService;
@@ -211,7 +213,7 @@ class OverlayScoreTest extends TestCase
         $session = $this->owner->liveSessions()->active()->sole();
 
         $board->call('refreshQueue')->assertRedirect('/dashboard');
-        $this->get('/dashboard')->assertOk()->assertSee($session->title);
+        $this->get('/dashboard')->assertOk()->assertSeeLivewire(SidebarSessionStatus::class)->assertSee($session->title);
 
         // Sudah live: tidak membuat sesi baru.
         $this->postJson("/api/overlay/{$token}/obs", ['event' => 'started'])->assertOk()->assertJsonPath('data.action', 'already_live');
@@ -221,9 +223,18 @@ class OverlayScoreTest extends TestCase
         $this->postJson("/api/overlay/{$token}/obs", ['event' => 'stopped'])->assertJsonPath('data.action', 'disabled');
         $this->assertSame('active', $session->refresh()->status);
 
+        $player = app(QueueService::class)->addManual($session, 'Dey', 3);
+        $liveBoard = Livewire::test(QueueBoard::class, ['session' => $session])->assertSeeHtml('class="qb-live is-live"');
+        $livePanel = Livewire::test(LiveSessionPanel::class)->assertSee('Sedang live');
+        $sidebar = Livewire::test(SidebarSessionStatus::class)->assertSee('Sesi: Live');
+
         Livewire::test(OverlaySettingsPanel::class)->set('obsAutoEnd', true)->call('save')->assertHasNoErrors();
         $this->postJson("/api/overlay/{$token}/obs", ['event' => 'stopped'])->assertJsonPath('data.action', 'ended');
         $this->assertSame('ended', $session->refresh()->status);
+        $this->assertSame(3, (int) $player->refresh()->matches_total);
+        $liveBoard->call('refreshQueue')->assertSee('Belum live')->assertSee('Dey');
+        $livePanel->call('$refresh')->assertSee('Belum live')->assertSee('/live-session/'.$session->id);
+        $sidebar->call('$refresh')->assertSee('Sesi: Belum dimulai');
 
         Livewire::test(OverlaySettingsPanel::class)->set('obsAutoStart', false)->call('save');
         $this->postJson("/api/overlay/{$token}/obs", ['event' => 'started'])->assertJsonPath('data.action', 'disabled');

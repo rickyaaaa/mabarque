@@ -5,7 +5,7 @@
    ========================================================================== */
 body.public-body.ui-v2 {
   --v-ground: #eeede6; --v-panel: #ffffff; --v-sunk: #f6f5ef; --v-ink: #111111; --v-muted: #57564f;
-  --v-line: #111111; --v-rule: #d9d8d0; --v-accent: #c5f02e; --v-accent-soft: #eefac4; --v-dark: #141414;
+  --v-line: #111111; --v-rule: #d9d8d0; --v-accent: var(--channel-accent, #c5f02e); --v-accent-soft: #eefac4; --v-accent-soft: color-mix(in srgb, var(--v-accent) 18%, white); --v-dark: #141414;
   --v-warn: #ffd23f; --v-shadow-sm: 3px 3px 0 var(--v-line); --v-shadow: 5px 5px 0 var(--v-line);
   color: var(--v-ink);
   background: var(--v-ground);
@@ -23,7 +23,7 @@ body.public-body.ui-v2 .eyebrow { margin: 0 0 6px; color: var(--v-muted); font-s
 .ui-v2 .public-brand .brand-mark { color: var(--v-ink); background: var(--v-accent); border: 2px solid var(--v-line); box-shadow: var(--v-shadow-sm); font-weight: 900; }
 .ui-v2 .public-header-actions .button { color: var(--v-ink); background: var(--v-panel); border: 2px solid var(--v-line); box-shadow: var(--v-shadow-sm); }
 .ui-v2 .public-live-badge { padding: 6px 10px; color: #fff; background: var(--v-dark); border: 2px solid var(--v-line); }
-.ui-v2 .public-live-badge i { background: var(--v-accent); box-shadow: 0 0 0 3px rgba(197, 240, 46, .3); }
+.ui-v2 .public-live-badge i { background: var(--v-accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--v-accent) 30%, transparent); }
 .ui-v2 .public-live-badge.is-offline { color: var(--v-ink); background: var(--v-panel); }
 .ui-v2 .public-live-badge.is-offline i { background: #a5a39a; box-shadow: none; }
 
@@ -73,7 +73,7 @@ body.public-body.ui-v2 .eyebrow { margin: 0 0 6px; color: var(--v-muted); font-s
 .ui-v2 .public-queue-tools .filter-button { color: var(--v-ink); background: var(--v-panel); border: 2px solid var(--v-line); }
 .ui-v2 .public-queue-item { background: var(--v-panel); border: 2px solid var(--v-line); }
 .ui-v2 .public-queue-item.is-match { background: var(--v-accent-soft); box-shadow: var(--v-shadow-sm); }
-.ui-v2 .public-queue-item > .public-queue-number { color: var(--v-accent); background: var(--v-dark); border: 2px solid var(--v-line); font-size: 15px; font-weight: 900; }
+.ui-v2 .public-queue-item > .public-queue-initials { color: var(--v-accent); background: var(--v-dark); border: 2px solid var(--v-line); font-size: 15px; font-weight: 900; }
 .ui-v2 .public-queue-item strong { font-size: 14px; font-weight: 800; }
 .ui-v2 .public-queue-item > div > span { color: var(--v-muted); font-size: 11px; }
 .ui-v2 .public-queue-item > .public-match-left { color: #fff; background: var(--v-dark); border: 2px solid var(--v-line); }

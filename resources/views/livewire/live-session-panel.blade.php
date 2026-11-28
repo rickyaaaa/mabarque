@@ -3,7 +3,7 @@
     $providerLabels = ['manual' => 'Manual', 'saweria' => 'Saweria', 'sociabuzz' => 'SociaBuzz', 'trakteer' => 'Trakteer'];
 @endphp
 
-<div wire:poll.10s.keep-alive>
+<div wire:poll.5s.keep-alive>
     <header class="live-header">
         <div>
             <p class="eyebrow">Kelola sesi live</p>
@@ -81,7 +81,7 @@
                 <input class="field-input @error('title') is-invalid @enderror" id="session-title" wire:model="title" maxlength="120" />
                 @error('title') <p class="form-error" role="alert">{{ $message }}</p> @enderror
                 <div class="live-hero-actions">
-                    <button class="button button-primary" type="submit" wire:loading.attr="disabled">▶ Mulai sesi sekarang</button>
+                    <button class="button button-primary" type="submit" wire:loading.attr="disabled" wire:target="startSession">▶ Mulai sesi sekarang</button>
                 </div>
             </form>
             <div class="live-hero-side">

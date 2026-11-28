@@ -9,7 +9,11 @@
         ! empty($entry['mlbb_id']) && ! str_starts_with($entry['player_name'], 'ID ') ? 'ID '.$entry['mlbb_id'] : null,
     ])->filter()->join(' · ');
     $rupiah = fn (int $value) => 'Rp '.number_format($value, 0, ',', '.');
-    $initials = fn (string $name) => mb_strtoupper(collect(preg_split('/\s+/', trim($name)))->filter()->take(2)->map(fn ($w) => mb_substr($w, 0, 1))->join('')) ?: '?';
+    $initials = function (string $name): string {
+        preg_match_all('/(?:^|\s)[^\s\p{L}]*(\p{L})/u', $name, $matches);
+
+        return mb_substr(mb_strtoupper(implode('', array_slice($matches[1], 0, 2))), 0, 2) ?: '?';
+    };
     $partyNames = $queue['party'] ?? [];
     $nextNames = $queue['next'] ?? [];
     $jokiOrders = $queue['joki'] ?? [];
@@ -143,7 +147,7 @@
         <div class="public-position-note" id="public-position-note" role="status" aria-live="polite">Cari nama atau ID kamu untuk melihat posisi dan sisa game.</div>
         <div class="public-queue-list" id="public-queue-list" aria-live="polite">
           @foreach ($waiting as $entry)
-            <article class="public-queue-item"><span class="public-queue-number" aria-hidden="true">{{ $loop->iteration }}</span><div><strong>{{ $entry['player_name'] }}</strong><span>{{ $entryMeta($entry) }}</span></div><span class="public-match-left"><strong>{{ $entry['matches_remaining'] }}</strong><small>game</small></span></article>
+            <article class="public-queue-item"><span class="public-queue-initials" aria-hidden="true">{{ $initials($entry['player_name']) }}</span><div><strong>{{ $entry['player_name'] }}</strong><span>{{ $entryMeta($entry) }}</span></div><span class="public-match-left"><strong>{{ $entry['matches_remaining'] }}</strong><small>game</small></span></article>
           @endforeach
         </div>
         <div class="public-empty" id="public-empty" role="status" aria-live="polite" @if ($waiting->isNotEmpty()) hidden @endif>

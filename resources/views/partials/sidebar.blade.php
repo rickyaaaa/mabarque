@@ -1,10 +1,5 @@
 {{-- Sidebar dashboard streamer. Pakai: @include('partials.sidebar', ['active' => 'account']) --}}
 @php
-    $sidebarUser = auth()->user();
-    $sidebarSession = $sidebarUser?->liveSessions()->active()->latest('started_at')->first();
-    $sidebarQueue = $sidebarSession
-        ? $sidebarSession->queueEntries()->reorder()->whereIn('status', ['ready', 'offline', 'playing'])->count()
-        : 0;
     $links = [
         'live-session' => ['/live-session', 'layout', 'Dashboard'],
         'dashboard' => ['/dashboard', 'list', 'Antrean'],
@@ -27,19 +22,7 @@
         @endforeach
     </nav>
     <div class="sidebar-divider"></div>
-    <section class="stream-status" aria-label="Status stream">
-        <div class="status-line">
-            <span @class(['status-dot', 'is-live' => $sidebarSession])></span>
-            <strong>{{ $sidebarSession ? 'Sesi: Live' : 'Sesi: Belum dimulai' }}</strong>
-        </div>
-        @if ($sidebarSession)
-            <p>{{ $sidebarSession->title }}</p>
-            <p>Antrean: <strong>{{ $sidebarQueue }} pemain</strong></p>
-        @else
-            <p><a href="/live-session">Mulai sesi live →</a></p>
-        @endif
-    </section>
-
+    <livewire:sidebar-session-status />
     <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false">
         <span class="theme-toggle-icon" data-theme-icon="moon" aria-hidden="true">@include('partials.icon', ['name' => 'moon', 'size' => 16])</span>
         <span class="theme-toggle-icon" data-theme-icon="sun" aria-hidden="true">@include('partials.icon', ['name' => 'sun', 'size' => 16])</span>

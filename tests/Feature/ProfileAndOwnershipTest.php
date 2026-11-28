@@ -50,7 +50,7 @@ class ProfileAndOwnershipTest extends TestCase
 
     public function test_public_channel_shows_only_safe_fields_and_hides_pending_accounts(): void
     {
-        $active = User::factory()->create(['slug' => 'andra', 'channel_name' => 'Andra Rizky', 'main_role' => 'mid']);
+        $active = User::factory()->create(['slug' => 'andra', 'channel_name' => 'Andra Rizky', 'main_role' => 'mid', 'profile_accent' => '#1f9bd1']);
         User::factory()->pending()->create(['slug' => 'baru']);
 
         $this->getJson('/api/channels/andra')
@@ -60,6 +60,8 @@ class ProfileAndOwnershipTest extends TestCase
             ->assertJsonPath('data.is_live', false)
             ->assertJsonMissingPath('data.email')
             ->assertJsonMissingPath('data.beta_status');
+
+        $this->get('/andra')->assertOk()->assertSee('--channel-accent: #1f9bd1', false);
 
         $this->getJson('/api/channels/baru')->assertNotFound();
         $this->getJson('/api/channels/baru/queue')->assertNotFound();
