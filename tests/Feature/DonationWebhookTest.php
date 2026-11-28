@@ -603,6 +603,31 @@ class DonationWebhookTest extends TestCase
             ->assertSee('Webhook aktif · terakhir diterima 21:30 WIB');
     }
 
+    /** Daftar "Donasi terbaru" 10 per halaman, seperti daftar antrean. */
+    public function test_inbox_lists_donations_ten_per_page(): void
+    {
+        $this->actingAs($this->streamer);
+        Donation::insert(collect(range(1, 25))->map(fn ($i) => [
+            'platform_connection_id' => $this->saweria->id, 'external_id' => "d-{$i}", 'provider' => 'saweria', 'donor_name' => sprintf('Donatur %02d', $i),
+            'amount' => 1000, 'currency' => 'IDR', 'status' => $i <= 3 ? 'review' : 'ignored',
+            'received_at' => now()->subMinutes(100 - $i), 'created_at' => now(), 'updated_at' => now(),
+        ])->all());
+
+        $inbox = Livewire::test(DonationInbox::class)
+            ->assertSee('1–10 dari 25 donasi')
+            ->assertSee('Donatur 25')->assertSee('Donatur 16')->assertDontSee('Donatur 15') // terbaru dulu
+            ->assertSeeHtml('aria-label="Halaman daftar donasi"');
+        $this->assertCount(10, $inbox->viewData('donations'));
+
+        $inbox->call('goToPage', 3)->assertSee('21–25 dari 25 donasi')->assertSee('Donatur 01')->assertDontSee('Donatur 06');
+        $this->assertCount(5, $inbox->viewData('donations'));
+
+        // Halaman kebablasan dijepit ke halaman terakhir; ganti filter kembali ke halaman 1.
+        $inbox->call('goToPage', 99)->assertSet('page', 3);
+        $inbox->call('setStatus', 'review')->assertSet('page', 1)->assertSee('1–3 dari 3 donasi')
+            ->assertDontSeeHtml('aria-label="Halaman daftar donasi"'); // satu halaman → tanpa tombol
+    }
+
     public function test_connection_without_credential_rejects_all_webhooks(): void
     {
         $this->openLiveSession();

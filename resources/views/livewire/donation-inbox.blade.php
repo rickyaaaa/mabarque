@@ -62,7 +62,7 @@
     @endif
 
     <section class="donation-toolbar" aria-label="Filter donasi">
-        <div><p class="eyebrow">Kotak masuk</p><h2>Donasi terbaru</h2></div>
+        <div><p class="eyebrow">Kotak masuk</p><h2>Donasi terbaru</h2>@if ($filteredCount > 0)<p class="donation-range">{{ ($page - 1) * $perPage + 1 }}–{{ min($page * $perPage, $filteredCount) }} dari {{ $filteredCount }} donasi</p>@endif</div>
         <div class="donation-filters" role="group" aria-label="Filter status">
             @foreach (['all' => 'Semua', 'received' => 'Baru', 'review' => 'Perlu cek', 'queued' => 'Masuk antrean', 'reward' => 'Reward', 'ignored' => 'Diabaikan'] as $key => $label)
                 <button type="button" wire:click="setStatus('{{ $key }}')" @class(['filter-button', 'is-active' => $status === $key]) aria-pressed="{{ $status === $key ? 'true' : 'false' }}">{{ $label }} <span>({{ $counts[$key] }})</span></button>
@@ -105,6 +105,8 @@
                 </article>
             @endforeach
         </div>
+
+        @include('partials.pager', ['page' => $page, 'lastPage' => $lastPage, 'action' => 'goToPage', 'label' => 'Halaman daftar donasi'])
 
         @if ($donations->isEmpty())
             <div class="donation-empty">

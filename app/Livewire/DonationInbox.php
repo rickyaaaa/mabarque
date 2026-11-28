@@ -22,9 +22,14 @@ class DonationInbox extends Component
 
     private const PROVIDERS = ['all', 'saweria', 'sociabuzz', 'trakteer'];
 
+    /** Donasi per halaman — sama dengan daftar antrean (QueueBoard::PER_PAGE). */
+    public const PER_PAGE = 10;
+
     public string $status = 'all';
 
     public string $provider = 'all';
+
+    public int $page = 1;
 
     public ?int $queueingId = null;
 
@@ -41,11 +46,18 @@ class DonationInbox extends Component
     public function setStatus(string $status): void
     {
         $this->status = in_array($status, self::STATUSES, true) ? $status : 'all';
+        $this->page = 1;
     }
 
     public function updatedProvider(string $value): void
     {
         $this->provider = in_array($value, self::PROVIDERS, true) ? $value : 'all';
+        $this->page = 1;
+    }
+
+    public function goToPage(int $page): void
+    {
+        $this->page = max(1, $page); // batas atas dijaga di render()
     }
 
     /** Buka modal masukkan manual; jumlah game & ID MLBB diusulkan dari nominal dan pesan donasi. */
@@ -159,11 +171,17 @@ class DonationInbox extends Component
         $user = auth()->user();
         $base = $user->donations()->with(['vipPackage:id,name,kind,reward_label,match_count', 'queueEntry:id,position,status']);
 
-        $visible = (clone $base)
+        $filtered = (clone $base)
             ->when($this->status !== 'all', fn ($q) => $q->where('donations.status', $this->status))
-            ->when($this->provider !== 'all', fn ($q) => $q->where('donations.provider', $this->provider))
+            ->when($this->provider !== 'all', fn ($q) => $q->where('donations.provider', $this->provider));
+        $filteredCount = (clone $filtered)->reorder()->count();
+        $lastPage = max(1, (int) ceil($filteredCount / self::PER_PAGE));
+        // Halaman tidak boleh melewati yang ada (mis. donasi berkurang setelah filter/abaikan).
+        $this->page = min(max(1, $this->page), $lastPage);
+
+        $visible = $filtered
             ->latest('received_at')->latest('donations.id')
-            ->limit(50)
+            ->forPage($this->page, self::PER_PAGE)
             ->get();
 
         // Hitungan filter dari seluruh donasi (bukan hanya 200 baris terakhir).
@@ -178,6 +196,9 @@ class DonationInbox extends Component
 
         return view('livewire.donation-inbox', [
             'donations' => $visible,
+            'filteredCount' => $filteredCount,
+            'lastPage' => $lastPage,
+            'perPage' => self::PER_PAGE,
             'counts' => collect(self::STATUSES)->mapWithKeys(fn ($s) => [$s => (int) ($s === 'all' ? $statusCounts->sum() : ($statusCounts[$s] ?? 0))]),
             'needsCheck' => (int) $user->donations()->whereIn('donations.status', ['received', 'review'])->count(),
             'session' => $session,

@@ -597,7 +597,7 @@ html[data-theme="dark"] body.ui-v2 :is(
   .donation-status.queued, .donation-status.review, .queue-marker, .connection-badge.is-paused,
   .activity-item .activity-icon.is-green, .activity-item .activity-icon.is-orange, .notification-read:hover:not(:disabled),
   .live-hero-side, .live-stat-orange, .control-icon-orange, .donation-stat-orange, .auto-queue-panel,
-  .summary-note, .profile-avatar, .match-stat-orange, .score-pill.win, .qb-avatar
+  .summary-note, .profile-avatar, .match-stat-orange, .score-pill.win, .qb-avatar, .qb-page.is-active
 ) {
   --v-ink: var(--v-on-accent);
   --ink: var(--v-on-accent);

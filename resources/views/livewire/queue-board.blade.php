@@ -257,20 +257,7 @@
                     @endforeach
                 </div>
 
-                @if ($lastPage > 1)
-                    @php
-                        $pages = collect([1, $lastPage, $queuePage - 1, $queuePage, $queuePage + 1])
-                            ->filter(fn ($p) => $p >= 1 && $p <= $lastPage)->unique()->sort()->values();
-                    @endphp
-                    <nav class="qb-pager" aria-label="Halaman daftar antrean">
-                        <button type="button" class="qb-page" wire:click="goToPage({{ $queuePage - 1 }})" @disabled($queuePage <= 1) aria-label="Halaman sebelumnya"><span class="qb-flip">@include('partials.icon', ['name' => 'arrow-right', 'size' => 14])</span></button>
-                        @foreach ($pages as $i => $p)
-                            @if ($i > 0 && $p - $pages[$i - 1] > 1)<span class="qb-page-gap" aria-hidden="true">…</span>@endif
-                            <button type="button" @class(['qb-page', 'is-active' => $p === $queuePage]) wire:click="goToPage({{ $p }})" aria-label="Halaman {{ $p }}" @if ($p === $queuePage) aria-current="page" @endif>{{ $p }}</button>
-                        @endforeach
-                        <button type="button" class="qb-page" wire:click="goToPage({{ $queuePage + 1 }})" @disabled($queuePage >= $lastPage) aria-label="Halaman berikutnya">@include('partials.icon', ['name' => 'arrow-right', 'size' => 14])</button>
-                    </nav>
-                @endif
+                @include('partials.pager', ['page' => $queuePage, 'lastPage' => $lastPage, 'action' => 'goToPage', 'label' => 'Halaman daftar antrean'])
             </section>
         </div>
 

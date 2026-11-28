@@ -186,3 +186,6 @@
 .webhook-problem-main details { margin-top: 6px; }
 .webhook-problem-main summary { cursor: pointer; font-size: 12px; font-weight: 700; }
 .webhook-problem-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* Rentang halaman di bawah judul "Donasi terbaru" (10 donasi per halaman, seperti daftar antrean). */
+.donation-range { margin: 4px 0 0; color: var(--v-muted, var(--muted)); font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
