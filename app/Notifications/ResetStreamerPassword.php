@@ -38,12 +38,12 @@ class ResetStreamerPassword extends Notification implements ShouldQueue
         $minutes = (int) config('auth.passwords.users.expire', 60);
 
         return (new MailMessage)
-            ->subject('Reset password MabarQueue')
+            ->subject('Reset password Mabarku')
             ->greeting("Hai {$notifiable->channel_name},")
-            ->line('Kami menerima permintaan reset password untuk akun MabarQueue kamu.')
+            ->line('Kami menerima permintaan reset password untuk akun Mabarku kamu.')
             ->action('Buat password baru', $this->resetUrl($notifiable))
             ->line("Link ini berlaku {$minutes} menit dan hanya bisa dipakai sekali.")
             ->line('Kalau kamu tidak meminta reset, abaikan email ini — password kamu tidak berubah.')
-            ->salutation('Salam, tim MabarQueue');
+            ->salutation('Salam, tim Mabarku');
     }
 }

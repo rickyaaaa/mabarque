@@ -21,12 +21,12 @@ class BetaAccessApproved extends Notification implements ShouldQueue
     public function toMail(User $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Akses MabarQueue kamu sudah aktif')
+            ->subject('Akses Mabarku kamu sudah aktif')
             ->greeting("Hai {$notifiable->channel_name},")
-            ->line('Akses private alpha MabarQueue untuk akun kamu sudah disetujui.')
+            ->line('Akses private alpha Mabarku untuk akun kamu sudah disetujui.')
             ->line('Sekarang kamu bisa membuat paket VIP, menghubungkan platform donasi, dan membuka sesi live.')
             ->action('Masuk ke workspace', url('/login'))
             ->line("Halaman antrean publik kamu: ".url('/'.$notifiable->slug))
-            ->salutation('Salam, tim MabarQueue');
+            ->salutation('Salam, tim Mabarku');
     }
 }

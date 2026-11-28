@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" /><meta name="csrf-token" content="{{ csrf_token() }}" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Pulihkan akses akun streamer MabarQueue." />
-    <title>MabarQueue — Lupa Password</title>
+    <meta name="description" content="Pulihkan akses akun streamer Mabarku." />
+    <title>Mabarku — Lupa Password</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
@@ -16,7 +16,7 @@
   <body class="login-body ui-v2">
     <main class="login-shell">
       <header class="signup-header">
-        <a class="public-brand" href="/"><span class="brand-mark" aria-hidden="true">MQ</span><span>MabarQueue</span></a>
+        <a class="public-brand" href="/"><span class="brand-mark" aria-hidden="true">MB</span><span>Mabarku</span></a>
         <span>Ingat password? <a href="/login">Masuk</a></span>
       </header>
 
@@ -61,7 +61,7 @@
                 <span class="mock-inbox-badge">Email terkirim</span>
                 <small id="mock-inbox-time">baru saja</small>
               </header>
-              <strong>Subjek: Reset password MabarQueue</strong>
+              <strong>Subjek: Reset password Mabarku</strong>
               <p>Buka email itu lalu klik <b>Buat password baru</b>. Tidak ada di inbox? Cek folder Spam atau Promosi, atau kirim ulang setelah hitung mundur selesai.</p>
             </article>
             <div class="reset-secondary-actions">
@@ -113,7 +113,7 @@
         </section>
       </section>
 
-      <footer class="signup-footer"><span>© 2025 MabarQueue</span><span>Link reset berlaku 60 menit</span></footer>
+      <footer class="signup-footer"><span>© 2025 Mabarku</span><span>Link reset berlaku 60 menit</span></footer>
     </main>
     <div class="toast" id="reset-toast" role="status" aria-live="polite"></div>
     <script src="{{ \App\Support\Asset::url('js/api.js') }}" defer></script><script src="{{ \App\Support\Asset::url('js/forgot-password.js') }}" defer></script>

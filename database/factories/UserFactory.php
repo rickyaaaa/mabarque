@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
- * Akun streamer MabarQueue. Default: streamer dengan akses beta aktif.
+ * Akun streamer Mabarku. Default: streamer dengan akses beta aktif.
  *
  * @extends Factory<User>
  */

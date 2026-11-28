@@ -9,19 +9,22 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 
 /**
- * php artisan mabarqueue:create-admin admin@domain.com --name="Admin MabarQueue"
+ * php artisan mabarku:create-admin admin@domain.com --name="Admin Mabarku"
  *
  * Password diketik tersembunyi (tidak masuk riwayat shell). Dengan --generate,
  * password acak dibuat dan ditampilkan SEKALI.
  */
 class CreateSuperAdmin extends Command
 {
-    protected $signature = 'mabarqueue:create-admin
+    protected $signature = 'mabarku:create-admin
         {email : Email login Super Admin}
-        {--name=Admin MabarQueue : Nama tampilan}
+        {--name=Admin Mabarku : Nama tampilan}
         {--generate : Buat password acak alih-alih mengetik}';
 
     protected $description = 'Buat akun Super Admin (atau naikkan akun yang sudah ada menjadi Super Admin)';
+
+    /** Nama lama sebelum ganti merek ke Mabarku — tetap jalan untuk catatan/skrip lama. */
+    protected $aliases = ['mabarqueue:create-admin'];
 
     public function handle(BetaAccessService $service): int
     {

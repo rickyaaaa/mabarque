@@ -19,7 +19,7 @@ class BetaAccessTest extends TestCase
         Notification::fake();
         $nadia = User::factory()->pending()->create(['email' => 'nadia@example.com', 'slug' => 'nadia-gaming']);
 
-        $this->artisan('mabarqueue:beta', ['user' => 'NADIA@example.com', 'status' => 'active'])
+        $this->artisan('mabarku:beta', ['user' => 'NADIA@example.com', 'status' => 'active'])
             ->expectsOutputToContain('sekarang berstatus active')
             ->assertSuccessful();
 
@@ -27,7 +27,7 @@ class BetaAccessTest extends TestCase
         Notification::assertSentTo($nadia, BetaAccessApproved::class);
 
         // Pakai slug juga bisa; status sama tidak mengirim email lagi.
-        $this->artisan('mabarqueue:beta', ['user' => 'nadia-gaming', 'status' => 'active'])
+        $this->artisan('mabarku:beta', ['user' => 'nadia-gaming', 'status' => 'active'])
             ->expectsOutputToContain('tidak ada perubahan')
             ->assertSuccessful();
         Notification::assertSentToTimes($nadia, BetaAccessApproved::class, 1);
@@ -40,11 +40,11 @@ class BetaAccessTest extends TestCase
 
         $this->actingAs($nadia)->getJson('/api/vip-packages')->assertForbidden();
 
-        $this->artisan('mabarqueue:beta', ['user' => $nadia->email, 'status' => 'active'])->assertSuccessful();
+        $this->artisan('mabarku:beta', ['user' => $nadia->email, 'status' => 'active'])->assertSuccessful();
         $this->actingAs($nadia->refresh())->getJson('/api/vip-packages')->assertOk();
 
         $oldRememberToken = $nadia->remember_token;
-        $this->artisan('mabarqueue:beta', ['user' => $nadia->email, 'status' => 'inactive'])->assertSuccessful();
+        $this->artisan('mabarku:beta', ['user' => $nadia->email, 'status' => 'inactive'])->assertSuccessful();
         $nadia->refresh();
         $this->assertNotSame($oldRememberToken, $nadia->remember_token);
         $this->actingAs($nadia)->getJson('/api/vip-packages')->assertForbidden();
@@ -55,15 +55,15 @@ class BetaAccessTest extends TestCase
         $admin = User::factory()->superAdmin()->create();
         $streamer = User::factory()->pending()->create();
 
-        $this->artisan('mabarqueue:beta', ['user' => 'tidak-ada@example.com', 'status' => 'active'])->assertFailed();
-        $this->artisan('mabarqueue:beta', ['user' => $streamer->email, 'status' => 'approved'])->assertExitCode(2);
-        $this->artisan('mabarqueue:beta', ['user' => $admin->email, 'status' => 'inactive'])->assertExitCode(2);
+        $this->artisan('mabarku:beta', ['user' => 'tidak-ada@example.com', 'status' => 'active'])->assertFailed();
+        $this->artisan('mabarku:beta', ['user' => $streamer->email, 'status' => 'approved'])->assertExitCode(2);
+        $this->artisan('mabarku:beta', ['user' => $admin->email, 'status' => 'inactive'])->assertExitCode(2);
         $this->assertSame('active', $admin->refresh()->beta_status);
     }
 
     public function test_create_admin_command_with_generated_password(): void
     {
-        $this->artisan('mabarqueue:create-admin', ['email' => 'Boss@Example.com', '--generate' => true])
+        $this->artisan('mabarku:create-admin', ['email' => 'Boss@Example.com', '--generate' => true])
             ->expectsOutputToContain('Super Admin siap: boss@example.com')
             ->assertSuccessful();
 
@@ -75,13 +75,13 @@ class BetaAccessTest extends TestCase
 
     public function test_create_admin_command_with_typed_password_and_validation(): void
     {
-        $this->artisan('mabarqueue:create-admin', ['email' => 'boss@example.com'])
+        $this->artisan('mabarku:create-admin', ['email' => 'boss@example.com'])
             ->expectsQuestion('Password Super Admin (min 12 karakter, huruf + angka)', 'pendek1')
             ->expectsQuestion('Ulangi password', 'pendek1')
             ->assertExitCode(2);
         $this->assertDatabaseMissing('users', ['email' => 'boss@example.com']);
 
-        $this->artisan('mabarqueue:create-admin', ['email' => 'boss@example.com'])
+        $this->artisan('mabarku:create-admin', ['email' => 'boss@example.com'])
             ->expectsQuestion('Password Super Admin (min 12 karakter, huruf + angka)', 'AdminKuat2026x')
             ->expectsQuestion('Ulangi password', 'AdminKuat2026x')
             ->assertSuccessful();
@@ -93,7 +93,7 @@ class BetaAccessTest extends TestCase
         User::factory()->pending()->create(['email' => 'nadia@example.com']);
         User::factory()->create(['email' => 'andra@example.com']);
 
-        $this->artisan('mabarqueue:streamers', ['--status' => 'pending'])
+        $this->artisan('mabarqueue:streamers', ['--status' => 'pending']) // alias nama lama tetap jalan
             ->expectsOutputToContain('nadia@example.com')
             ->doesntExpectOutputToContain('andra@example.com')
             ->assertSuccessful();
@@ -129,11 +129,11 @@ class BetaAccessTest extends TestCase
     {
         $this->seed();
 
-        $this->assertTrue(User::firstWhere('email', 'admin@mabarqueue.test')->isSuperAdmin());
+        $this->assertTrue(User::firstWhere('email', 'admin@mabarku.test')->isSuperAdmin());
         $this->assertSame(3, User::firstWhere('slug', 'andrarizky')->vipPackages()->count());
         $this->assertSame('pending', User::firstWhere('slug', 'nadia-gaming')->beta_status);
 
-        $this->postJson('/api/auth/login', ['email' => 'andra@mabarqueue.test', 'password' => 'password123'])->assertOk();
+        $this->postJson('/api/auth/login', ['email' => 'andra@mabarku.test', 'password' => 'password123'])->assertOk();
         $this->getJson('/api/channels/andrarizky/vip-packages')->assertOk()->assertJsonCount(3, 'data');
     }
 }

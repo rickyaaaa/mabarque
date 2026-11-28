@@ -5,7 +5,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex" />
-    <title>Panel Admin — MabarQueue</title>
+    <title>Panel Admin — Mabarku</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
@@ -16,7 +16,7 @@
   {{-- Area Super Admin: terpisah dari workspace streamer (tanpa sidebar streamer), login tetap lewat /login. --}}
   <body class="admin-body ui-v2">
     <div class="admin-topbar">
-      <a class="public-brand" href="/admin"><span class="brand-mark" aria-hidden="true">MQ</span><span>MabarQueue <em>Admin</em></span></a>
+      <a class="public-brand" href="/admin"><span class="brand-mark" aria-hidden="true">MB</span><span>Mabarku <em>Admin</em></span></a>
     </div>
     <main class="admin-shell">
       <livewire:admin-panel />

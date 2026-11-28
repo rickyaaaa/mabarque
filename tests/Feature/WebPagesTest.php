@@ -29,7 +29,7 @@ class WebPagesTest extends TestCase
     {
         $this->get('/')->assertOk()
             ->assertSee('Sudah dipakai di live streamer')
-            ->assertSee('ColdW menggunakan MabarQueue')
+            ->assertSee('ColdW menggunakan Mabarku')
             ->assertSee('href="https://www.youtube.com/@ColdW6"', false)
             ->assertSee('images/coldw-profile.png', false)
             ->assertSee('images/coldw-live-example.png', false);
@@ -85,7 +85,7 @@ class WebPagesTest extends TestCase
 
         $this->get('/dashboard')->assertOk()
             ->assertSee('data-theme-toggle', false)
-            ->assertSee('mabarqueue-theme', false)
+            ->assertSee('mabarku-theme', false)
             ->assertSee('Mode gelap');
     }
 
@@ -104,8 +104,31 @@ class WebPagesTest extends TestCase
             $head = substr($html, 0, (int) strpos($html, '</head>'));
             $this->assertStringContainsString("document.documentElement.dataset.theme = theme", $head, "{$path}: script tema belum di <head>");
             $this->assertStringContainsString('data-theme-toggle', $html, "{$path}: tombol tema hilang");
-            $this->assertStringContainsString("localStorage.setItem('mabarqueue-theme', theme)", $html, "{$path}: handler tombol tema belum dimuat");
+            $this->assertStringContainsString("localStorage.setItem('mabarku-theme', theme)", $html, "{$path}: handler tombol tema belum dimuat");
+            // Ganti nama 2026-11-29: kunci lama dipindahkan supaya pilihan tema user tidak hilang.
+            $this->assertStringContainsString("localStorage.removeItem('mabarqueue-theme')", $head, "{$path}: migrasi kunci tema lama hilang");
         }
+    }
+
+    /** Ganti nama 2026-11-29: merek baru tampil, dan teks domain link publik diambil dari config (domain belum aktif). */
+    public function test_brand_is_mabarku_and_public_domain_comes_from_config(): void
+    {
+        config(['app.public_domain' => 'contoh-domain.id']);
+        $user = User::factory()->create(['slug' => 'andra']);
+        $this->actingAs($user);
+
+        $this->get('/dashboard')->assertOk()->assertSee('Mabarku')->assertDontSee('MabarQueue')->assertSeeHtml('class="brand-mark" aria-hidden="true">MB<');
+        $this->get('/account')->assertOk()->assertSee('contoh-domain.id/andra')->assertDontSee('mabarqueue.id');
+        $this->get('/profile')->assertOk()
+            ->assertSeeHtml('<span>contoh-domain.id/</span>')
+            ->assertSeeHtml('data-public-domain="contoh-domain.id"');
+
+        $this->putJson('/api/profile', ['channel_name' => 'Andra', 'slug' => 'andra-baru', 'profile_accent' => '#6b63ff'])
+            ->assertOk()->assertJsonPath('message', 'Profil disimpan. Link publik kini contoh-domain.id/andra-baru.');
+
+        auth()->logout();
+        $this->get('/')->assertOk()->assertSee('Mabarku')->assertDontSee('MabarQueue');
+        $this->get('/login')->assertOk()->assertSee('Mabarku');
     }
 
     public function test_account_page_shows_real_workspace_data(): void

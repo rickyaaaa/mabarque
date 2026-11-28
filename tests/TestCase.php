@@ -14,7 +14,7 @@ abstract class TestCase extends BaseTestCase
     {
         parent::setUp();
 
-        $this->webhookJournalDir = sys_get_temp_dir().DIRECTORY_SEPARATOR.'mabarqueue-test-webhooks-'.getmypid();
+        $this->webhookJournalDir = sys_get_temp_dir().DIRECTORY_SEPARATOR.'mabarku-test-webhooks-'.getmypid();
         File::deleteDirectory($this->webhookJournalDir);
         config(['logging.webhook_journal_path' => $this->webhookJournalDir]);
     }

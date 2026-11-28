@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'Laravel'),
+    'name' => env('APP_NAME', 'Mabarku'),
 
     /*
     |--------------------------------------------------------------------------
@@ -53,6 +53,12 @@ return [
     */
 
     'url' => env('APP_URL', 'http://localhost'),
+
+    /*
+    | Domain publik yang DITAMPILKAN ke streamer/penonton (mis. "mabarku.id/maswafa"). Hanya teks — link yang
+    | diklik tetap memakai APP_URL sampai domain ini aktif dan diarahkan ke server.
+    */
+    'public_domain' => env('PUBLIC_DOMAIN', 'mabarku.id'),
 
     /*
     |--------------------------------------------------------------------------

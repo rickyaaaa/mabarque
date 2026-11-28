@@ -8,16 +8,19 @@ use Illuminate\Console\Command;
 use InvalidArgumentException;
 
 /**
- * php artisan mabarqueue:beta nadia@example.com active     # setujui
- * php artisan mabarqueue:beta nadia-gaming inactive        # nonaktifkan (pakai slug juga bisa)
+ * php artisan mabarku:beta nadia@example.com active     # setujui
+ * php artisan mabarku:beta nadia-gaming inactive        # nonaktifkan (pakai slug juga bisa)
  */
 class SetBetaStatus extends Command
 {
-    protected $signature = 'mabarqueue:beta
+    protected $signature = 'mabarku:beta
         {user : Email atau slug streamer}
         {status : active | pending | inactive}';
 
     protected $description = 'Setujui, tunda, atau nonaktifkan akses beta streamer';
+
+    /** Nama lama sebelum ganti merek ke Mabarku — tetap jalan untuk catatan/skrip lama. */
+    protected $aliases = ['mabarqueue:beta'];
 
     public function handle(BetaAccessService $service): int
     {

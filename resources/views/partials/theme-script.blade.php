@@ -15,7 +15,7 @@
     buttons.forEach((button) => button.addEventListener('click', () => {
       const theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
       root.dataset.theme = theme;
-      localStorage.setItem('mabarqueue-theme', theme);
+      localStorage.setItem('mabarku-theme', theme);
       syncThemeControls();
     }));
   })();

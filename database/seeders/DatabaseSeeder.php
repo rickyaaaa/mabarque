@@ -10,11 +10,11 @@ use RuntimeException;
  * Data demo untuk pengembangan LOKAL saja (php artisan db:seed).
  *
  * Akun (password lokal: password123):
- * - admin@mabarqueue.test  — Super Admin
- * - andra@mabarqueue.test  — streamer beta aktif (@andrarizky) + 3 paket VIP
- * - nadia@mabarqueue.test  — streamer baru, menunggu persetujuan (pending)
+ * - admin@mabarku.test  — Super Admin
+ * - andra@mabarku.test  — streamer beta aktif (@andrarizky) + 3 paket VIP
+ * - nadia@mabarku.test  — streamer baru, menunggu persetujuan (pending)
  *
- * Di produksi, buat Super Admin lewat: php artisan mabarqueue:create-admin <email>
+ * Di produksi, buat Super Admin lewat: php artisan mabarku:create-admin <email>
  */
 class DatabaseSeeder extends Seeder
 {
@@ -25,15 +25,15 @@ class DatabaseSeeder extends Seeder
         }
 
         User::factory()->superAdmin()->create([
-            'name' => 'Admin MabarQueue',
-            'email' => 'admin@mabarqueue.test',
-            'channel_name' => 'Admin MabarQueue',
+            'name' => 'Admin Mabarku',
+            'email' => 'admin@mabarku.test',
+            'channel_name' => 'Admin Mabarku',
             'slug' => 'sa-admin-local',
         ]);
 
         $andra = User::factory()->create([
             'name' => 'Andra Rizky',
-            'email' => 'andra@mabarqueue.test',
+            'email' => 'andra@mabarku.test',
             'channel_name' => 'Andra Rizky',
             'slug' => 'andrarizky',
             'tagline' => 'Mabar santai, push mythic bareng viewer',
@@ -50,7 +50,7 @@ class DatabaseSeeder extends Seeder
 
         $nadia = User::factory()->pending()->create([
             'name' => 'Nadia Gaming',
-            'email' => 'nadia@mabarqueue.test',
+            'email' => 'nadia@mabarku.test',
             'channel_name' => 'Nadia Gaming',
             'slug' => 'nadia-gaming',
         ]);

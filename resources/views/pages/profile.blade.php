@@ -5,8 +5,8 @@
     @include('partials.theme-head')
     <meta name="csrf-token" content="{{ csrf_token() }}" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="MabarQueue — atur profil channel yang tampil di halaman publik dan overlay." />
-    <title>MabarQueue — Pengaturan Profil</title>
+    <meta name="description" content="Mabarku — atur profil channel yang tampil di halaman publik dan overlay." />
+    <title>Mabarku — Pengaturan Profil</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Agdasima:wght@400;700&family=Inter:wght@400;500;600;700;800;900&family=Bricolage+Grotesque:opsz,wght@12..96,400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="{{ \App\Support\Asset::url('css/styles.css') }}" /><link rel="stylesheet" href="{{ \App\Support\Asset::url('css/account.css') }}" /><link rel="stylesheet" href="{{ \App\Support\Asset::url('css/profile-settings.css') }}" />
@@ -36,7 +36,7 @@
               <p class="field-help" id="channel-name-help"><span id="channel-name-count">0</span>/40 · tampil sebagai judul halaman publik dan overlay.</p>
 
               <label class="field-label" for="profile-slug">Alamat publik</label>
-              <div class="slug-input"><span>mabarqueue.id/</span><input id="profile-slug" name="slug" maxlength="24" autocomplete="off" spellcheck="false" required aria-describedby="slug-status" /></div>
+              <div class="slug-input"><span>{{ config('app.public_domain') }}/</span><input id="profile-slug" name="slug" maxlength="24" autocomplete="off" spellcheck="false" required aria-describedby="slug-status" /></div>
               <p class="field-help slug-status" id="slug-status" role="status" aria-live="polite"></p>
 
               <label class="field-label" for="profile-tagline">Tagline <span>(opsional)</span></label>
@@ -102,7 +102,7 @@
             </div>
 
             <div class="preview-frame" id="preview-public" role="tabpanel" aria-labelledby="tab-public">
-              <div class="mini-browser"><i></i><i></i><i></i><code id="preview-url">mabarqueue.id/andrarizky</code></div>
+              <div class="mini-browser"><i></i><i></i><i></i><code id="preview-url" data-public-domain="{{ config('app.public_domain') }}">{{ config('app.public_domain') }}/{{ auth()->user()?->slug }}</code></div>
               <div class="mini-public">
                 <span class="mini-live"><i></i>Live sekarang</span>
                 <div class="mini-identity">

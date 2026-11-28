@@ -1,6 +1,6 @@
 # mabarque
 
-**MabarQueue** — SaaS antrean VIP mabar untuk streamer Mobile Legends. Donasi masuk, antrean VIP otomatis.
+**Mabarku** — SaaS antrean VIP mabar untuk streamer Mobile Legends. Donasi masuk, antrean VIP otomatis.
 
 Stack: Laravel 12 · Livewire 4 · Sanctum (SPA cookie auth) · MySQL (SQLite untuk lokal/test) · Database queue.
 
@@ -21,7 +21,7 @@ touch database/database.sqlite
 php artisan migrate
 ```
 
-Untuk MySQL, ubah di `.env`: `DB_CONNECTION=mysql`, lalu isi `DB_HOST`, `DB_PORT`, `DB_DATABASE=mabarqueue`, `DB_USERNAME`, `DB_PASSWORD`, buat database-nya, dan jalankan `php artisan migrate`.
+Untuk MySQL, ubah di `.env`: `DB_CONNECTION=mysql`, lalu isi `DB_HOST`, `DB_PORT`, `DB_DATABASE=mabarku`, `DB_USERNAME`, `DB_PASSWORD`, buat database-nya, dan jalankan `php artisan migrate`.
 
 **Server & worker**
 
@@ -37,10 +37,10 @@ php artisan queue:work   # email reset password & proses webhook (database queue
 Akun baru berstatus `pending` dan belum bisa membuka dashboard sampai disetujui.
 
 ```bash
-php artisan mabarqueue:create-admin admin@domainkamu.com     # password diketik tersembunyi
-php artisan mabarqueue:streamers --status=pending           # antrean persetujuan
-php artisan mabarqueue:beta nadia@example.com active        # setujui (email/slug), kirim email notifikasi
-php artisan mabarqueue:beta nadia-gaming inactive           # nonaktifkan + cabut sesi login
+php artisan mabarku:create-admin admin@domainkamu.com     # password diketik tersembunyi
+php artisan mabarku:streamers --status=pending           # antrean persetujuan
+php artisan mabarku:beta nadia@example.com active        # setujui (email/slug), kirim email notifikasi
+php artisan mabarku:beta nadia-gaming inactive           # nonaktifkan + cabut sesi login
 ```
 
 Untuk panel admin nanti tersedia API (khusus Super Admin, selain itu 404): `GET /api/admin/streamers?status=pending` dan `PATCH /api/admin/streamers/{id}/beta-status`.

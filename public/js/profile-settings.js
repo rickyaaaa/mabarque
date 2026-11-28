@@ -76,7 +76,8 @@ function renderPreview(profile) {
   const tagline = document.querySelector('[data-preview="tagline"]');
   tagline.textContent = profile.tagline;
   tagline.hidden = !profile.tagline;
-  document.querySelector("#preview-url").textContent = `mabarqueue.id/${profile.slug || "…"}`;
+  const previewUrl = document.querySelector("#preview-url");
+  previewUrl.textContent = `${previewUrl.dataset.publicDomain || "mabarku.id"}/${profile.slug || "…"}`;
   document.querySelector(".preview-panel").style.setProperty("--profile-accent", profile.profile_accent);
   document.querySelector("#avatar-preview").style.background = profile.profile_accent;
   document.querySelector("#channel-name-count").textContent = fields.channel_name.value.length;

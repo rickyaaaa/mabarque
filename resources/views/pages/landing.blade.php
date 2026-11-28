@@ -9,8 +9,8 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>MabarQueue | Antrean mabar VIP untuk streamer Mobile Legends</title>
-    <meta name="description" content="Atur paket VIP, kelola party dan Next game, lalu bagikan link agar viewer bisa cek sisa game. Daftar akses MabarQueue untuk streamer Mobile Legends." />
+    <title>Mabarku | Antrean mabar VIP untuk streamer Mobile Legends</title>
+    <meta name="description" content="Atur paket VIP, kelola party dan Next game, lalu bagikan link agar viewer bisa cek sisa game. Daftar akses Mabarku untuk streamer Mobile Legends." />
     <meta name="theme-color" content="#EEEDE6" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -21,8 +21,8 @@
     <a class="lp-skip" href="#konten">Lewati ke konten</a>
     <header class="lp-header">
         <div class="lp-shell lp-header-inner">
-            <a class="lp-brand" href="/" aria-label="MabarQueue, beranda">
-                <span class="lp-brand-mark" aria-hidden="true">MQ</span> MabarQueue
+            <a class="lp-brand" href="/" aria-label="Mabarku, beranda">
+                <span class="lp-brand-mark" aria-hidden="true">MB</span> Mabarku
             </a>
             <nav class="lp-nav lp-nav-desktop" aria-label="Navigasi utama">
                 @foreach ($links as $href => $label)
@@ -89,7 +89,7 @@
             <div class="lp-shell lp-social-proof-inner lp-section">
                 <div class="lp-social-proof-copy">
                     <h2 id="social-proof-title">Sudah dipakai di live streamer</h2>
-                    <p>ColdW menggunakan MabarQueue untuk mengatur party, sisa game pemain, paket VIP, dan overlay OBS saat live Mobile Legends.</p>
+                    <p>ColdW menggunakan Mabarku untuk mengatur party, sisa game pemain, paket VIP, dan overlay OBS saat live Mobile Legends.</p>
                     <article class="lp-coldw-card">
                         <img src="{{ \App\Support\Asset::url('images/coldw-profile.png') }}" width="170" height="145" alt="Profil ColdW" loading="lazy" decoding="async" />
                         <div>
@@ -114,7 +114,7 @@
                     <ol class="lp-steps">
                         <li><h3>Atur paket dan sambungkan donasi</h3><p>Tentukan harga dan jumlah game tiap paket. Hubungkan SociaBuzz, Saweria, atau Trakteer untuk menerima notifikasi donasi.</p></li>
                         <li><h3>Tentukan cara pemain masuk antrean</h3><p>Konfirmasi donasi satu per satu atau aktifkan mode otomatis sesuai aturanmu. Kamu juga bisa tambah pemain dan tempel daftar dari Notepad.</p></li>
-                        <li><h3>Pilih party dan catat game selesai</h3><p>Susun Next game dari papan antrean. Saat kamu klik Selesai game, MabarQueue memperbarui sisa game pemain di party.</p></li>
+                        <li><h3>Pilih party dan catat game selesai</h3><p>Susun Next game dari papan antrean. Saat kamu klik Selesai game, Mabarku memperbarui sisa game pemain di party.</p></li>
                     </ol>
                 </div>
                 <figure class="lp-calculation">
@@ -218,7 +218,7 @@
                     </details>
                     <details>
                         <summary>Bisa mulai dan akhiri sesi dari OBS?</summary>
-                        <p>Bisa lewat Browser Source MabarQueue. Aktifkan opsi mulai atau akhiri sesi otomatis di pengaturan Overlay OBS sesuai kebutuhanmu.</p>
+                        <p>Bisa lewat Browser Source Mabarku. Aktifkan opsi mulai atau akhiri sesi otomatis di pengaturan Overlay OBS sesuai kebutuhanmu.</p>
                     </details>
                     <details>
                         <summary>Apakah akun langsung aktif setelah daftar?</summary>
@@ -230,7 +230,7 @@
 
         <section class="lp-shell lp-close" aria-labelledby="close-title">
             <div class="lp-close-panel">
-                <div><h2 id="close-title">Siapkan antrean untuk live berikutnya</h2><p>Daftar akses MabarQueue untuk mengatur paket, giliran main, dan sisa game dari satu dashboard.</p></div>
+                <div><h2 id="close-title">Siapkan antrean untuk live berikutnya</h2><p>Daftar akses Mabarku untuk mengatur paket, giliran main, dan sisa game dari satu dashboard.</p></div>
                 <div class="lp-close-actions">
                     <a class="lp-button lp-dark" href="{{ route('signup', absolute: false) }}">Daftar akses @include('partials.icon', ['name' => 'arrow-right', 'size' => 18])</a>
                     <a class="lp-text-link" href="{{ route('login', absolute: false) }}">Sudah punya akun? Masuk</a>
@@ -242,7 +242,7 @@
     <footer class="lp-footer">
         <div class="lp-shell lp-footer-inner">
             <div>
-                <a class="lp-brand" href="/"><span class="lp-brand-mark" aria-hidden="true">MQ</span> MabarQueue</a>
+                <a class="lp-brand" href="/"><span class="lp-brand-mark" aria-hidden="true">MB</span> Mabarku</a>
                 <p>Dashboard mabar VIP untuk streamer Mobile Legends</p>
             </div>
             <nav class="lp-nav" aria-label="Navigasi footer">

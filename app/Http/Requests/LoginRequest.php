@@ -57,7 +57,7 @@ class LoginRequest extends FormRequest
         if ($user->beta_status === User::BETA_INACTIVE && ! $user->isSuperAdmin()) {
             $guard->logout();
 
-            throw ValidationException::withMessages(['email' => 'Akun ini sedang dinonaktifkan. Hubungi admin MabarQueue.']);
+            throw ValidationException::withMessages(['email' => 'Akun ini sedang dinonaktifkan. Hubungi admin Mabarku.']);
         }
 
         RateLimiter::clear($this->throttleKey());

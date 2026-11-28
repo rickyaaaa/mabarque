@@ -27,7 +27,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Antrean VIP mabar {{ $channel['channel_name'] }} — cek posisi dan sisa match kamu." />
-    <title>{{ $channel['channel_name'] }} — Antrean VIP · MabarQueue</title>
+    <title>{{ $channel['channel_name'] }} — Antrean VIP · Mabarku</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
@@ -189,7 +189,7 @@
 
       <footer class="public-footer">
         <span>Data antrean diperbarui otomatis setiap 5 detik</span>
-        <span>Powered by <strong>MabarQueue</strong></span>
+        <span>Powered by <strong>Mabarku</strong></span>
       </footer>
     </main>
     <div class="toast" id="public-toast" role="status" aria-live="polite"></div>

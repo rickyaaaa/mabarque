@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 /*
- * Halaman web MabarQueue. Data diambil/dikirim halaman lewat /api (session + CSRF, lihat public/js/api.js).
+ * Halaman web Mabarku. Data diambil/dikirim halaman lewat /api (session + CSRF, lihat public/js/api.js).
  * Satu login (/login) untuk semua; setelah masuk, tiap peran diarahkan ke areanya (User::homePath()).
  */
 

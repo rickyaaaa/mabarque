@@ -5,14 +5,17 @@ namespace App\Console\Commands;
 use App\Services\BetaAccessService;
 use Illuminate\Console\Command;
 
-/** php artisan mabarqueue:streamers --status=pending */
+/** php artisan mabarku:streamers --status=pending */
 class ListStreamers extends Command
 {
-    protected $signature = 'mabarqueue:streamers
+    protected $signature = 'mabarku:streamers
         {--status= : Filter pending | active | inactive}
         {--search= : Cari email, nama channel, atau slug}';
 
     protected $description = 'Daftar akun streamer beserta status beta (antrean persetujuan private alpha)';
+
+    /** Nama lama sebelum ganti merek ke Mabarku — tetap jalan untuk catatan/skrip lama. */
+    protected $aliases = ['mabarqueue:streamers'];
 
     public function handle(BetaAccessService $service): int
     {

@@ -29,7 +29,7 @@ class StreamerProfileController extends Controller
         return response()->json([
             'data' => $service->settings($user),
             'message' => $slugChanged
-                ? "Profil disimpan. Link publik kini mabarqueue.id/{$user->slug}."
+                ? "Profil disimpan. Link publik kini ".config('app.public_domain')."/{$user->slug}."
                 : 'Profil streamer disimpan.',
         ]);
     }

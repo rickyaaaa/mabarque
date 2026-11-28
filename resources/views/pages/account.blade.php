@@ -5,8 +5,8 @@
     @include('partials.theme-head')
     <meta name="csrf-token" content="{{ csrf_token() }}" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="MabarQueue — akun streamer dan ringkasan workspace." />
-    <title>MabarQueue — Akun Streamer</title>
+    <meta name="description" content="Mabarku — akun streamer dan ringkasan workspace." />
+    <title>Mabarku — Akun Streamer</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Agdasima:wght@400;700&family=Inter:wght@400;500;600;700;800;900&family=Bricolage+Grotesque:opsz,wght@12..96,400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="{{ \App\Support\Asset::url('css/styles.css') }}" /><link rel="stylesheet" href="{{ \App\Support\Asset::url('css/account.css') }}" />
@@ -24,14 +24,14 @@
           <div>
             <p class="eyebrow">Masuk &amp; akun streamer</p>
             <h1>Workspace kamu</h1>
-            <p class="session-meta">Kelola identitas streamer, koneksi, dan akses workspace MabarQueue.</p>
+            <p class="session-meta">Kelola identitas streamer, koneksi, dan akses workspace Mabarku.</p>
           </div>
           <button class="button button-outline" id="logout-button" type="button">Keluar</button>
         </header>
 
         @if (session('beta_notice') || ! $isActive)
           <p class="form-error beta-notice" role="status">
-            {{ session('beta_notice') ?? ($user->beta_status === 'inactive' ? 'Akun ini sedang dinonaktifkan. Hubungi admin MabarQueue.' : 'Akses private alpha kamu masih menunggu persetujuan admin. Sambil menunggu, kamu bisa melengkapi profil channel.') }}
+            {{ session('beta_notice') ?? ($user->beta_status === 'inactive' ? 'Akun ini sedang dinonaktifkan. Hubungi admin Mabarku.' : 'Akses private alpha kamu masih menunggu persetujuan admin. Sambil menunggu, kamu bisa melengkapi profil channel.') }}
           </p>
         @endif
 
@@ -84,7 +84,7 @@
               @endif
             </p>
             @if ($isActive && $user->isStreamer())
-              <p class="plan-copy">Halaman publik: <a class="account-link" href="/{{ $user->slug }}">mabarqueue.id/{{ $user->slug }}</a></p>
+              <p class="plan-copy">Halaman publik: <a class="account-link" href="/{{ $user->slug }}">{{ config('app.public_domain') }}/{{ $user->slug }}</a></p>
             @endif
           </article>
         </section>

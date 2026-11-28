@@ -16,7 +16,7 @@ Primary users are Mobile Legends streamers running a live VIP mabar session. The
 
 ## Product Purpose
 
-MabarQueue helps streamers manage a VIP mabar queue fed by donations and manual entries. Success means a streamer can keep the live queue orderly, know who is playing now, and make the next queue action in a few clicks without maintaining a separate note.
+Mabarku helps streamers manage a VIP mabar queue fed by donations and manual entries. Success means a streamer can keep the live queue orderly, know who is playing now, and make the next queue action in a few clicks without maintaining a separate note.
 
 ## Positioning
 
@@ -37,7 +37,7 @@ The dashboard is used during a live stream on a desktop or mobile browser. The s
 
 ## Brand Commitments
 
-The working product name is MabarQueue. The PRD's value proposition is "Donasi masuk, antrean VIP otomatis. Fokus main, bukan nyatet pemain." The product language is Indonesian.
+The product name is Mabarku (renamed from MabarQueue on 2026-11-29 because that name is used in Malaysia). The PRD's value proposition is "Donasi masuk, antrean VIP otomatis. Fokus main, bukan nyatet pemain." The product language is Indonesian.
 
 ## Evidence on Hand
 

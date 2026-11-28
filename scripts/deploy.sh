@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Deploy MabarQueue di server (Hostinger). Dijalankan GitHub Actions lewat SSH dari folder aplikasi,
+# Deploy Mabarku di server (Hostinger). Dijalankan GitHub Actions lewat SSH dari folder aplikasi,
 # atau manual:  cd ~/domains/<domain>/mabarque && bash scripts/deploy.sh
 #
 # Variabel opsional:

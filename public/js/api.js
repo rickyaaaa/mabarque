@@ -1,4 +1,4 @@
-// Helper pemanggil /api MabarQueue dari halaman web (same-origin, session cookie + CSRF).
+// Helper pemanggil /api Mabarku dari halaman web (same-origin, session cookie + CSRF).
 // Dipakai halaman: MQApi.get/post/put/patch/del → { ok, status, data, errors, message }.
 (function () {
   const csrfToken = () => document.querySelector('meta[name="csrf-token"]')?.content ?? "";

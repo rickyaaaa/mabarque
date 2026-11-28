@@ -36,7 +36,7 @@ class User extends Authenticatable
 
     /** Slug yang tidak boleh dipakai streamer (bentrok dengan rute/brand). */
     public const RESERVED_SLUGS = [
-        'admin', 'api', 'login', 'logout', 'signup', 'daftar', 'masuk', 'o', 'overlay', 'settings', 'mabarqueue', 'support', 'help',
+        'admin', 'api', 'login', 'logout', 'signup', 'daftar', 'masuk', 'o', 'overlay', 'settings', 'mabarqueue', 'mabarku', 'support', 'help',
         // Path halaman web di routes/web.php — tidak boleh tertutup halaman publik /{slug}.
         'dashboard', 'live-session', 'match-count', 'vip-packages', 'donations', 'overlay-settings', 'account', 'profile',
         'forgot-password', 'reset-password', 'register', 'up', 'storage', 'css', 'js', 'livewire', 'sanctum', 'build',

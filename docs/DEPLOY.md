@@ -59,7 +59,8 @@ php artisan key:generate
 Nilai penting untuk produksi:
 
 ```dotenv
-APP_NAME=MabarQueue
+APP_NAME=Mabarku
+PUBLIC_DOMAIN=mabarku.id        # teks domain di link publik streamer
 APP_ENV=production
 APP_DEBUG=false                  # WAJIB false: kalau true, error menampilkan stack trace & path server
 APP_URL=https://DOMAINKAMU
@@ -69,8 +70,8 @@ APP_TIMEZONE=Asia/Jakarta
 DB_CONNECTION=mysql
 DB_HOST=localhost
 DB_PORT=3306
-DB_DATABASE=u123456_mabarqueue
-DB_USERNAME=u123456_mabarqueue
+DB_DATABASE=u123456_mabarku
+DB_USERNAME=u123456_mabarku
 DB_PASSWORD=...
 
 SESSION_DRIVER=database
@@ -85,7 +86,7 @@ MAIL_SCHEME=smtps
 MAIL_USERNAME=noreply@DOMAINKAMU
 MAIL_PASSWORD=...
 MAIL_FROM_ADDRESS=noreply@DOMAINKAMU
-MAIL_FROM_NAME="MabarQueue"
+MAIL_FROM_NAME="Mabarku"
 ```
 
 - **Bila memakai SQLite** (production saat ini): set `SESSION_DRIVER=file` dan `CACHE_STORE=file` supaya
@@ -96,8 +97,11 @@ MAIL_FROM_NAME="MabarQueue"
 - **Webhook donasi** dicatat di `storage/logs/webhooks-YYYY-MM-DD.jsonl` dan tabel `webhook_deliveries`.
   Proses ulang yang gagal: `php artisan webhooks:replay failed` (atau `webhooks:replay 2026-11-28` dari jurnal;
   tambah `--dry-run` untuk melihat dulu). Idempoten — donasi yang sudah tercatat tidak dobel.
+- **Ganti nama dari MabarQueue (2026-11-29):** `APP_NAME` menentukan nama cookie session. Mengganti
+  `APP_NAME=Mabarku` membuat semua user logout sekali; untuk menghindarinya set `SESSION_COOKIE=mabarqueue-session`.
+  Perintah lama `mabarqueue:*` tetap jalan sebagai alias `mabarku:*`.
 - Jalankan deploy pertama manual: `bash scripts/deploy.sh`, lalu buat Super Admin:
-  `php artisan mabarqueue:create-admin emailkamu@domain.com`
+  `php artisan mabarku:create-admin emailkamu@domain.com`
 - hPanel → **Advanced → Cron Jobs**, tambahkan **satu** cron tiap menit (menjalankan scheduler + queue worker):
 
 ```

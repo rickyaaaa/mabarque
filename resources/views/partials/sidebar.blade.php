@@ -11,8 +11,8 @@
 @endphp
 <aside class="sidebar" aria-label="Navigasi utama">
     <div class="brand-lockup">
-        <div class="brand-mark" aria-hidden="true">MQ</div>
-        <div><p class="brand-name">MabarQueue</p><p class="brand-subtitle">Dashboard streamer<br />VIP mabar Mobile Legends</p></div>
+        <div class="brand-mark" aria-hidden="true">MB</div>
+        <div><p class="brand-name">Mabarku</p><p class="brand-subtitle">Dashboard streamer<br />VIP mabar Mobile Legends</p></div>
     </div>
     <nav class="main-nav">
         @foreach ($links as $key => [$href, $icon, $label])

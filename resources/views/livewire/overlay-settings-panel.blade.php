@@ -135,7 +135,7 @@
             <label class="switch-control">
                 <input type="checkbox" wire:model.live="obsAutoStart" />
                 <span class="switch-track"></span>
-                <span><strong>Mulai sesi otomatis saat OBS mulai streaming</strong><small>Klik "Start Streaming" di OBS, sesi live di MabarQueue ikut dimulai — tidak perlu klik dua kali. Kalau sesi sudah berjalan, tidak ada yang berubah.</small></span>
+                <span><strong>Mulai sesi otomatis saat OBS mulai streaming</strong><small>Klik "Start Streaming" di OBS, sesi live di Mabarku ikut dimulai — tidak perlu klik dua kali. Kalau sesi sudah berjalan, tidak ada yang berubah.</small></span>
             </label>
             <label class="switch-control">
                 <input type="checkbox" wire:model.live="obsAutoEnd" />
