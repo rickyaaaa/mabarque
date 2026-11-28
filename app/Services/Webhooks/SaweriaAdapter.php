@@ -42,16 +42,16 @@ class SaweriaAdapter implements ProviderAdapter
 
         $id = $payload['id'] ?? null;
         $name = trim((string) ($payload['donator_name'] ?? ''));
-        $amount = $payload['amount_raw'] ?? null;
+        $amount = Amount::parse($payload['amount_raw'] ?? null);
 
-        if (blank($id) || $name === '' || ! is_numeric($amount) || (int) round((float) $amount) <= 0) {
-            throw new InvalidPayload('Payload Saweria tidak lengkap (id, donator_name, amount_raw).');
+        if (blank($id) || $amount === null || (int) round($amount) <= 0) {
+            throw new InvalidPayload('Payload Saweria tidak lengkap (id, amount_raw).');
         }
 
         return new IncomingDonation(
             externalId: (string) $id,
-            donorName: $name,
-            amount: (int) round((float) $amount), // nominal yang dibayar donatur (sebelum potongan "cut")
+            donorName: $name !== '' ? $name : 'Anonim', // donatur anonim tetap dicatat
+            amount: (int) round($amount), // nominal yang dibayar donatur (sebelum potongan "cut")
             donorEmail: filled($payload['donator_email'] ?? null) ? (string) $payload['donator_email'] : null,
             message: filled($payload['message'] ?? null) ? (string) $payload['message'] : null,
         );

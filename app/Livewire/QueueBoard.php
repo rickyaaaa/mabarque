@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\LiveSession;
 use App\Models\QueueEntry;
 use App\Services\DonationQueueService;
+use App\Services\DonationStatsService;
 use App\Services\LiveSessionService;
 use App\Services\MatchService;
 use App\Services\QueueService;
@@ -621,7 +622,7 @@ class QueueBoard extends Component
             'played' => $queue->playedThisSession($this->session),
             'cap' => $queue->sessionCap($this->session),
             'isLive' => $this->session->status === 'active',
-            'donationValue' => (int) $this->session->donations()->where('donations.status', '!=', 'refunded')->sum('amount'),
+            'donationStats' => app(DonationStatsService::class)->forSession($this->session),
             // Kolom kanan papan: donasi terbaru (semua status) supaya streamer tidak perlu pindah halaman saat live.
             'recentDonations' => auth()->user()->donations()->latest('received_at')->latest('donations.id')->limit(5)->get(),
             // Reward (mis. Follback IG) yang belum diberikan streamer.

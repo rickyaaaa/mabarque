@@ -3,7 +3,10 @@
 namespace App\Livewire;
 
 use App\Models\Donation;
+use App\Models\WebhookDelivery;
 use App\Services\DonationQueueService;
+use App\Services\DonationStatsService;
+use App\Services\DonationWebhookService;
 use App\Services\LiveSessionService;
 use App\Services\QueueService;
 use InvalidArgumentException;
@@ -116,6 +119,30 @@ class DonationInbox extends Component
         }
     }
 
+    /** Proses ulang webhook yang gagal dibaca (mis. setelah format provider didukung). */
+    public function replayDelivery(int $deliveryId, DonationWebhookService $service): void
+    {
+        $delivery = auth()->user()->webhookDeliveries()->where('webhook_deliveries.id', $deliveryId)->firstOrFail();
+
+        try {
+            $result = $service->replayDelivery($delivery);
+            $this->dispatch('notify', message: in_array($result->result(), WebhookDelivery::PROBLEMS, true)
+                ? 'Webhook masih belum bisa dibaca. Masukkan donasinya manual dari papan antrean, lalu tandai selesai.'
+                : 'Webhook diproses ulang — donasi '.($result->donation?->donor_name ?? '').' kini tercatat.');
+        } catch (\Throwable $exception) {
+            report($exception);
+            $this->dispatch('notify', message: 'Gagal memproses ulang webhook. Coba lagi sebentar.');
+        }
+    }
+
+    /** Tandai webhook gagal sudah ditangani (mis. donasinya sudah dimasukkan manual). */
+    public function resolveDelivery(int $deliveryId): void
+    {
+        auth()->user()->webhookDeliveries()->where('webhook_deliveries.id', $deliveryId)->firstOrFail()
+            ->forceFill(['resolved_at' => now()])->save();
+        $this->dispatch('notify', message: 'Webhook ditandai sudah ditangani.');
+    }
+
     public function markRead(int $notificationId): void
     {
         auth()->user()->donationNotifications()->whereKey($notificationId)->whereNull('read_at')->update(['read_at' => now()]);
@@ -131,35 +158,68 @@ class DonationInbox extends Component
     {
         $user = auth()->user();
         $base = $user->donations()->with(['vipPackage:id,name,kind,reward_label,match_count', 'queueEntry:id,position,status']);
-        $recent = (clone $base)->latest('received_at')->limit(200)->get();
 
-        $visible = $recent
-            ->when($this->status !== 'all', fn ($c) => $c->where('status', $this->status))
-            ->when($this->provider !== 'all', fn ($c) => $c->where('provider', $this->provider))
-            ->take(50)
-            ->values();
+        $visible = (clone $base)
+            ->when($this->status !== 'all', fn ($q) => $q->where('donations.status', $this->status))
+            ->when($this->provider !== 'all', fn ($q) => $q->where('donations.provider', $this->provider))
+            ->latest('received_at')->latest('donations.id')
+            ->limit(50)
+            ->get();
+
+        // Hitungan filter dari seluruh donasi (bukan hanya 200 baris terakhir).
+        $statusCounts = $user->donations()->reorder()
+            ->when($this->provider !== 'all', fn ($q) => $q->where('donations.provider', $this->provider))
+            ->toBase()->selectRaw('donations.status as status, count(*) as aggregate')->groupBy('donations.status')
+            ->pluck('aggregate', 'status');
 
         $session = $user->liveSessions()->active()->latest('started_at')->first();
         $connections = $user->platformConnections()->get();
+        $stats = app(DonationStatsService::class);
 
         return view('livewire.donation-inbox', [
             'donations' => $visible,
-            'counts' => collect(self::STATUSES)->mapWithKeys(fn ($s) => [$s => $s === 'all' ? $recent->count() : $recent->where('status', $s)->count()]),
-            'todayCount' => $recent->filter(fn (Donation $d) => $d->received_at?->isToday())->count(),
-            'needsCheck' => $recent->whereIn('status', ['received', 'review'])->count(),
+            'counts' => collect(self::STATUSES)->mapWithKeys(fn ($s) => [$s => (int) ($s === 'all' ? $statusCounts->sum() : ($statusCounts[$s] ?? 0))]),
+            'needsCheck' => (int) $user->donations()->whereIn('donations.status', ['received', 'review'])->count(),
             'session' => $session,
-            // Semua uang donasi yang masuk (termasuk "Perlu cek"/"Diabaikan"): selama sesi live, atau hari ini.
-            'donationValue' => (int) ($session
-                ? $session->donations()->where('donations.status', '!=', 'refunded')->sum('amount')
-                : $user->donations()->whereDate('received_at', today())->where('donations.status', '!=', 'refunded')->sum('amount')),
+            // Selama live: angka sesi (tidak ter-reset jam 00:00 di tengah live). Tanpa live: hari ini.
+            'donationStats' => $session ? $stats->forSession($session) : $stats->forToday($user),
             'activeProviders' => $connections->where('status', 'active')->count(),
             'connectedProviders' => $connections->count(),
+            'syncStatus' => $this->syncStatus($connections),
+            'failedDeliveries' => $user->webhookDeliveries()->unresolvedProblems()->with('platformConnection:id,provider')
+                ->latest('webhook_deliveries.created_at')->limit(10)->get(),
+            'failedDeliveryCount' => $user->webhookDeliveries()->unresolvedProblems()->count(),
             'packages' => $this->activePackages(),
             'rewardPackages' => $this->activePackages()->filter(fn ($p) => $p->isReward())->values(),
-            'queueing' => $this->queueingId ? $recent->firstWhere('id', $this->queueingId) : null,
+            'queueing' => $this->queueingId ? $user->donations()->where('donations.id', $this->queueingId)->first() : null,
             'notifications' => $user->donationNotifications()->latest()->limit(6)->get(),
             'unread' => $user->donationNotifications()->whereNull('read_at')->count(),
         ]);
+    }
+
+    /**
+     * Teks status webhook di bawah judul. "Menunggu webhook pertama" hanya bila belum pernah ada kiriman;
+     * bila ada error, tampilkan pesan provider + waktunya.
+     *
+     * @return array{tone: string, text: string}
+     */
+    private function syncStatus($connections): array
+    {
+        $labels = ['saweria' => 'Saweria', 'sociabuzz' => 'SociaBuzz', 'trakteer' => 'Trakteer'];
+
+        if ($connections->isEmpty()) {
+            return ['tone' => 'idle', 'text' => 'Belum ada koneksi provider'];
+        }
+
+        if ($problem = $connections->filter(fn ($c) => filled($c->last_error))->sortByDesc('updated_at')->first()) {
+            return ['tone' => 'error', 'text' => ($labels[$problem->provider] ?? $problem->provider).': '.$problem->last_error];
+        }
+
+        $last = $connections->filter(fn ($c) => $c->last_received_at)->sortByDesc('last_received_at')->first();
+
+        return $last
+            ? ['tone' => 'live', 'text' => 'Webhook aktif · terakhir diterima '.$last->last_received_at->format('H:i').' WIB ('.$last->last_received_at->diffForHumans().')']
+            : ['tone' => 'idle', 'text' => 'Menunggu webhook pertama'];
     }
 
     private function activePackages()

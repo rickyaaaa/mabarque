@@ -33,4 +33,31 @@ final class WebhookResult
     {
         return new self(200, ['data' => ['status' => 'test', 'message' => 'Webhook uji diterima. Koneksi berfungsi.']]);
     }
+
+    /**
+     * Payload lolos verifikasi tapi tidak bisa dibaca. Tetap 2xx: balasan 4xx membuat SociaBuzz berhenti
+     * mengirim donasi berikutnya (kejadian 2026-11-28) dan Trakteer mematikan webhook setelah 3x gagal.
+     */
+    public static function unreadable(string $reason): self
+    {
+        return new self(202, ['data' => ['status' => 'unreadable', 'reason' => $reason]]);
+    }
+
+    /** Error tak terduga saat memproses. Tetap 2xx; kiriman tercatat dan bisa diproses ulang (webhooks:replay). */
+    public static function failed(): self
+    {
+        return new self(202, ['data' => ['status' => 'failed', 'reason' => 'Webhook diterima tapi gagal diproses. Tercatat untuk diproses ulang.']]);
+    }
+
+    /** Nama hasil untuk kolom webhook_deliveries.result. */
+    public function result(): string
+    {
+        $status = (string) ($this->body['data']['status'] ?? '');
+
+        return match (true) {
+            in_array($status, ['test', 'ignored', 'unreadable', 'failed'], true) => $status,
+            $this->donation !== null => ($this->body['data']['duplicate'] ?? false) ? 'duplicate' : 'donation',
+            default => 'ignored',
+        };
+    }
 }

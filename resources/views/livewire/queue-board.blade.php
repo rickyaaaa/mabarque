@@ -49,7 +49,7 @@
         @if ($isLive)
             <article class="qb-stat"><span>Win – Lose</span><strong>{{ $session->wins }} – {{ $session->losses }}</strong><small>skor sesi ini</small></article>
             <article class="qb-stat"><span>Match selesai</span><strong>{{ $session->total_matches }}</strong><small>sejak live dimulai</small></article>
-            <article class="qb-stat is-accent"><span>Donasi masuk</span><strong>Rp {{ number_format($donationValue, 0, ',', '.') }}</strong><small>semua donasi sesi ini</small></article>
+            <article class="qb-stat is-accent"><span>Masuk antrean</span><strong>Rp {{ number_format($donationStats['queued_amount'], 0, ',', '.') }}</strong><small>{{ \App\Services\DonationStatsService::caption($donationStats) }}</small></article>
         @else
             <article class="qb-stat"><span>Sisa game</span><strong>{{ $remainingTotal }}</strong><small>total Mabar VIP tersimpan</small></article>
             <article class="qb-stat"><span>Mainin akun</span><strong>{{ $counts['joki'] }}</strong><small>pesanan aktif</small></article>

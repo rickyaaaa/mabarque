@@ -169,3 +169,20 @@
 .provider-card > .provider-sample { grid-column: 1 / -1; }
 .provider-sample-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .provider-sample pre { max-height: 320px; white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere; }
+
+/* Status webhook di bawah judul: hijau aktif, merah ada error, abu belum ada kiriman. */
+.sync-line .status-dot.is-error { background: var(--v-danger, #d8341b); box-shadow: 0 0 0 3px rgba(216, 52, 27, .25); }
+.sync-line .status-dot.is-idle { background: var(--v-muted, #8a877d); box-shadow: none; }
+
+/* Webhook yang lolos verifikasi tapi gagal dibaca/diproses (kejadian 2026-11-28) — perlu ditangani streamer. */
+.webhook-problems { margin: 0 0 22px; padding: 16px; color: var(--v-ink, var(--ink)); background: var(--v-warn-soft, #fff3c4); border: 3px solid var(--line); box-shadow: 5px 5px 0 var(--line); }
+.webhook-problems h2 { margin: 0; }
+.webhook-problems-head p { max-width: 760px; margin: 6px 0 0; font-size: 13px; line-height: 1.45; }
+.webhook-problem-list { display: grid; gap: 8px; margin: 14px 0 0; padding: 0; list-style: none; }
+.webhook-problem { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 10px; padding: 10px 12px; background: var(--v-panel, var(--cream)); border: 2px solid var(--line); }
+.webhook-problem-main { flex: 1 1 320px; min-width: 0; }
+.webhook-problem-main strong { display: block; font-size: 14px; }
+.webhook-problem-main small { display: block; margin-top: 3px; color: var(--v-muted, var(--muted)); font-size: 12px; overflow-wrap: anywhere; }
+.webhook-problem-main details { margin-top: 6px; }
+.webhook-problem-main summary { cursor: pointer; font-size: 12px; font-weight: 700; }
+.webhook-problem-actions { display: flex; flex-wrap: wrap; gap: 8px; }

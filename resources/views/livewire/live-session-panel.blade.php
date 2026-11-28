@@ -41,7 +41,7 @@
 
         <section class="live-stat-grid" aria-label="Statistik sesi berjalan">
             <article class="live-stat live-stat-red"><span>Pemain di antrean</span><strong>{{ $queue->count() }}</strong><small>{{ $readyCount }} siap bermain</small></article>
-            <article class="live-stat live-stat-orange"><span>Nilai donasi</span><strong>Rp {{ number_format($donationValue, 0, ',', '.') }}</strong><small>{{ $donationCount }} donasi sesi ini</small></article>
+            <article class="live-stat live-stat-orange"><span>Masuk antrean</span><strong>Rp {{ number_format($donationStats['queued_amount'], 0, ',', '.') }}</strong><small>{{ \App\Services\DonationStatsService::caption($donationStats) }}</small></article>
             <article class="live-stat live-stat-purple"><span>Match selesai</span><strong>{{ $session->total_matches }}</strong><small>sejak sesi dimulai</small></article>
             <article class="live-stat live-stat-cream"><span>Durasi live</span><strong>{{ $session->started_at ? $session->started_at->diff(now())->format('%hj %Im') : '—' }}</strong><small>dimulai {{ $session->started_at?->format('H:i') }} WIB</small></article>
         </section>

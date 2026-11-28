@@ -42,16 +42,16 @@ class TrakteerAdapter implements ProviderAdapter
 
         $id = $payload['transaction_id'] ?? null;
         $name = trim((string) ($payload['supporter_name'] ?? ''));
-        $price = $payload['price'] ?? null;
+        $price = Amount::parse($payload['price'] ?? null);
 
-        if (blank($id) || $name === '' || ! is_numeric($price) || (int) round((float) $price) <= 0) {
-            throw new InvalidPayload('Payload Trakteer tidak lengkap (transaction_id, supporter_name, price).');
+        if (blank($id) || $price === null || (int) round($price) <= 0) {
+            throw new InvalidPayload('Payload Trakteer tidak lengkap (transaction_id, price).');
         }
 
         return new IncomingDonation(
             externalId: (string) $id,
-            donorName: $name,
-            amount: (int) round((float) $price), // total harga unit × quantity (sebelum potongan, lihat net_amount)
+            donorName: $name !== '' ? $name : 'Anonim', // donatur anonim tetap dicatat
+            amount: (int) round($price), // total harga unit × quantity (sebelum potongan, lihat net_amount)
             message: filled($payload['supporter_message'] ?? null) ? (string) $payload['supporter_message'] : null,
             isTest: str_starts_with((string) $id, 'test-'),
         );

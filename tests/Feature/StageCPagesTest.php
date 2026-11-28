@@ -78,23 +78,28 @@ class StageCPagesTest extends TestCase
         $this->get('/andra')->assertSee('Streamer belum memasang link donasi')->assertSee('Lihat cara donasi');
     }
 
-    public function test_donation_value_counts_all_money_received(): void
+    public function test_donation_cards_split_queued_money_from_all_donations(): void
     {
         $connection = $this->connection();
         $this->streamer->vipPackages()->create(['name' => 'VIP 1', 'price' => 15000, 'match_count' => 1]);
 
-        // Belum live: nilai donasi = semua donasi hari ini (termasuk yang di bawah harga paket).
+        // Kejadian 2026-11-28: angka "nilai donasi" mencampur yang diabaikan/perlu cek sehingga dikira salah.
+        // Kini dipisah: "Masuk antrean" (angka utama) vs semua donasi (keterangan). Belum live: angka hari ini.
         $this->sendWebhook($connection, ['id' => 'a', 'donor_name' => 'Raka', 'amount' => 15000, 'message' => 'mabar 1185010926'])->assertCreated();
         $this->sendWebhook($connection, ['id' => 'b', 'donor_name' => 'Nadia', 'amount' => 10000])->assertCreated(); // diabaikan
-        Livewire::test(DonationInbox::class)->assertSee('Rp 25.000')->assertSee('semua donasi hari ini');
+        Livewire::test(DonationInbox::class)
+            ->assertSee('Donasi hari ini')
+            ->assertSeeHtml('<span>Masuk antrean</span><strong>Rp 15.000</strong>')
+            ->assertSee('1 donasi · semua donasi Rp 25.000 (2, termasuk diabaikan & perlu cek)');
 
-        // Saat live: semua donasi sejak sesi dimulai, termasuk yang perlu dicek.
+        // Saat live: angka sesi; yang perlu dicek hanya di keterangan "semua donasi".
         $session = app(\App\Services\LiveSessionService::class)->start($this->streamer, 'Live');
         $this->sendWebhook($connection, ['id' => 'c', 'donor_name' => 'Citra', 'amount' => 20000])->assertCreated(); // perlu dicek
         $this->sendWebhook($connection, ['id' => 'd', 'donor_name' => 'Dodi', 'amount' => 15000, 'message' => 'mabar'])->assertCreated();
-        Livewire::test(DonationInbox::class)->assertSee('Rp 35.000')->assertSee('semua donasi sejak sesi dimulai');
-        Livewire::test(\App\Livewire\LiveSessionPanel::class)->assertSee('Rp 35.000');
-        Livewire::test(\App\Livewire\QueueBoard::class, ['session' => $session])->assertSeeHtml('<span>Donasi masuk</span><strong>Rp 35.000</strong>');
+        $caption = '1 donasi · semua donasi Rp 35.000 (2, termasuk diabaikan & perlu cek)';
+        Livewire::test(DonationInbox::class)->assertSee('Donasi sesi ini')->assertSeeHtml('<span>Masuk antrean</span><strong>Rp 15.000</strong>')->assertSee($caption);
+        Livewire::test(\App\Livewire\LiveSessionPanel::class)->assertSeeHtml('<span>Masuk antrean</span><strong>Rp 15.000</strong>')->assertSee($caption);
+        Livewire::test(\App\Livewire\QueueBoard::class, ['session' => $session])->assertSeeHtml('<span>Masuk antrean</span><strong>Rp 15.000</strong>')->assertSee($caption);
     }
 
     public function test_package_manager_create_edit_toggle_and_duplicate_price_guard(): void
@@ -235,7 +240,7 @@ class StageCPagesTest extends TestCase
         $this->assertSame('ignored', Donation::sole()->status);
 
         $manager->call('togglePause', 'saweria');
-        $this->assertSame('pending', $connection->refresh()->status); // belum pernah menerima webhook
+        $this->assertSame('active', $connection->refresh()->status); // sudah menerima webhook (saat dijeda)
         $this->sendWebhook($connection, ['id' => 'p2', 'donor_name' => 'Raka', 'amount' => 15000])->assertCreated();
         $this->assertSame('active', $connection->refresh()->status);
 
@@ -313,7 +318,8 @@ class StageCPagesTest extends TestCase
 
         // Tidak live: daftar sisa game tetap tampil (pengganti notepad streamer).
         $session->update(['status' => 'ended']);
-        $this->get('/andra')->assertOk()->assertSee('Belum live')->assertSee('Sesi mabar VIP belum dibuka')->assertSee('Raka ML')->assertDontSee('Menunggu');
+        $this->get('/andra')->assertOk()->assertSee('Belum live')->assertSee('Sesi mabar VIP belum dibuka')->assertSee('Raka ML')->assertDontSee('Menunggu')
+            ->assertSeeHtml('<span class="public-queue-initials" aria-hidden="true">RM</span>');
 
         // Setelah antrean dikosongkan, tidak ada lagi yang ditampilkan.
         $session->queueEntries()->update(['status' => 'done']);

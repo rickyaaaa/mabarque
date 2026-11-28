@@ -88,6 +88,14 @@ MAIL_FROM_ADDRESS=noreply@DOMAINKAMU
 MAIL_FROM_NAME="MabarQueue"
 ```
 
+- **Bila memakai SQLite** (production saat ini): set `SESSION_DRIVER=file` dan `CACHE_STORE=file` supaya
+  session & penghitung throttle tidak ikut menulis ke file database (sumber error "database is locked").
+  `config/database.php` sudah memakai WAL + `busy_timeout` 10 detik + transaksi IMMEDIATE. Dengan WAL,
+  database terdiri dari `database.sqlite` + `-wal` + `-shm` — backup pakai
+  `sqlite3 database/database.sqlite ".backup database/backup-$(date +%Y%m%d-%H%M).sqlite"`, jangan `cp`.
+- **Webhook donasi** dicatat di `storage/logs/webhooks-YYYY-MM-DD.jsonl` dan tabel `webhook_deliveries`.
+  Proses ulang yang gagal: `php artisan webhooks:replay failed` (atau `webhooks:replay 2026-11-28` dari jurnal;
+  tambah `--dry-run` untuk melihat dulu). Idempoten — donasi yang sudah tercatat tidak dobel.
 - Jalankan deploy pertama manual: `bash scripts/deploy.sh`, lalu buat Super Admin:
   `php artisan mabarqueue:create-admin emailkamu@domain.com`
 - hPanel → **Advanced → Cron Jobs**, tambahkan **satu** cron tiap menit (menjalankan scheduler + queue worker):

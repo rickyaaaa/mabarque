@@ -18,19 +18,48 @@
             <a class="button button-primary" href="/dashboard">Buka antrean</a>
         </div>
         <div class="sync-line" role="status" aria-live="polite">
-            <span @class(['status-dot', 'is-live' => $activeProviders > 0])></span>
-            <span>{{ $activeProviders > 0 ? 'Webhook aktif' : ($connectedProviders ? 'Menunggu webhook pertama' : 'Belum ada koneksi provider') }}</span>
+            <span @class(['status-dot', 'is-live' => $syncStatus['tone'] === 'live', 'is-error' => $syncStatus['tone'] === 'error', 'is-idle' => $syncStatus['tone'] === 'idle'])></span>
+            <span>{{ $syncStatus['text'] }}</span>
             <span class="meta-separator">•</span>
             <span>Diperbarui otomatis tiap 10 detik</span>
         </div>
     </header>
 
     <section class="donation-summary" aria-label="Ringkasan donasi">
-        <article class="donation-stat donation-stat-red"><span>Donasi hari ini</span><strong>{{ $todayCount }}</strong><small>transaksi masuk</small></article>
+        <article class="donation-stat donation-stat-red"><span>{{ $session ? 'Donasi sesi ini' : 'Donasi hari ini' }}</span><strong>{{ $donationStats['all_count'] }}</strong><small>{{ $session ? 'transaksi sejak '.$session->started_at?->format('H:i').' WIB' : 'transaksi masuk' }}</small></article>
         <article class="donation-stat donation-stat-orange"><span>Perlu dicek</span><strong>{{ $needsCheck }}</strong><small>belum masuk antrean</small></article>
-        <article class="donation-stat donation-stat-purple"><span>Nilai donasi</span><strong>{{ $rupiah($donationValue) }}</strong><small>{{ $session ? 'semua donasi sejak sesi dimulai' : 'semua donasi hari ini' }}</small></article>
+        <article class="donation-stat donation-stat-purple"><span>Masuk antrean</span><strong>{{ $rupiah($donationStats['queued_amount']) }}</strong><small>{{ \App\Services\DonationStatsService::caption($donationStats) }}</small></article>
         <article class="donation-stat donation-stat-cream"><span>Provider aktif</span><strong>{{ $activeProviders }}/3</strong><small>{{ $connectedProviders }} terhubung</small></article>
     </section>
+
+    @if ($failedDeliveryCount > 0)
+        <section class="webhook-problems" aria-labelledby="webhook-problems-title" role="alert">
+            <div class="webhook-problems-head">
+                <div>
+                    <h2 id="webhook-problems-title">{{ $failedDeliveryCount }} webhook gagal dibaca</h2>
+                    <p>Provider mengirim donasi ini tapi isinya tidak bisa dibaca, jadi belum tercatat. Coba proses ulang, atau masukkan pemainnya manual di papan antrean lalu tandai selesai.</p>
+                </div>
+            </div>
+            <ul class="webhook-problem-list">
+                @foreach ($failedDeliveries as $delivery)
+                    <li class="webhook-problem" wire:key="delivery-{{ $delivery->id }}">
+                        <div class="webhook-problem-main">
+                            <strong>{{ $delivery->summary() }}</strong>
+                            <small>{{ $providerLabels[$delivery->provider] ?? $delivery->provider }} · {{ $delivery->created_at?->format('H:i') }} WIB, {{ $delivery->created_at?->translatedFormat('j M') }}@if ($delivery->error) · {{ \Illuminate\Support\Str::limit($delivery->error, 140) }}@endif</small>
+                            <details class="provider-sample">
+                                <summary class="text-button">Lihat isi webhook</summary>
+                                <pre>{{ json_encode($delivery->body(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) }}</pre>
+                            </details>
+                        </div>
+                        <div class="webhook-problem-actions">
+                            <button class="button button-small button-primary" type="button" wire:click="replayDelivery({{ $delivery->id }})" wire:loading.attr="disabled" wire:target="replayDelivery({{ $delivery->id }})">Proses ulang</button>
+                            <button class="button button-small button-outline" type="button" wire:click="resolveDelivery({{ $delivery->id }})">Sudah ditangani</button>
+                        </div>
+                    </li>
+                @endforeach
+            </ul>
+        </section>
+    @endif
 
     <section class="donation-toolbar" aria-label="Filter donasi">
         <div><p class="eyebrow">Kotak masuk</p><h2>Donasi terbaru</h2></div>

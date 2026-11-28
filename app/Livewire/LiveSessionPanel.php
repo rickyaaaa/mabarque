@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\LiveSession;
+use App\Services\DonationStatsService;
 use App\Services\LiveSessionService;
 use Livewire\Component;
 
@@ -68,8 +69,6 @@ class LiveSessionPanel extends Component
         $session = $this->activeSession();
 
         $queue = $session?->queueEntries()->whereIn('status', ['playing', 'ready', 'offline', 'skipped'])->get() ?? collect();
-        $donations = $session?->donations() ?? null;
-
         // Sesi penampung "Antrean sebelum live" bukan live sungguhan → tidak ditampilkan di arsip.
         $archives = $user->liveSessions()->where('status', 'ended')->where('title', '!=', LiveSessionService::STANDBY_TITLE)->latest('ended_at');
 
@@ -78,8 +77,7 @@ class LiveSessionPanel extends Component
             'queue' => $queue,
             'nextUp' => $queue->whereIn('status', ['playing', 'ready', 'offline'])->take(5),
             'readyCount' => $queue->where('status', 'ready')->count(),
-            'donationCount' => $donations?->count() ?? 0,
-            'donationValue' => (int) ($session?->donations()->where('donations.status', '!=', 'refunded')->sum('amount') ?? 0),
+            'donationStats' => $session ? app(DonationStatsService::class)->forSession($session) : null,
             'pendingDonations' => $session?->donations()->whereIn('status', ['received', 'review'])->count() ?? 0,
             'archives' => (clone $archives)->withSum(['donations as donation_value' => fn ($query) => $query->where('donations.status', '!=', 'refunded')], 'amount')->limit($this->archiveLimit)->get(),
             'archiveTotal' => $archives->count(),

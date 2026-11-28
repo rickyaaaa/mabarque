@@ -133,6 +133,11 @@ class User extends Authenticatable
         return $this->hasManyThrough(Donation::class, PlatformConnection::class);
     }
 
+    public function webhookDeliveries(): HasManyThrough
+    {
+        return $this->hasManyThrough(WebhookDelivery::class, PlatformConnection::class);
+    }
+
     // ── Peran & akses ───────────────────────────────────────────────────
 
     public function isSuperAdmin(): bool

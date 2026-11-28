@@ -50,6 +50,9 @@ return [
     |
     */
 
+    // Folder jurnal webhook donasi (webhooks-YYYY-MM-DD.jsonl) — lihat DonationWebhookService.
+    'webhook_journal_path' => env('WEBHOOK_JOURNAL_PATH', storage_path('logs')),
+
     'channels' => [
 
         'stack' => [
