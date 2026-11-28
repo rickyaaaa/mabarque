@@ -119,4 +119,35 @@ class QueueEntry extends Model
     {
         return $user !== null && $this->live_session_id !== null && (bool) $this->liveSession?->isOwnedBy($user);
     }
+
+    /** Waktu pemain masuk antrean; data lama tanpa joined_at memakai created_at. */
+    public function joinedAt(): ?\Carbon\CarbonInterface
+    {
+        return $this->joined_at ?? $this->created_at;
+    }
+
+    /** Label singkat di bawah nama: "masuk hari ini 21:30", "masuk kemarin 22:46", "masuk 22 Nov", "masuk 22 Nov 2025". */
+    public function joinedLabel(): ?string
+    {
+        $at = $this->joinedAt()?->copy()->locale('id');
+
+        if ($at === null) {
+            return null;
+        }
+
+        return 'masuk '.match (true) {
+            $at->isToday() => 'hari ini '.$at->format('H:i'),
+            $at->isYesterday() => 'kemarin '.$at->format('H:i'),
+            $at->isSameYear(now()) => $at->translatedFormat('j M'),
+            default => $at->translatedFormat('j M Y'),
+        };
+    }
+
+    /** Tanggal & jam lengkap untuk tooltip, mis. "Masuk antrean Minggu, 22 November 2026 19:20 WIB". */
+    public function joinedTitle(): ?string
+    {
+        $at = $this->joinedAt()?->copy()->locale('id');
+
+        return $at ? 'Masuk antrean '.$at->translatedFormat('l, j F Y H:i').' WIB' : null;
+    }
 }

@@ -169,8 +169,18 @@
                             <button type="button" wire:click="clearSearch" aria-label="Hapus pencarian">@include('partials.icon', ['name' => 'x', 'size' => 14])</button>
                         @endif
                     </label>
+                    <div class="qb-sort">
+                        <label for="queue-sort">Urutkan</label>
+                        <select id="queue-sort" wire:model.live="sort">
+                            @foreach ($sorts as $key => $label)<option value="{{ $key }}">{{ $label }}</option>@endforeach
+                        </select>
+                    </div>
                     @if ($filteredCount > 0)
                         <span class="qb-range">{{ ($queuePage - 1) * $perPage + 1 }}–{{ min($queuePage * $perPage, $filteredCount) }} dari {{ $filteredCount }}{{ $search !== '' ? ' hasil' : ' pemain' }}</span>
+                    @endif
+                    @if ($sort !== 'queue')
+                        {{-- Urutan ini hanya tampilan: giliran main (Next game, Mulai game) tetap menurut urutan antrean. --}}
+                        <p class="qb-sort-note" role="status">@include('partials.icon', ['name' => 'alert', 'size' => 13]) Urutan main tetap mengikuti antrean.</p>
                     @endif
                 </div>
 

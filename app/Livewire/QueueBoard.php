@@ -26,6 +26,9 @@ class QueueBoard extends Component
     /** Filter daftar: otomatis = masuk dari donasi, manual = diinput streamer, joki = mainin akun. */
     private const FILTERS = ['all', 'vip', 'joki', 'auto', 'manual'];
 
+    /** Urutan tampilan daftar antrean. Hanya tampilan — urutan main tetap `position` (Next game, Mulai game). */
+    public const SORTS = ['queue' => 'Urutan antrean', 'newest' => 'Terbaru masuk', 'oldest' => 'Terlama masuk'];
+
     /** Batas game per orang per sesi yang bisa dipilih streamer (0 = tanpa batas). */
     public const MAX_SESSION_CAP = 20;
 
@@ -38,6 +41,8 @@ class QueueBoard extends Component
 
     /** Cari pemain berdasarkan nama atau ID MLBB. */
     public string $search = '';
+
+    public string $sort = 'queue';
 
     /** Halaman daftar antrean yang sedang dibuka (mulai dari 1). */
     public int $queuePage = 1;
@@ -118,6 +123,13 @@ class QueueBoard extends Component
     public function updatedSearch(): void
     {
         $this->search = mb_substr($this->search, 0, 60);
+        $this->selected = [];
+        $this->queuePage = 1;
+    }
+
+    public function updatedSort(): void
+    {
+        $this->sort = array_key_exists($this->sort, self::SORTS) ? $this->sort : 'queue';
         $this->selected = [];
         $this->queuePage = 1;
     }
@@ -204,7 +216,33 @@ class QueueBoard extends Component
                 || str_contains(mb_strtolower((string) $entry->mlbb_id), $term));
         }
 
-        return $entries->values();
+        return $this->sorted($entries)->values();
+    }
+
+    /**
+     * Terbaru/terlama masuk antrean (joined_at; seri — mis. hasil tempel notepad — diurutkan menurut urutan input).
+     * Anggota party tetap dipin di atas di semua mode karena sedang main. Mode "queue" = urutan allEntries() apa adanya.
+     */
+    private function sorted($entries)
+    {
+        $sort = array_key_exists($this->sort, self::SORTS) ? $this->sort : 'queue';
+
+        if ($sort === 'queue') {
+            return $entries;
+        }
+
+        $direction = $sort === 'newest' ? -1 : 1;
+
+        return $entries->sortBy(function (QueueEntry $entry) use ($direction): array {
+            $time = $entry->joinedAt()?->getTimestamp();
+
+            return [
+                $entry->status === 'playing' ? 0 : 1,
+                $time === null ? 1 : 0, // tanpa tanggal masuk → paling bawah
+                $direction * (int) $time,
+                $direction * (int) $entry->id,
+            ];
+        });
     }
 
     private function lastPage(int $total): int
@@ -613,6 +651,7 @@ class QueueBoard extends Component
         return view('livewire.queue-board', [
             'entries' => $this->pageOf($filtered),
             'filteredCount' => $filtered->count(),
+            'sorts' => self::SORTS,
             'lastPage' => $this->lastPage($filtered->count()),
             'perPage' => self::PER_PAGE,
             'counts' => [

@@ -487,6 +487,13 @@ body.ui-v2 .admin-pagination { color: var(--v-muted); }
 .ui-v2 .qb-search button { position: absolute; right: 6px; display: grid; width: 28px; height: 28px; place-items: center; padding: 0; color: var(--v-ink); background: transparent; border: 0; cursor: pointer; }
 .ui-v2 .qb-search button:hover { background: var(--v-accent); }
 .ui-v2 .qb-range { color: var(--v-muted); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+/* Urutkan (tampilan saja) + keterangan bahwa giliran main tetap menurut antrean. */
+.ui-v2 .qb-sort { display: flex; align-items: center; gap: 8px; }
+.ui-v2 .qb-sort label { color: var(--v-muted); font-size: 12px; font-weight: 700; }
+.ui-v2 .qb-sort select { min-height: 40px; padding: 6px 10px; color: var(--v-ink); background-color: var(--v-sunk); border: 2px solid var(--v-line); border-radius: 0; font: 700 13px "Inter", sans-serif; cursor: pointer; }
+.ui-v2 .qb-sort select:focus { background-color: var(--v-panel); box-shadow: var(--v-shadow-sm); }
+.ui-v2 .qb-sort-note { display: flex; flex-basis: 100%; align-items: center; gap: 6px; margin: 0; color: var(--v-muted); font-size: 12px; font-weight: 600; }
+.ui-v2 .player-joined { color: var(--v-muted); font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .ui-v2 .qb-pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; padding: 14px 18px; border-top: 2px solid var(--v-line); }
 .ui-v2 .qb-page { display: inline-grid; min-width: 36px; height: 36px; place-items: center; padding: 0 8px; color: var(--v-ink); background: var(--v-panel); border: 2px solid var(--v-line); font: 700 13px "Inter", sans-serif; font-variant-numeric: tabular-nums; cursor: pointer; transition: transform 120ms ease, box-shadow 120ms ease; }
 .ui-v2 .qb-page:hover:not(:disabled) { transform: translate(-1px, -1px); box-shadow: var(--v-shadow-sm); }
@@ -497,6 +504,8 @@ body.ui-v2 .admin-pagination { color: var(--v-muted); }
 @media (max-width: 640px) {
   .ui-v2 .qb-queue-tools { padding: 10px 12px; }
   .ui-v2 .qb-search { max-width: none; }
+  .ui-v2 .qb-sort { flex: 1 1 100%; }
+  .ui-v2 .qb-sort select { flex: 1; }
 }
 
 body.ui-v2 .modal-help.is-warning { margin-top: 8px; padding: 10px 12px; color: var(--v-ink); background: var(--v-warn-soft); border: 2px solid var(--v-line); }
